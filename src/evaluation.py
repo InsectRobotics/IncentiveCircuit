@@ -19,7 +19,7 @@ behaviour = {
 behaviour = pd.DataFrame(behaviour, index=cases)
 
 
-def evaluate(mb_model, experiment="B+", reversal=True, extinction=True, tolerance=.1, percentage=False,
+def evaluate(mb_model, experiment="B+", nids=None, reversal=True, extinction=True, tolerance=.1, percentage=False,
              cs_only=False, us_only=False, mbon_only=False, behav=behaviour, integration=np.mean):
     pred = {}
     models = []
@@ -29,55 +29,55 @@ def evaluate(mb_model, experiment="B+", reversal=True, extinction=True, toleranc
         rev_model = mb_model.copy()
         models.append(rev_model)
         rev_model(reversal=reversal)
-        rev = rev_model.as_dataframe()[experiment]
+        rev = rev_model.as_dataframe(nids=nids, reconstruct=False)[experiment]
         for neuron in behav:
             pred[neuron] = {}
             for case in cases:
                 trials = []
                 if case == "acquisition (A)":
-                    trials.extend([2, 3, 4, 5, 6])
+                    trials.extend([1, 2, 3, 4, 5, 6])
                     odour = "A"
                 elif case == "acquisition (B)":
-                    trials.extend([2, 3, 4, 5, 6])
+                    trials.extend([1, 2, 3, 4, 5, 6])
                     odour = "B"
                 elif case == "reversal (A)":
-                    trials.extend([8, 9, 10, 11, 12, 13])
+                    trials.extend([7, 8, 9, 10, 11, 12, 13])
                     odour = "A"
                 elif case == "reversal (B)":
-                    trials.extend([7, 8, 9, 10, 11, 12])
+                    trials.extend([6, 7, 8, 9, 10, 11, 12])
                     odour = "B"
                 else:
                     continue
                 for tr in trials[::-1]:
-                    if tr * 200 >= rev[neuron].shape[0] + 100:
+                    if tr >= rev[neuron].shape[0]:
                         trials.remove(tr)
 
                 trs = []
                 for trial in trials:
-                    trs.append(_get_trial(rev[neuron], trial, odour=odour))
+                    trs.append(rev[neuron][trial*2 + int(odour == "B")])
                 pred[neuron][case], _ = _get_trend(trs, cs_only=cs_only, us_only=us_only, integration=integration)
 
     if extinction:
         ext_model = mb_model.copy()
         models.append(ext_model)
         ext_model(extinction=extinction)
-        ext = ext_model.as_dataframe()[experiment]
+        ext = ext_model.as_dataframe(nids=nids)[experiment]
         for neuron in behav:
             if not reversal:
                 pred[neuron] = {}
             for case in cases:
                 trials = []
                 if case == "acquisition (A)" and not reversal:
-                    trials.extend([2, 3, 4, 5, 6])
+                    trials.extend([1, 2, 3, 4, 5, 6])
                     odour = "A"
                 elif case == "acquisition (B)" and not reversal:
-                    trials.extend([2, 3, 4, 5, 6])
+                    trials.extend([1, 2, 3, 4, 5, 6])
                     odour = "B"
                 elif case == "extinction (A)":
-                    trials.extend([8, 9, 10, 11, 12, 13])
+                    trials.extend([7, 8, 9, 10, 11, 12, 13])
                     odour = "A"
                 elif case == "extinction (B)":
-                    trials.extend([7, 8, 9, 10, 11, 12])
+                    trials.extend([6, 7, 8, 9, 10, 11, 12])
                     odour = "B"
                 else:
                     continue
@@ -89,42 +89,26 @@ def evaluate(mb_model, experiment="B+", reversal=True, extinction=True, toleranc
                     trs.append(_get_trial(ext[neuron], trial, odour=odour))
                 pred[neuron][case], _ = _get_trend(trs, cs_only=cs_only, us_only=us_only, integration=integration)
 
-    # detecting no-changes
-    for neuron in pred:
-        for case in pred[neuron]:
-            if np.absolute(pred[neuron][case]) < tolerance:
-                pred[neuron][case] = 0.
-            pred[neuron][case] = np.sign(pred[neuron][case])
     pred = pd.DataFrame(pred)
+    z_p = np.sqrt(np.nansum(np.square(np.array(pred))))
+    pred /= z_p
 
     # calculate importance from behavioural values (zeros are important, NaNs are not important)
     target = behav.copy()
-    weights = np.absolute(target)
-    weights[weights == 0] = 1.
+    z_t = np.sqrt(np.nansum(np.square(np.array(target))))
+    targ = target / z_t
 
     # calculate accuracy = 1 - error
-    acc = 1 - np.clip(np.absolute(pred - target / weights), 0, 1)
+    err = pred @ targ
+    total_err = np.sqrt(np.nansum(np.square(err)))
+    print(total_err, np.sqrt(1 / np.array(err).size))
+    acc = 1 - err
+    total = pred.reshape((-1)) @ targ.reshape((-1))
 
-    # get overall performance
-    if mbon_only:
-        cols = list(acc.columns)
-        for i in range(len(cols))[::-1]:
-            if 'MBON' not in cols[i]:
-                cols.remove(cols[i])
-        total = (weights[cols] * acc[cols]).sum().sum()
-        n = weights[cols].sum().sum()
-    else:
-        total = (weights * acc).sum().sum()
-        n = weights.sum().sum()
-
-    # transform to percentage
-    if not percentage:
-        n = 1.
-
-    return total / n, acc, pred, models
+    return total, acc, pred, models
 
 
-def create_behaviour_map(cs_only=False, us_only=False, integration=np.mean):
+def create_behaviour_map(cs_only=False, us_only=False, integration=np.nanmean):
     dff = load_draft_data()
     dfr = dff["B+"]
     dfe = dff["B-"]
@@ -133,15 +117,15 @@ def create_behaviour_map(cs_only=False, us_only=False, integration=np.mean):
         if not np.all(np.isnan(dfr[neuron])):
             trials_1, trials_2, trials_3, trials_4 = [], [], [], []
             # print(neuron, dfr[neuron].shape)
-            for trial in [2, 3, 4, 5, 6]:
+            for trial in [1, 2, 3, 4, 5, 6]:
                 # B+
                 trials_1.append(_get_trial(dfr[neuron], trial, odour="B"))
                 # A-
                 trials_2.append(_get_trial(dfr[neuron], trial, odour="A"))
-            for trial in [7, 8]:
+            for trial in [6, 7, 8]:
                 # B-
                 trials_3.append(_get_trial(dfr[neuron], trial, odour="B"))
-            for trial in [8, 9]:
+            for trial in [7, 8, 9]:
                 # A+
                 trials_4.append(_get_trial(dfr[neuron], trial, odour="A"))
             b1, s1 = _get_trend(trials_1, cs_only=cs_only, us_only=us_only, integration=integration)
@@ -156,10 +140,10 @@ def create_behaviour_map(cs_only=False, us_only=False, integration=np.mean):
         if not np.all(np.isnan(dfe[neuron])) and False:
             trials_5, trials_6 = [], []
             # print(neuron, dfe[neuron].shape)
-            for trial in [7, 8]:
+            for trial in [6, 7, 8]:
                 # B-
                 trials_5.append(_get_trial(dfe[neuron], trial, odour="B"))
-            for trial in [8, 9]:
+            for trial in [7, 8, 9]:
                 # A-
                 trials_6.append(_get_trial(dfe[neuron], trial, odour="A"))
             b5, s5 = _get_trend(trials_5, cs_only=cs_only, us_only=us_only, integration=integration)
@@ -170,16 +154,9 @@ def create_behaviour_map(cs_only=False, us_only=False, integration=np.mean):
 
         bs = np.array([b1/s1, b2/s2, b3/s3, b4/s4, b5/s5, b6/s6])
 
-        # print(bs)
-        # print(np.nanmean(np.absolute(bs)))
         behav[neuron] = bs
-        # behav[neuron] = np.clip(bs / np.nanmedian(np.absolute(bs)), -1, 1)
-        # for i, b in enumerate(bs):
-        #     if np.isnan(b):
-        #         behav[neuron][i] = behaviour[neuron][cases[i]]
 
     behav = pd.DataFrame(behav, index=cases)
-    behav = (behav / np.nanmean(np.absolute(behav))).clip(-1, 1)
 
     for neuron in behaviour.columns:
         for i, b in enumerate(behav[neuron]):
@@ -189,9 +166,13 @@ def create_behaviour_map(cs_only=False, us_only=False, integration=np.mean):
     return behav
 
 
-def _get_trend(trials, cs_only=False, us_only=False, integration=np.mean, axis=None):
-    dst = int(43 if us_only else 28)
-    det = int(33 if cs_only else 48)
+def _get_trend(trials, cs_only=False, us_only=False, integration=np.nanmean, axis=None):
+    if np.array(trials).shape[1] == 2:
+        dst = int(1 if us_only else 0)
+        det = int(1 if cs_only else 2)
+    else:
+        dst = int(43 if us_only else 28)
+        det = int(33 if cs_only else 48)
     trends = []
     for tr1, tr2 in zip(trials[:-1], trials[1:]):
         trends.append(tr2[dst:det] - tr1[dst:det])
