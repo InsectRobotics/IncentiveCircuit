@@ -177,8 +177,8 @@ if __name__ == '__main__':
     model = MotivationModel(learning_rule="dan-based", nb_apl=0, pn2kc_init="default", verbose=False, third_order=False,
                             timesteps=2, trials=28, nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2)
 
-    val, acc, prediction, models = evaluate(model, tolerance=.02, nids=neurons, percentage=True,
-                                            behav=target, cs_only=True, mbon_only=False, reversal=True, extinction=True)
+    val, acc, prediction, models = evaluate(model, nids=neurons, percentage=True, behav_mean=target,
+                                            cs_only=True, reversal=True, extinction=True)
 
     print("TARGET")
     print(target.T)

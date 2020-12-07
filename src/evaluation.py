@@ -19,8 +19,8 @@ behaviour = {
 behaviour = pd.DataFrame(behaviour, index=cases)
 
 
-def evaluate(mb_model, experiment="B+", nids=None, reversal=True, extinction=True, tolerance=.1, percentage=False,
-             cs_only=False, us_only=False, mbon_only=False, behav=behaviour, integration=np.mean):
+def evaluate(mb_model, experiment="B+", nids=None, reversal=True, extinction=True, percentage=False,
+             cs_only=False, us_only=False, behav_mean=behaviour, behav_std=None, integration=np.mean):
     pred = {}
     models = []
 
@@ -30,7 +30,7 @@ def evaluate(mb_model, experiment="B+", nids=None, reversal=True, extinction=Tru
         models.append(rev_model)
         rev_model(reversal=reversal)
         rev = rev_model.as_dataframe(nids=nids, reconstruct=False)[experiment]
-        for neuron in behav:
+        for neuron in behav_mean:
             pred[neuron] = {}
             for case in cases:
                 trials = []
@@ -62,7 +62,7 @@ def evaluate(mb_model, experiment="B+", nids=None, reversal=True, extinction=Tru
         models.append(ext_model)
         ext_model(extinction=extinction)
         ext = ext_model.as_dataframe(nids=nids)[experiment]
-        for neuron in behav:
+        for neuron in behav_mean:
             if not reversal:
                 pred[neuron] = {}
             for case in cases:
@@ -94,18 +94,43 @@ def evaluate(mb_model, experiment="B+", nids=None, reversal=True, extinction=Tru
     pred /= z_p
 
     # calculate importance from behavioural values (zeros are important, NaNs are not important)
-    target = behav.copy()
+    target = behav_mean.copy()
     z_t = np.sqrt(np.nansum(np.square(np.array(target))))
-    targ = target / z_t
+    target = target / z_t
+    if behav_std is not None:
+        target_std = behav_std.copy()
+    else:
+        target_std = .1
+
+    target_max = np.nanmax(np.absolute(np.array(target)))
+    t0 = np.exp(-np.square(target / target_max + 1)/(2 * target_std))
+    t1 = np.exp(-np.square(target / target_max - 0)/(2 * target_std))
+    t2 = np.exp(-np.square(target / target_max - 1)/(2 * target_std))
+    t_all = t0 + t1 + t2
+
+    pred_max = np.nanmax(np.absolute(np.array(pred)))
+    p0 = np.exp(-np.square(pred / pred_max + 1) / (2 * target_std))
+    p1 = np.exp(-np.square(pred / pred_max - 0) / (2 * target_std))
+    p2 = np.exp(-np.square(pred / pred_max - 1) / (2 * target_std))
+    p_all = p0 + p1 + p2
 
     # calculate accuracy = 1 - error
-    err = pred @ targ
-    total_err = np.sqrt(np.nansum(np.square(err)))
-    print(total_err, np.sqrt(1 / np.array(err).size))
-    acc = 1 - err
-    total = pred.reshape((-1)) @ targ.reshape((-1))
+    print(target.T)
+    print(p0.T / t_all)
+    print(p1.T / t_all)
+    print(p2.T / t_all)
+    print(p_all)
+    target_id = np.argmax([np.array(t0), np.array(t1), np.array(t2)], axis=0)
+    print(target_id)
+    target_n = np.transpose([np.array(t0 / t_all), np.array(t1 / t_all), np.array(t2 / t_all)],
+                            axes=(1, 2, 0))[..., target_id.flatten()]
+    pred_n = np.array([np.array(p0 / p_all), np.array(p1 / p_all), np.array(p2 / p_all)])[target_id]
+    print(target_n.shape)
 
-    return total, acc, pred, models
+    error = p_all.copy()
+    error[:] = np.absolute(target_n - pred_n)
+    acc = 1 - error
+    return np.array(acc).mean(), error, pred, models
 
 
 def create_behaviour_map(cs_only=False, us_only=False, integration=np.nanmean):

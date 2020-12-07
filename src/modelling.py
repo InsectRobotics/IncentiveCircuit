@@ -811,7 +811,7 @@ if __name__ == '__main__':
             # model = MBModel()
             model = MBModel(learning_rule="dan-based", nb_apl=0, pn2kc_init="default", verbose=False,
                             timesteps=2, trials=28, nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2)
-            vals[kc1, kc2], acc, prediction, models = evaluate(model, tolerance=.02, percentage=True, behav=target,
+            vals[kc1, kc2], acc, prediction, models = evaluate(model, tolerance=.02, percentage=True, behav_mean=target,
                                                                cs_only=True, mbon_only=False,
                                                                reversal=True, extinction=True)
             val = vals[kc1, kc2]
