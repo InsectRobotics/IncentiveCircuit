@@ -112,8 +112,8 @@ def plot_population(ms, nids=None):
 
 
 if __name__ == '__main__':
-    from evaluation import evaluate, create_behaviour_map
-    target = create_behaviour_map(cs_only=True)
+    from evaluation import evaluate, generate_behaviour_map
+    target, target_s = generate_behaviour_map(cs_only=True)
 
     import pandas as pd
 
@@ -128,8 +128,8 @@ if __name__ == '__main__':
     model = MotivationModel(learning_rule="dan-based", nb_apl=1, pn2kc_init="default", verbose=False,
                             timesteps=2, trials=28, nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2)
 
-    val, acc, prediction, models = evaluate(model, tolerance=.02, nids=neurons, percentage=True,
-                                            behav_mean=target, cs_only=True, mbon_only=False, reversal=True, extinction=True)
+    val, acc, prediction, models = evaluate(model, nids=neurons, behav_mean=target, behav_std=target_s,
+                                            cs_only=True, reversal=True, extinction=True)
 
     print("TARGET")
     print(target.T)

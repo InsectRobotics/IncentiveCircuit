@@ -49,6 +49,7 @@ class MBModel(object):
         self.nb_trials = trials
         self.nb_timesteps = timesteps
         self.__leak = leak
+        self.us_dims = 8
 
         self._t = 0
         self.__routine_name = ""
@@ -100,7 +101,7 @@ class MBModel(object):
         self.w_min = np.array([-2.] * (nb_dan+nb_mbon))
 
         self.w_k2m = np.array([[[0.] * nb_dan + [1.] * nb_mbon] * nb_kc] * (trials * timesteps + 1))
-        self.w_u2d = np.array([u] * (trials * timesteps + 1))
+        self.w_u2d = np.array(u)
         self.k2m_init = self.w_k2m[0, 0]
         self.b_k2m = np.array([0.] * nb_dan + [1.] * nb_mbon)
 
@@ -179,6 +180,7 @@ class MBModel(object):
             routine = self.__reversal_routine()
         else:
             routine = []
+        repeat = kwargs.get('repeat', 4)
 
         for _, _, cs, us in routine:
 
@@ -189,17 +191,21 @@ class MBModel(object):
             # feed forward responses: PN(CS) -> KC
             k = cs @ self.w_p2k
 
-            # feed forward responses: KC -> MBON, US -> DAN
-            mb = k @ w_k2m_pre + us @ self.w_u2d[self._t] + self.v_init
+            for r in range(repeat):
+                eta = float(1) / float(repeat)
 
-            # Step 1: internal values update
-            v_post = self.update_values(k, v_pre, mb)
+                # feed forward responses: KC -> MBON, US -> DAN
+                mb = k @ w_k2m_pre + us @ self.w_u2d + self.v_init
 
-            # Step 2: synaptic weights update
-            w_k2m_post = self.update_weights(k, v_post, w_k2m_post)
+                # Step 1: internal values update
+                v_post = self.update_values(k, v_pre, mb)
 
-            # update dynamic memory for repeating loop
-            v_pre, w_k2m_pre = v_post, w_k2m_post
+                # Step 2: synaptic weights update
+                w_k2m_post = self.update_weights(k, v_post, w_k2m_pre)
+
+                # update dynamic memory for repeating loop
+                v_pre += eta * (v_post - v_pre)
+                w_k2m_pre += eta * (w_k2m_post - w_k2m_pre)
 
             # store values and weights in history
             self._v[self._t + 1], self.w_k2m[self._t + 1] = v_post, w_k2m_post
@@ -238,8 +244,9 @@ class MBModel(object):
                 cs = cs_ * float(trial_ in odour)
 
                 # shock is presented only in specific trials
-                us__ = np.zeros(self.nb_dan // 2, dtype=float)
-                us__[0] = float(trial_ in shock)
+                us__ = np.zeros(self.us_dims, dtype=float)
+                us__[4] = float(trial_ in shock)
+                print(us__)
 
                 for timestep in range(self.nb_timesteps):
 

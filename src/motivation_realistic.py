@@ -26,86 +26,86 @@ class MotivationModel(MBModel):
         self.v_init[p_dan_prim:p_dan_seco] = 2.
         self.v_init[p_dan_seco:p_mbon_pri] = -7.
         self.v_init[p_mbon_pri:p_mbon_sec] = -3.
-        self.v_init[p_mbon_sec:] = 0.
+        self.v_init[p_mbon_sec:] = -1.
 
         #     DANs                          MBONs
         # --------------------------------------------------
-        # 00: sadness (γ1ped)           16: joy (γ1ped)
+        # 00: PPL1-γ1ped                16: MBON-γ1ped
         # 01: surprise                  17: anticipation
         # 02: fear                      18: anger
         # 03: trust                     19: disgust
-        # 04: joy (PAM-γ4<γ1γ2)         20: sadness (γ4>γ1γ2)
+        # 04: PAM-γ4<γ1γ2               20: MBON-γ4>γ1γ2
         # 05: anticipation              21: surprise
         # 06: anger                     22: fear
         # 07: disgust                   23: trust
-        # 08: disapproval (PPL1-γ2α'1)  24: optimism (γ2α'1)
+        # 08: PPL1-γ2α'1                24: MBON-γ2α'1
         # 09: awe                       25: aggressiveness
-        # 10: submission                26: contempt
-        # 11: love                      27: remorse
-        # 12: optimism (PAM-β'2a)       28: disapproval (γ5β'2a)
+        # 10: PAM-α1                    26: MBON-α1
+        # 11: PPL1-α3                   27: MBON-α3
+        # 12: PAM-β'2a                  28: MBON-γ5β'2a
         # 13: aggressiveness            29: awe
-        # 14: contempt                  30: submission
+        # 14: PPL1-α'1                  30: MBON-α'1
         # 15: remorse                   31: love
         self._w_m2v = np.zeros((32, 32), dtype=float)
-        self._w_m2v[p_mbon_pri:p_mbon_sec, p_dan_prim:p_dan_seco] = -np.eye(8)  # primary emotions depress their DANs
-        self._w_m2v[p_mbon_pri:p_mbon_sec, p_mbon_sec:] = np.array([  # P-MBONs to S-MBONs
-            [-.0, -.0, -.0, -.25, -.25, -.0, -.0, -.0],
-            [-.0, -.0, -.0, -.0, -.25, -.25, -.0, -.0],
-            [-.0, -.0, -.0, -.0, -.0, -.25, -.25, -.0],
-            [-.0, -.0, -.0, -.0, -.0, -.0, -.25, -.25],
-            [-.25, -.0, -.0, -.0, -.0, -.0, -.0, -.25],
-            [-.25, -.25, -.0, -.0, -.0, -.0, -.0, -.0],
-            [-.0, -.25, -.25, -.0, -.0, -.0, -.0, -.0],
-            [-.0, -.0, -.25, -.25, -.0, -.0, -.0, -.0],
-        ]) * .5
+        self._w_m2v[p_mbon_pri:p_mbon_sec, p_dan_prim:p_dan_seco] = np.array([  # primary emotions depress their DANs
+            [-1., +0., +0., +0., +0., +0., +0., +0.],  # MBON-γ1ped
+            [+0., -1., +0., +0., +0., +0., +0., +0.],  # anticipation
+            [+0., +0., -1., +0., +0., +0., +0., +0.],  # anger
+            [+0., +0., +0., -1., +0., +0., +0., +0.],  # disgust
+            [+0., +0., +0., +0., -1., +0., +0., +0.],  # MBON-γ4>γ1γ2
+            [+0., +0., +0., +0., +0., -1., +0., +0.],  # surprise
+            [+0., +0., +0., +0., +0., +0., -1., +0.],  # fear
+            [+0., +0., +0., +0., +0., +0., +0., -1.],  # trust
+        ])
         self._w_m2v[p_mbon_sec:, p_dan_seco:p_mbon_pri] = np.array([  # S-MBONs to S-DANs
-            [+.0, +.0, +.0, +.0, +1., +.0, +.0, +.0],
-            [+.0, +.0, +.0, +.0, +.0, +1., +.0, +.0],
-            [+.0, +.0, +.0, +.0, +.0, +.0, +1., +.0],
-            [+.0, +.0, +.0, +.0, +.0, +.0, +.0, +1.],
-            [+1., +.0, +.0, +.0, +.0, +.0, +.0, +.0],
-            [+.0, +1., +.0, +.0, +.0, +.0, +.0, +.0],
-            [+.0, +.0, +1., +.0, +.0, +.0, +.0, +.0],
-            [+.0, +.0, +.0, +1., +.0, +.0, +.0, +.0],
+            [+.0, +.0, +.0, +.0, +1., +.0, +.0, +.0],  # MBON-γ2α'1
+            [+.0, +.0, +.0, +.0, +.0, +.0, +.0, +.0],  # aggressiveness
+            [+.0, +.0, +.2, +.0, +.0, +.0, +.0, +.0],  # MBON-α1
+            [+.0, +.0, +.2, +.0, +.0, +.0, +.0, +.0],  # MBON-α3
+            [+1., +.0, +.0, +.0, +.0, +.0, +.0, +.0],  # MBON-γ5β'2a
+            [+.0, +.0, +.0, +.0, +.0, +.0, +.0, +.0],  # awe
+            [+.0, +.0, +.0, +.0, +.0, +.0, +.5, +.0],  # MBON-α'1
+            [+.0, +.0, +.0, +.0, +.0, +.0, +.0, +.0],  # love
         ]) * 2.1
-        if third_order:
-            self._w_m2v[p_mbon_sec:, p_dan_seco:p_mbon_pri] += np.array([  # S-MBONs to S-DANs (3rd order)
-                [+.0, +.0, +.0, +.25, -1.5, +.25, +0., +.0],
-                [+.0, +.0, +.0, +.0, +.25, -1.5, +.25, +.0],
-                [+.0, +.0, +.0, +.0, +.0, +.25, -1.5, +.25],
-                [+.25, +.0, +.0, +.0, +.0, +.0, +.25, -1.5],
-                [-1.5, +.25, +.0, +.0, +.0, +.0, +.0, +.25],
-                [+.25, -1.5, +.25, +.0, +.0, +.0, +.0, +.0],
-                [+.0, +.25, -1.5, +.25, +.0, +.0, +.0, +.0],
-                [+.0, +.0, +.25, -1.5, +.25, +.0, +.0, +.0],
-            ])
-
-            self._w_m2v[p_mbon_sec:, p_mbon_pri:p_mbon_sec] = np.array([  # S-MBONs to P-MBONs (3rd order)
-                [+.0, +.0, +.0, +.0, +1., +.0, +.0, +.0],
-                [+.0, +.0, +.0, +.0, +.0, +1., +.0, +.0],
-                [+.0, +.0, +.0, +.0, +.0, +.0, +1., +.0],
-                [+.0, +.0, +.0, +.0, +.0, +.0, +.0, +1.],
-                [+1., +.0, +.0, +.0, +.0, +.0, +.0, +.0],
-                [+.0, +1., +.0, +.0, +.0, +.0, +.0, +.0],
-                [+.0, +.0, +1., +.0, +.0, +.0, +.0, +.0],
-                [+.0, +.0, +.0, +1., +.0, +.0, +.0, +.0],
-            ]) * 1.
-
-        self.names[0], self.names[4], self.names[8], self.names[12] = (
-            "PPL1-γ1ped", "PAM-γ4<γ1γ2", "PPL1-γ2α'1", "PAM-β'2a")
-        self.names[16], self.names[20], self.names[24], self.names[28] = (
-            "MBON-γ1ped", "MBON-γ4>γ1γ2", "MBON-γ2α'1", "MBON-γ5β'2a")
+        self._w_m2v[p_mbon_pri:p_mbon_sec, p_mbon_sec:] = np.array([  # P-MBONs to S-MBONs
+            [-.0, -.0, +.5, +.5, -.5, -.0, -.0, -.0],  # MBON-γ1ped
+            [-.0, -.0, -.0, -.0, -.0, -.0, -.0, -.0],  # anticipation
+            [-.0, -.0, -.0, -.0, -.0, -.0, -.0, -.0],  # anger
+            [-.0, -.0, -.0, -.0, -.0, -.0, -.0, -.0],  # disgust
+            [-.5, -.0, -.0, -.0, -.0, -.0, +1., -.0],  # MBON-γ4>γ1γ2
+            [-.0, -.0, -.0, -.0, -.0, -.0, -.0, -.0],  # surprise
+            [-.0, -.0, -.0, -.0, -.0, -.0, -.0, -.0],  # fear
+            [-.0, -.0, -.0, -.0, -.0, -.0, -.0, -.0],  # trust
+        ]) * .5
+        self._w_m2v[p_mbon_sec:, p_mbon_sec:] = np.array([  # S-MBONs to S-MBONs
+            [+.0, +.0, +.0, +.0, +.0, +.0, +.0, +.0],  # MBON-γ2α'1
+            [+.0, +.0, +.0, +.0, +.0, +.0, +.0, +.0],  # aggressiveness
+            [+1., +.0, +.0, +.0, +.0, +.0, +.0, +.0],  # MBON-α1
+            [+.0, +.0, +.0, +.0, +.0, +.0, +.0, +.0],  # MBON-α3
+            [+.0, +.0, +.0, +.0, +.0, +.0, +.0, +.0],  # MBON-γ5β'2a
+            [+.0, +.0, +.0, +.0, +.0, +.0, +.0, +.0],  # awe
+            [+.0, +.0, +.0, +.0, +1., +.0, +.0, +.0],  # MBON-α'1
+            [+.0, +.0, +.0, +.0, +.0, +.0, +.0, +.0],  # love
+        ]) * .5
+        # self.w_d2k[:, int(1.5 * self.nb_dan):] *= 1.2
+        self.w_d2k[[10, 14], [26, 30]] = 1
+        self.names[0], self.names[4], self.names[8], self.names[10], self.names[12], self.names[14] = (
+            "PPL1-γ1ped", "PAM-γ4<γ1γ2", "PPL1-γ2α'1", "PAM-α1", "PAM-β'2a", "PAM-α'1")
+        self.names[16], self.names[20], self.names[24], self.names[26], self.names[28], self.names[30] = (
+            "MBON-γ1ped", "MBON-γ4>γ1γ2", "MBON-γ2α'1", "MBON-α1", "MBON-γ5β'2a", "MBON-α'1")
 
         w = self._w_m2v + self.w_d2k
-        # w[:self.nb_dan//2, :] += self.w_u2d[1]
+        # w = self._w_m2v
+        w[:self.nb_dan//2, :] += self.w_u2d[1]
+        nids = [0, 4, 8, 10, 12, 14, 16, 20, 24, 26, 28, 30]
 
-        # plt.figure("Synaptic weights", figsize=(10, 10))
-        # plt.imshow(w, vmin=-2, vmax=2, cmap="coolwarm")
-        # plt.xticks([0, 4, 8, 12, 16, 20, 24, 28], np.array(self.names)[[0, 4, 8, 12, 16, 20, 24, 28]])
-        # plt.yticks([0, 4, 8, 12, 16, 20, 24, 28], np.array(self.names)[[0, 4, 8, 12, 16, 20, 24, 28]])
-        # plt.tight_layout()
-        # plt.grid("both")
-        # plt.show()
+        plt.figure("Synaptic weights", figsize=(10, 10))
+        plt.imshow(w, vmin=-2, vmax=2, cmap="coolwarm")
+        plt.xticks(nids, np.array(self.names)[nids])
+        plt.yticks(nids, np.array(self.names)[nids])
+        plt.tight_layout()
+        plt.grid("both")
+        plt.show()
 
 
 def plot_population(ms, nids=None):
@@ -170,11 +170,11 @@ if __name__ == '__main__':
     pd.options.display.max_rows = 16
     pd.options.display.width = 1000
 
-    neurons = [0, 4, 8, 12, 16, 20, 24, 28]
+    neurons = [0, 4, 8, 10, 12, 14, 16, 20, 24, 26, 28, 30]
     nb_kcs = 10
     kc1, kc2 = nb_kcs // 2, nb_kcs // 2
 
-    model = MotivationModel(learning_rule="dan-based", nb_apl=0, pn2kc_init="default", verbose=False, third_order=True,
+    model = MotivationModel(learning_rule="dan-based", nb_apl=0, pn2kc_init="default", verbose=False, third_order=False,
                             timesteps=2, trials=28, nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2)
 
     val, acc, prediction, models = evaluate(model, nids=neurons, behav_mean=target, behav_std=target_s,
