@@ -103,23 +103,28 @@ def evaluate(mb_model, experiment="B+", nids=None, reversal=True, extinction=Tru
     else:
         target_std = .1
 
-    target_max = np.nanmax(np.absolute(np.array(target)))
+    if np.size(target) < 1:
+        target_max = 1.
+    else:
+        target_max = np.nanmax(np.absolute(np.array(target)))
     target_m = target / target_max
     target_s = target_std / np.square(target_max)
-    print(target_s.T)
+
     t0 = np.exp(-np.square(target_m + 1)/(2 * target_s))
     t1 = np.exp(-np.square(target_m - 0)/(2 * target_s))
     t2 = np.exp(-np.square(target_m - 1)/(2 * target_s))
     t_all = t0 + t1 + t2
 
-    pred_max = np.nanmax(np.absolute(np.array(pred)))
+    if np.size(pred) < 1:
+        pred_max = 1.
+    else:
+        pred_max = np.nanmax(np.absolute(np.array(pred)))
     pred_m = pred / pred_max
     p0 = np.exp(-np.square(pred_m + 1) / (2 * target_s))
     p1 = np.exp(-np.square(pred_m - 0) / (2 * target_s))
     p2 = np.exp(-np.square(pred_m - 1) / (2 * target_s))
     p_all = p0 + p1 + p2
 
-    print(target_max, pred_max)
     # calculate accuracy = 1 - error
     target_id = np.argmax([np.array(t0), np.array(t1), np.array(t2)], axis=0)
     target_n = np.zeros_like(t0)
