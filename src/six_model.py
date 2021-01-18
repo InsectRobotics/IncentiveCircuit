@@ -11,7 +11,7 @@ if __name__ == '__main__':
     trials_a = 5  # number of acquisition trials
     trials_t = 1  # number of rest trials
     trials_r = 2  # number of reversal trials
-    trials_e = 6  # number of extinction trials
+    trials_e = 6  # number of no shock trials
 
     eta = .3
     apl = False
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     kc_t, us_t, fl_t = [[1, 0]] * trials_t, [0] * trials_t, ["t"] * trials_t
     # reversal
     kc_r, us_r, fl_r = [[0, 1], [1, 0]] * trials_r, [0, 1] * trials_r, ["r", "r"] * trials_r
-    # extinction
+    # no shock
     kc_e, us_e, fl_e = [[1, 0], [0, 1]] * trials_e, [0, 0] * trials_e, ["e", "e"] * trials_e
 
     paradigms = {
@@ -33,7 +33,7 @@ if __name__ == '__main__':
             "US": np.array(us_p + us_a + us_t + us_r, dtype=float),
             "flag": np.array(fl_p + fl_a + fl_t + fl_r)
         },
-        "MCH-extinction": {
+        "MCH-no-shock": {
             "CS": np.array(kc_p + kc_a + kc_e, dtype=float),
             "US": np.array(us_p + us_a + us_e, dtype=float),
             "flag": np.array(fl_p + fl_a + fl_e)
@@ -43,7 +43,7 @@ if __name__ == '__main__':
             "US": np.array(us_p + us_a + us_t + us_r, dtype=float),
             "flag": np.array(fl_p + fl_a + fl_t + fl_r)
         },
-        "OCT-extinction": {
+        "OCT-no-shock": {
             "CS": 1 - np.array(kc_p + kc_a + kc_e, dtype=float),
             "US": np.array(us_p + us_a + us_e, dtype=float),
             "flag": np.array(fl_p + fl_a + fl_e)

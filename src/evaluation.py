@@ -6,7 +6,7 @@ import numpy as np
 
 cases = ["acquisition (B)", "acquisition (A)",
          "reversal (B)", "reversal (A)",
-         "extinction (B)", "extinction (A)"]
+         "no shock (B)", "no shock (A)"]
 behaviour = pd.DataFrame({
     # [A-, B+, A+, B-, A-, B-]
     "MBON-γ1ped": [-1., +0., +0., -1., +0., +0.],
@@ -19,7 +19,7 @@ behaviour = pd.DataFrame({
 _behaviour_map = {}
 
 
-def evaluate(mb_model, experiment="B+", nids=None, reversal=True, extinction=True, liyans_frames=False,
+def evaluate(mb_model, experiment="B+", nids=None, reversal=True, unpaired=True, no_shock=True, liyans_frames=False,
              cs_only=True, us_only=False, behav_mean=behaviour, behav_std=None, integration=np.nanmean):
     pred = {}
     models = []
@@ -58,11 +58,11 @@ def evaluate(mb_model, experiment="B+", nids=None, reversal=True, extinction=Tru
                 pred[neuron][case], _ = _get_trend(trs, cs_only=cs_only, us_only=us_only, integration=integration,
                                                    liyans_frames=liyans_frames)
 
-    if extinction:
-        ext_model = mb_model.copy()
-        models.append(ext_model)
-        ext_model(extinction=extinction)
-        ext = ext_model.as_dataframe(nids=nids)[experiment]
+    if unpaired:
+        unp_model = mb_model.copy()
+        models.append(unp_model)
+        unp_model(unpaired=unpaired)
+        unp = unp_model.as_dataframe(nids=nids, reconstruct=False)[experiment]
         for neuron in behav_mean:
             if not reversal:
                 pred[neuron] = {}
@@ -74,20 +74,52 @@ def evaluate(mb_model, experiment="B+", nids=None, reversal=True, extinction=Tru
                 elif case == "acquisition (B)" and not reversal:
                     trials.extend([1, 2, 3, 4, 5, 6])
                     odour = "B"
-                elif case == "extinction (A)":
+                elif case == "unpaired (A)":
                     trials.extend([7, 8, 9, 10, 11, 12, 13])
                     odour = "A"
-                elif case == "extinction (B)":
+                elif case == "unpaired (B)":
                     trials.extend([6, 7, 8, 9, 10, 11, 12])
                     odour = "B"
                 else:
                     continue
                 for tr in trials[::-1]:
-                    if tr * 100 >= ext[neuron].shape[0]:
+                    if tr * 100 >= unp[neuron].shape[0]:
                         trials.remove(tr)
                 trs = []
                 for trial in trials:
-                    trs.append(_get_trial(ext[neuron], trial, odour=odour))
+                    trs.append(_get_trial(unp[neuron], trial, odour=odour))
+                pred[neuron][case], _ = _get_trend(trs, cs_only=cs_only, us_only=us_only, integration=integration)
+
+    if no_shock:
+        nsk_model = mb_model.copy()
+        models.append(nsk_model)
+        nsk_model(no_shock=no_shock)
+        nsk = nsk_model.as_dataframe(nids=nids, reconstruct=False)[experiment]
+        for neuron in behav_mean:
+            if not reversal:
+                pred[neuron] = {}
+            for case in cases:
+                trials = []
+                if case == "acquisition (A)" and not (reversal or unpaired):
+                    trials.extend([1, 2, 3, 4, 5, 6])
+                    odour = "A"
+                elif case == "acquisition (B)" and not (reversal or unpaired):
+                    trials.extend([1, 2, 3, 4, 5, 6])
+                    odour = "B"
+                elif case == "no shock (A)":
+                    trials.extend([7, 8, 9, 10, 11, 12, 13])
+                    odour = "A"
+                elif case == "no shock (B)":
+                    trials.extend([6, 7, 8, 9, 10, 11, 12])
+                    odour = "B"
+                else:
+                    continue
+                for tr in trials[::-1]:
+                    if tr * 100 >= nsk[neuron].shape[0]:
+                        trials.remove(tr)
+                trs = []
+                for trial in trials:
+                    trs.append(_get_trial(nsk[neuron], trial, odour=odour))
                 pred[neuron][case], _ = _get_trend(trs, cs_only=cs_only, us_only=us_only, integration=integration)
 
     pred = pd.DataFrame(pred)
@@ -138,8 +170,6 @@ def evaluate(mb_model, experiment="B+", nids=None, reversal=True, extinction=Tru
     pred_n[target_id == 1] = np.array(p1 / p_all)[target_id == 1]
     pred_n[target_id == 2] = np.array(p2 / p_all)[target_id == 2]
     pred_n = pd.DataFrame(pred_n, columns=p0.columns, index=p0.index)
-    print(target_n.T)
-    print(pred_n.T)
 
     error = p_all.copy()
     error[:] = np.absolute(target_n - pred_n)
@@ -319,5 +349,5 @@ if __name__ == '__main__':
     print(bm.T)
     df = load_draft_data()
     plot_overlap(df, "B+", score=bm, individuals=False)
-    # plot_overlap(df, "B-", phase2="extinction", score=bm, individuals=False)
+    # plot_overlap(df, "B-", phase2="no shock", score=bm, individuals=False)
     # plot_overlap(df, "B+", score=behaviour, zeros=True)

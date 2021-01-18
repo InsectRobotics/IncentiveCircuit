@@ -39,8 +39,8 @@ synapse_counts = {
 
 
 class MBModel(object):
-    def __init__(self, nb_kc=2, nb_mbon=3, nb_dan=3, learning_rule="default", pn2kc_init="default", nb_apl=0, trials=17, timesteps=1,
-                 nb_kc_odour_1=1, nb_kc_odour_2=1, eta=1., leak=.8, verbose=False):
+    def __init__(self, nb_kc=2, nb_mbon=3, nb_dan=3, learning_rule="default", pn2kc_init="default", nb_apl=0, trials=17,
+                 timesteps=3, nb_kc_odour_1=1, nb_kc_odour_2=1, eta=1., leak=.8, verbose=False):
         self.eta_w = eta
         self.eta_v = eta
         self.b_init = 1.
@@ -62,7 +62,7 @@ class MBModel(object):
         ])
         nb_pn, nb_kc = self.w_p2k.shape
         if pn2kc_init in ["default"]:
-            self.w_p2k *= nb_pn / np.array([[nb_kc_odour_1], [nb_kc_odour_2]], dtype=self.w_p2k.dtype)
+            self.w_p2k *= 1. / np.array([[nb_kc_odour_1], [nb_kc_odour_2]], dtype=self.w_p2k.dtype)
         elif pn2kc_init in ["simple"]:
             self.w_p2k *= nb_pn / nb_kc
         elif pn2kc_init in ["sqrt_pn", "pn_sqrt"]:
@@ -174,8 +174,10 @@ class MBModel(object):
         return leaky_relu(v, alpha=self.__leak, v_max=v_max, v_min=v_min)
 
     def __call__(self, *args, **kwargs):
-        if kwargs.get('extinction', False):
-            routine = self.__extinction_routine()
+        if kwargs.get('no_shock', False):
+            routine = self.__no_shock_routine()
+        elif kwargs.get('unpaired', False):
+            routine = self.__unpaired_routine()
         elif kwargs.get('reversal', True):
             routine = self.__reversal_routine()
         else:
@@ -191,8 +193,8 @@ class MBModel(object):
             # feed forward responses: PN(CS) -> KC
             k = cs @ self.w_p2k
 
+            eta = float(1) / float(repeat)
             for r in range(repeat):
-                eta = float(1) / float(repeat)
 
                 # feed forward responses: KC -> MBON, US -> DAN
                 mb = k @ w_k2m_pre + us @ self.w_u2d + self.v_init
@@ -204,7 +206,7 @@ class MBModel(object):
                 w_k2m_post = self.update_weights(k, v_post, w_k2m_pre)
 
                 # update dynamic memory for repeating loop
-                v_pre += eta * (v_post - v_pre)
+                v_pre = eta * (v_post - v_pre)
                 w_k2m_pre += eta * (w_k2m_post - w_k2m_pre)
 
             # store values and weights in history
@@ -220,18 +222,26 @@ class MBModel(object):
         self.__routine_name = "reversal"
         return self.__routine(odour=self.__cs_on, shock=self.__us_on)
 
-    def __extinction_routine(self):
+    def __unpaired_routine(self):
+        self.__cs_on = np.arange(self.nb_trials * 2)
+        self.__us_on = np.array([3, 5, 7, 9, 11, 14, 16, 18, 20, 22, 24])
+        self.__routine_name = "unpaired"
+        return self.__routine(odour=self.__cs_on, shock=self.__us_on, paired=[2, 3, 4, 5, 6])
+
+    def __no_shock_routine(self):
         self.__cs_on = np.arange(self.nb_trials * 2)
         self.__us_on = np.array([3, 5, 7, 9, 11])
-        self.__routine_name = "extinction"
+        self.__routine_name = "no shock"
         return self.__routine(odour=self.__cs_on, shock=self.__us_on)
 
-    def __routine(self, odour=None, shock=None):
+    def __routine(self, odour=None, shock=None, paired=None):
         self._t = 0
         if odour is None:
             odour = np.arange(self.nb_trials * 2)
         if shock is None:
             shock = np.arange(self.nb_trials * 2)
+        if paired is None:
+            paired = np.arange(self.nb_trials * 2)
 
         for trial in range(1, self.nb_trials // 2 + 2):
             for cs_ in [self.csa, self.csb]:
@@ -241,18 +251,23 @@ class MBModel(object):
                 trial_ = self._t // self.nb_timesteps
 
                 # odour is presented only in specific trials
-                cs = cs_ * float(trial_ in odour)
+                cs__ = cs_ * float(trial_ in odour)
 
                 # shock is presented only in specific trials
                 us__ = np.zeros(self.us_dims, dtype=float)
                 us__[4] = float(trial_ in shock)
-                print(us__)
+                # print(us__)
 
                 for timestep in range(self.nb_timesteps):
 
-                    # shock is presented only after the 4th sec of the trial
-                    us = us__ * float(4 <= 5 * (timestep + 1) / self.nb_timesteps)
-
+                    # we skip odour in the first timestep of the trial
+                    cs = cs__ * float(timestep > 0)
+                    if trial in paired:
+                        # shock is presented only after the 4th sec of the trial
+                        us = us__ * float(4 <= 5 * (timestep + 1) / self.nb_timesteps)
+                    else:
+                        us = us__ * float(timestep < 1)
+                    # print(self.__routine_name, trial, timestep, cs, us)
                     if self.__verbose:
                         print("Trial: %d / %d, %s" % (trial_ + 1, self.nb_trials, ["CS-", "CS+"][self._t % 2]))
                     yield trial, timestep, cs, us
@@ -260,58 +275,30 @@ class MBModel(object):
                     self._t += 1
 
     def update_weights(self, kc, v, w_k2m):
-        eta_w = np.sqrt(self.eta_w / float(self.nb_timesteps))
+        eta_w = self.eta_w / float(self.nb_timesteps - 1)
+        # eta_w = np.sqrt(self.eta_w / float(self.nb_timesteps))
 
-        gat = kc[..., np.newaxis]
+        k = kc[..., np.newaxis]
 
         if self.nb_apl > 0:
-            v_apl = self._v_apl[self._t + 1] = gat[..., 0] @ self.w_k2a
-            gat += (v_apl @ self.w_a2k)[..., np.newaxis]
+            v_apl = self._v_apl[self._t + 1] = k[..., 0] @ self.w_k2a
+            k += (v_apl @ self.w_a2k)[..., np.newaxis]
         else:
-            gat = np.maximum(gat, 0)  # do not learn negative values
+            k = np.maximum(k, 0)  # do not learn negative values
 
-        dop = np.maximum(v, 0).dot(self.w_d2k)
+        D = np.maximum(v, 0).dot(self.w_d2k)
 
-        if self.__learning_rule in ["hybrid"]:
-            # When DAN > 0 and KC > 0 : w <-- w_rest-
-            # When DAN = 0 and KC > 0 : w <-- w_rest
-            # When DAN > 0 and KC = 0 : w <-- w_rest+
-            # When DAN = 0 and KC = 0 : w <-- w
-            k = gat
-            d = -dop
-            b = self.k2m_init
-            # print(k.shape, d.shape, b.shape)
-
-            w_new = (k * (b - d) +
-                     (1 - k) * d * (b + d) +
-                     (1 - k) * (1 - d) * w_k2m)
-        elif self.__learning_rule in ["hybrid-2"]:
-            # When DAN > 0 and KC > 0 : w <-- w_rest-
-            # When DAN = 0 and KC > 0 : w <-- w_rest
-            # When DAN > 0 and KC = 0 : w <-- w_rest
-            # When DAN = 0 and KC = 0 : w <-- w
-            k = gat
-            d = -dop
-            b = self.k2m_init
-            # print(k.shape, d.shape, b.shape)
-
-            w_new = (k * (b - d) +
-                     (1 - k) * d * b +
-                     (1 - k) * (1 - d) * w_k2m)
-        elif self.__learning_rule in ["hybrid-3"]:
-            w_new = w_k2m + eta_w * dop * (gat + dop + w_k2m - self.k2m_init)
-        elif self.__learning_rule in ["hybrid-4"]:
-            w_new = w_k2m + eta_w * (dop * gat + (dop - gat) * (w_k2m - self.k2m_init))
-        elif self.__learning_rule in ["dan-based"]:
+        if self.__learning_rule in ["dan-based", "default"]:
             # When DAN > 0 and KC > W - W_rest increase the weight (if DAN < 0 it is reversed)
             # When DAN > 0 and KC < W - W_rest decrease the weight (if DAN < 0 it is reversed)
             # When DAN = 0 no learning happens
-            w_new = w_k2m + eta_w * dop * (gat + w_k2m - self.k2m_init)
-        elif self.__learning_rule in ["kc-based", "default"]:
+            w_state = self.k2m_init - w_k2m
+            w_new = w_k2m + eta_w * D * (k - w_state)
+        elif self.__learning_rule in ["kc-based"]:
             # When KC > 0 and DAN > W - W_rest increase the weight (if KC < 0 it is reversed)
             # When KC > 0 and DAN < W - W_rest decrease the weight (if KC < 0 it is reversed)
             # When KC = 0 no learning happens
-            w_new = w_k2m + eta_w * gat * (dop - w_k2m + self.k2m_init)
+            w_new = w_k2m + eta_w * k * (D - w_k2m + self.k2m_init)
         else:
             w_new = w_k2m
 
@@ -335,57 +322,9 @@ class MBModel(object):
         return copy(self)
 
     def __copy__(self):
-        m = MBModel()
-        m.eta_w = copy(self.eta_w)
-        m.eta_v = copy(self.eta_v)
-        m.b_init = copy(self.b_init)
-        m.vd_init = copy(self.vd_init)
-        m.vm_init = copy(self.vm_init)
-        m.nb_trials = copy(self.nb_trials)
-        m.nb_timesteps = copy(self.nb_timesteps)
-        m.__leak = copy(self.__leak)
-
-        m._t = copy(self._t)
-        m.__routine_name = copy(self.__routine_name)
-        m.__learning_rule = copy(self.__learning_rule)
-        m.__verbose = copy(self.__verbose)
-        m.nb_pn = self.nb_pn
-        m.nb_kc = self.nb_kc
-        m.nb_mbon = self.nb_mbon
-        m.nb_dan = self.nb_dan
-
-        m.w_p2k = copy(self.w_p2k)
-
-        m._v = copy(self._v)
-        m.w_diff = copy(self.w_diff)
-        m.v_init = copy(self.v_init)
-
-        m.v_max = copy(self.v_max)
-        m.v_min = copy(self.v_min)
-        m.w_max = copy(self.w_max)
-        m.w_min = copy(self.w_min)
-
-        m.w_k2m = copy(self.w_k2m)
-        m.w_u2d = copy(self.w_u2d)
-        m.k2m_init = copy(self.k2m_init)
-        m.b_k2m = copy(self.b_k2m)
-
-        m._w_m2v = copy(self._w_m2v)
-        m._w_d2k = copy(self._w_d2k)
-
-        m._v_apl = copy(self._v_apl)
-        m.nb_apl = copy(self.nb_apl)
-        m.w_a2k = copy(self.w_a2k)
-        m.w_a2d = copy(self.w_a2d)
-        m.w_k2a = copy(self.w_k2a)
-        m.w_d2a = copy(self.w_d2a)
-
-        m.csa = copy(self.csa)
-        m.csb = copy(self.csb)
-        m.__shock_on = copy(self.__shock_on)
-        m.__cs_on = copy(self.__cs_on)
-
-        m.names = copy(self.names)
+        m = self.__class__()
+        for att in self.__dict__:
+            m.__dict__[att] = copy(self.__dict__[att])
 
         return m
 
@@ -473,17 +412,17 @@ class MBModel(object):
             if show_trace:
                 if "reversal" in ndata and "v" in ndata["reversal"]:
                     vs += ndata["reversal"]["v"]
-                if "extinction" in ndata and "v" in ndata["extinction"]:
-                    vs += ndata["extinction"]["v"]
+                if "no shock" in ndata and "v" in ndata["no shock"]:
+                    vs += ndata["no shock"]["v"]
             else:
                 if "reversal" in ndata and "v_cs" in ndata["reversal"]:
                     vs += ndata["reversal"]["v_cs"]
                 if "reversal" in ndata and "v_cs" in ndata["reversal"]:
                     vs += ndata["reversal"]["v_us"]
-                if "extinction" in ndata and "v_cs" in ndata["extinction"]:
-                    vs += ndata["extinction"]["v_cs"]
-                if "extinction" in ndata and "v_us" in ndata["extinction"]:
-                    vs += ndata["extinction"]["v_us"]
+                if "no shock" in ndata and "v_cs" in ndata["no shock"]:
+                    vs += ndata["no shock"]["v_cs"]
+                if "no shock" in ndata and "v_us" in ndata["no shock"]:
+                    vs += ndata["no shock"]["v_us"]
             # transform the lists of data with uneven lengths into an even NumPy array filled with NaNs
             vs = _list2array(vs)
             if nb_trials is None:
@@ -498,8 +437,8 @@ class MBModel(object):
             ws = []  # Read the weights in the data depending on the available phases
             if "reversal" in ndata and "w" in ndata["reversal"]:
                 ws += ndata["reversal"]["w"]
-            if "extinction" in ndata and "w" in ndata["extinction"]:
-                ws += ndata["extinction"]["w"]
+            if "no shock" in ndata and "w" in ndata["no shock"]:
+                ws += ndata["no shock"]["w"]
             ws = _list2array(ws)
             if len(ws) > 0:
                 # compute the minimum and maximum weights in the data
@@ -532,7 +471,7 @@ class MBModel(object):
         us_mark = "--"
         w_mark = ":"
         for j, name in enumerate(data):
-            smark = "-." if "extinction" in data[name] else "-"
+            smark = "-." if "no shock" in data[name] else "-"
             plt.subplot(231 + j)
             plt.plot(xlim, [0, 0], c=(.8, .8, .8), lw=2)
             plt.fill_between(x_cs_[0::2].flatten(), np.full_like(y_cs_[0::2].flatten(), ylim[0]),
@@ -820,7 +759,7 @@ if __name__ == '__main__':
                             timesteps=2, trials=28, nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2)
             vals[kc1, kc2], acc, prediction, models = evaluate(model, tolerance=.02, percentage=True, behav_mean=target,
                                                                cs_only=True, mbon_only=False,
-                                                               reversal=True, extinction=True)
+                                                               reversal=True, no_shock=True)
             val = vals[kc1, kc2]
             if val > val_best:
                 val_best = val

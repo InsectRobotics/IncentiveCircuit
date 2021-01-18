@@ -178,7 +178,7 @@ if __name__ == '__main__':
                             timesteps=2, trials=28, nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2)
 
     val, acc, prediction, models = evaluate(model, nids=neurons, behav_mean=target, behav_std=target_s,
-                                            cs_only=True, reversal=True, extinction=True, liyans_frames=False)
+                                            cs_only=True, reversal=True, no_shock=True, liyans_frames=False)
 
     print("TARGET")
     print(target.T)

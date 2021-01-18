@@ -299,7 +299,7 @@ def plot_overlap(data, experiment="B+", phase2="reversal", title=None, score=Non
     sort_titles = {
         "acquisition": "Aq",
         "reversal": "Re",
-        "extinction": "Ex"
+        "no shock": "Ex"
     }
     if not isinstance(data, list):
         data = [data]
@@ -347,7 +347,7 @@ def plot_overlap(data, experiment="B+", phase2="reversal", title=None, score=Non
 
     acq = "acquisition" if nb_cols < 5 else sort_titles["acquisition"]
     rev = "reversal" if nb_cols < 5 else sort_titles["reversal"]
-    ext = "extinction" if nb_cols < 5 else sort_titles["extinction"]
+    nsk = "no shock" if nb_cols < 5 else sort_titles["no shock"]
 
     for genotype in genotypes:
         for k, dat_ in enumerate(data):
@@ -408,10 +408,174 @@ def plot_overlap(data, experiment="B+", phase2="reversal", title=None, score=Non
     plt.show()
 
 
+def plot_individuals(data, experiment="B+", nids=None, only_nids=True, maxy=30):
+    import matplotlib.pyplot as plt
+
+    title = "individuals-from-data"
+
+    data_exp = data[experiment]
+    genotypes = np.sort(data_exp.index)
+    odour_a_xs = np.array([np.arange(28, 43) + i * 200 for i in range(9)])
+    shock_a_xs = np.array([np.arange(44, 49) + i * 200 for i in range(9)])
+    odour_b_xs = np.array([np.arange(28, 43) + i * 200 + 100 for i in range(8)])
+    shock_b_xs = np.array([np.arange(44, 49) + i * 200 + 100 for i in range(8)])
+    xs = np.arange(14)
+
+    if nids is None:
+        nids = np.arange(len(genotypes))
+    if only_nids:
+        genotypes = genotypes[nids]
+
+    ymin, ymax = 0, 2
+    y_lim = [-0.1, 2.1]
+
+
+    nb_genotypes = len(genotypes)
+    nb_plots = nb_genotypes * 2
+    subs = []
+
+    nb_rows = 2
+    nb_cols = nb_plots // nb_rows
+    while nb_cols > 12:
+        nb_rows += 2
+        nb_cols = nb_plots // nb_rows + 1
+
+    plt.figure(title, figsize=(8, nb_rows))
+    for j, genotype in enumerate(genotypes):
+
+        odour_a_mean = np.nanmean(np.array(data_exp[genotype])[odour_a_xs], axis=(1, 2))
+        odour_a_std = np.nanstd(np.array(data_exp[genotype])[odour_a_xs], axis=(1, 2)) / 2
+        shock_a_mean = np.nanmean(np.array(data_exp[genotype])[shock_a_xs], axis=(1, 2))
+        shock_a_std = np.nanstd(np.array(data_exp[genotype])[shock_a_xs], axis=(1, 2)) / 2
+
+        odour_b_mean = np.nanmean(np.array(data_exp[genotype])[odour_b_xs], axis=(1, 2))
+        odour_b_std = np.nanstd(np.array(data_exp[genotype])[odour_b_xs], axis=(1, 2)) / 2
+        shock_b_mean = np.nanmean(np.array(data_exp[genotype])[shock_b_xs], axis=(1, 2))
+        shock_b_std = np.nanstd(np.array(data_exp[genotype])[shock_b_xs], axis=(1, 2)) / 2
+
+        data_a_mean = np.array([odour_a_mean, shock_a_mean]).T.reshape((-1,))
+        data_a_std = np.array([odour_a_std, shock_a_std]).T.reshape((-1,))
+        data_b_mean = np.array([odour_b_mean, shock_b_mean]).T.reshape((-1,))
+        data_b_std = np.array([odour_b_std, shock_b_std]).T.reshape((-1,))
+
+        z = np.maximum(np.max(data_a_mean + data_a_std), np.max(data_b_mean + data_b_std)) / 2
+
+        data_a_mean /= z
+        data_a_std /= z
+        colour = np.array([.5 * 205, .5 * 222, 238]) / 255.
+
+        if len(subs) <= j:
+            axa = plt.subplot(nb_rows, nb_cols, j+1)
+            axa.set_xticks(2 * np.arange(5) + 2)
+            axa.set_yticks([0, ymax/2, ymax])
+            axa.set_ylim(y_lim)
+            axa.set_xlim([0, 12])
+            axa.tick_params(labelsize=8)
+            axa.set_xticklabels("%s" % (i + 1) for i in range(5))
+            if nb_rows > 2:
+                axa.set_title(r"$%s$" % genotype, fontsize=8)
+            else:
+                axa.set_title(r"$%s$" % genotype, fontsize=8)
+            if j % nb_cols == 0:
+                axa.set_ylabel("Odour A", fontsize=8)
+            else:
+                axa.set_yticklabels([""] * 3)
+            # if j // nb_cols < nb_rows - 1:
+            #     axa.set_xticklabels([""] * 5)
+            # elif j % nb_cols == 0:
+            if j % nb_cols == 0:
+                axa.text(-8, -.65, "Trial #", fontsize=8)
+            axa.spines['top'].set_visible(False)
+            axa.spines['right'].set_visible(False)
+
+            acolour = np.array([205, 222, 238]) / 255.
+
+            axa.fill_between(xs, data_a_mean[:14] - data_a_std[:14], data_a_mean[:14] + data_a_std[:14],
+                             color=acolour, alpha=0.2)
+            axa.plot(xs, data_a_mean[:14], color=acolour, lw=2, label="acquisition")
+            subs.append(axa)
+        subs[-1].fill_between(xs[:6], data_a_mean[12:] - data_a_std[12:], data_a_mean[12:] + data_a_std[12:],
+                              color=colour, alpha=0.2)
+        subs[-1].plot(xs[:6], data_a_mean[12:], color=colour, lw=2, label="reversal")
+        subs[-1].plot([3, 5], data_a_mean[[15, 17]], 'r.')
+
+    for j, genotype in enumerate(genotypes):
+
+        odour_a_mean = np.nanmean(np.array(data_exp[genotype])[odour_a_xs], axis=(1, 2))
+        odour_a_std = np.nanstd(np.array(data_exp[genotype])[odour_a_xs], axis=(1, 2)) / 2
+        shock_a_mean = np.nanmean(np.array(data_exp[genotype])[shock_a_xs], axis=(1, 2))
+        shock_a_std = np.nanstd(np.array(data_exp[genotype])[shock_a_xs], axis=(1, 2)) / 2
+
+        odour_b_mean = np.nanmean(np.array(data_exp[genotype])[odour_b_xs], axis=(1, 2))
+        odour_b_std = np.nanstd(np.array(data_exp[genotype])[odour_b_xs], axis=(1, 2)) / 2
+        shock_b_mean = np.nanmean(np.array(data_exp[genotype])[shock_b_xs], axis=(1, 2))
+        shock_b_std = np.nanstd(np.array(data_exp[genotype])[shock_b_xs], axis=(1, 2)) / 2
+
+        data_a_mean = np.array([odour_a_mean, shock_a_mean]).T.reshape((-1,))
+        data_a_std = np.array([odour_a_std, shock_a_std]).T.reshape((-1,))
+        data_b_mean = np.array([odour_b_mean, shock_b_mean]).T.reshape((-1,))
+        data_b_std = np.array([odour_b_std, shock_b_std]).T.reshape((-1,))
+
+        z = np.maximum(np.max(data_a_mean + data_a_std), np.max(data_b_mean + data_b_std)) / 2
+
+        data_b_mean /= z
+        data_b_std /= z
+        colour = np.array([255, .5 * 197, .5 * 200]) / 255.
+
+        jn = j + (nb_rows * nb_cols) // 2
+
+        if len(subs) <= jn:
+            axb = plt.subplot(nb_rows, nb_cols, jn+1)
+            axb.set_xticks(2 * np.arange(5) + 2)
+            axb.set_yticks([0, ymax/2, ymax])
+            axb.set_ylim(y_lim)
+            axb.set_xlim([0, 12])
+            axb.tick_params(labelsize=8)
+            axb.set_xticklabels("%s" % (i + 1) for i in range(5))
+            if nb_rows > 2:
+                axb.set_title(r"$%s$" % genotype, fontsize=8)
+            if jn % nb_cols == 0:
+                axb.set_ylabel("Odour B", fontsize=8)
+            else:
+                axb.set_yticklabels([""] * 3)
+            # if jn // nb_cols < nb_rows - 1:
+            #     axb.set_xticklabels([""] * 5)
+            # elif jn % nb_cols == 0:
+            if jn % nb_cols == 0:
+                axb.text(-8, -.65, "Trial #", fontsize=8)
+            axb.spines['top'].set_visible(False)
+            axb.spines['right'].set_visible(False)
+
+            acolour = np.array([255, 197, 200]) / 255.
+
+            axb.fill_between(xs, data_b_mean[:14] - data_b_std[:14], data_b_mean[:14] + data_b_std[:14],
+                             color=acolour, alpha=0.2)
+            axb.plot(xs, data_b_mean[:14], color=acolour, lw=2, label="acquisition")
+            axb.plot([3, 5, 7, 9, 11], data_b_mean[[3, 5, 7, 9, 11]], 'r.')
+
+            subs.append(axb)
+        subs[-1].fill_between(xs[:6], data_b_mean[10:] - data_b_std[10:], data_b_mean[10:] + data_b_std[10:],
+                              color=colour, alpha=0.2)
+        subs[-1].plot(xs[:6], data_b_mean[10:], color=colour, lw=2, label="reversal")
+
+    subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left',
+                                  framealpha=0., labelspacing=1.)
+    subs[-1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left', framealpha=0., labelspacing=1)
+
+    # subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.), loc='upper left',
+    #                               framealpha=0., labelspacing=1.)
+    # subs[-1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.), loc='upper left', framealpha=0., labelspacing=1)
+    plt.tight_layout()
+    plt.show()
+
+
 if __name__ == '__main__':
     # df = load_draft_data()
     df = load_data("B+")
     # plot_traces(df, "A+", diff="A-")
-    plot_traces(df, "B+")
+    # plot_traces(df, "B+")
+    neurons = [33, 39, 13, 16, 21, 42, 14, 17, 37, 18, 5, 8]
+    plot_individuals(df, "B+", nids=neurons)
+    # plot_individuals(df, "B+")
     # print(df)
     # plot_overlap(df, "B+")
