@@ -474,6 +474,7 @@ def plot_individuals(data, experiment="B+", nids=None, only_nids=True, maxy=30):
             axa.set_xticklabels("%s" % (i + 1) for i in range(5))
             if nb_rows > 2:
                 axa.set_title(r"$%s$" % genotype, fontsize=8)
+                # axa.text(.5, 1.8, r"$%s$" % genotype, fontsize=8)
             else:
                 axa.set_title(r"$%s$" % genotype, fontsize=8)
             if j % nb_cols == 0:
@@ -484,7 +485,7 @@ def plot_individuals(data, experiment="B+", nids=None, only_nids=True, maxy=30):
             #     axa.set_xticklabels([""] * 5)
             # elif j % nb_cols == 0:
             if j % nb_cols == 0:
-                axa.text(-8, -.65, "Trial #", fontsize=8)
+                axa.text(-8, -.6e5, "Trial #", fontsize=8)
             axa.spines['top'].set_visible(False)
             axa.spines['right'].set_visible(False)
 
@@ -534,6 +535,7 @@ def plot_individuals(data, experiment="B+", nids=None, only_nids=True, maxy=30):
             axb.set_xticklabels("%s" % (i + 1) for i in range(5))
             if nb_rows > 2:
                 axb.set_title(r"$%s$" % genotype, fontsize=8)
+                # axb.text(.5, 1.8, r"$%s$" % genotype, fontsize=8)
             if jn % nb_cols == 0:
                 axb.set_ylabel("Odour B", fontsize=8)
             else:
@@ -574,7 +576,7 @@ if __name__ == '__main__':
     df = load_data("B+")
     # plot_traces(df, "A+", diff="A-")
     # plot_traces(df, "B+")
-    neurons = [33, 39, 13, 16, 21, 42, 14, 17, 37, 18, 5, 8]
+    neurons = [33, 39, 13, 16, 21, 42, 14, 17, 35, 37, 8, 2]
     plot_individuals(df, "B+", nids=neurons)
     # plot_individuals(df, "B+")
     # print(df)

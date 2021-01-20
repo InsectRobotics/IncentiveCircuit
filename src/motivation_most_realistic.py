@@ -387,6 +387,80 @@ def plot_individuals(ms, nids=None, only_nids=True):
     plt.show()
 
 
+def plot_weights(ms, nids=None, vmin=-2., vmax=2., only_nids=False):
+    title = "weights-" + '-'.join(str(ms[0]).split("'")[1:-1:2])
+
+    nb_models = len(ms)
+    xticks = ["%d" % (i+1) for i in range(16)]
+
+    plt.figure(title, figsize=(7.5, 5))
+
+    for i in range(nb_models):
+        nb_timesteps = ms[i].nb_timesteps
+        nb_trials = ms[i].nb_trials
+
+        yticks = np.array(ms[i].names)
+        if nids is None:
+            if ms[i].neuron_ids is None:
+                nids = np.arange(ms[i].nb_dan + ms[i].nb_mbon)[::8]
+            else:
+                nids = ms[i].neuron_ids
+        ylim = (len(nids) if only_nids else (ms[i].nb_dan + ms[i].nb_mbon)) - 1
+
+        w = ms[i].w_k2m
+
+        wa_acq = w[1:6*2*nb_timesteps+nb_timesteps, 0]
+        wb_acq = w[1:6*2*nb_timesteps+nb_timesteps, 5]
+        wa_for = w[1+5*2*nb_timesteps+nb_timesteps:12*2*nb_timesteps, 0]
+        wb_for = w[1+6*2*nb_timesteps+nb_timesteps:13*2*nb_timesteps, 5]
+        if only_nids:
+            wa_acq = wa_acq[:, nids]
+            wb_acq = wb_acq[:, nids]
+            wa_for = wa_for[:, nids]
+            wb_for = wb_for[:, nids]
+
+        if i < 1:
+            ax = plt.subplot(2, nb_models + 1, 1)
+            plt.imshow(wa_acq.T, vmin=vmin, vmax=vmax, cmap="coolwarm", aspect="auto")
+            plt.xticks(2 * nb_timesteps * (np.arange(5) + 1), xticks[:5])
+            plt.yticks(np.arange(len(nids)) if only_nids else nids, [r'$%s$' % tick for tick in yticks[nids]])
+            ax.yaxis.set_ticks_position('both')
+            ax.set_ylabel("Odour A")
+            plt.title("acquisition", color=np.array([205, 222, 238]) / 255.)
+
+            ax = plt.subplot(2, nb_models + 1, 2 + nb_models)
+            plt.imshow(wb_acq.T, vmin=vmin, vmax=vmax, cmap="coolwarm", aspect="auto")
+            plt.plot([np.array([2, 3, 4, 5, 6]) * 2 * nb_timesteps - 1] * 2, [[0] * 5, [ylim] * 5], 'r-')
+            plt.xticks(2 * nb_timesteps * (np.arange(5) + 1), xticks[:5])
+            plt.yticks(np.arange(len(nids)) if only_nids else nids, [r'$%s$' % tick for tick in yticks[nids]])
+            ax.yaxis.set_ticks_position('both')
+            ax.set_ylabel("Odour B")
+            plt.title("acquisition", color=np.array([255, 197, 200]) / 255.)
+
+        s = (i + 1) / (nb_models + 1)
+        ax = plt.subplot(2, nb_models + 1, nb_models + 1 - i)
+        plt.imshow(wa_for.T, vmin=vmin, vmax=vmax, cmap="coolwarm", aspect="auto")
+        if "reversal" in ms[i].routine_name:
+            plt.plot([np.array([2, 3, 4, 5, 6]) * 2 * nb_timesteps - 1] * 2, [[0] * 5, [ylim] * 5], 'r-')
+        elif "unpaired" in ms[i].routine_name:
+            plt.plot([(np.array([2, 3, 4, 5, 6]) - 1) * 2 * nb_timesteps + 1] * 2, [[0] * 5, [ylim] * 5], 'r-')
+        plt.xticks(2 * nb_timesteps * (np.arange(5) + 1), xticks[:5])
+        plt.yticks(np.arange(len(nids)) if only_nids else nids, ['' for tick in yticks[nids]])
+        ax.yaxis.set_ticks_position('both')
+        plt.title(ms[i].routine_name, color=np.array([s * 205, s * 222, 238]) / 255.)
+
+        ax = plt.subplot(2, nb_models + 1, 2 + 2 * nb_models - i)
+        plt.imshow(wb_for.T, vmin=vmin, vmax=vmax, cmap="coolwarm", aspect="auto")
+        plt.xticks(2 * nb_timesteps * (np.arange(5) + 1), xticks[:5])
+        plt.yticks(np.arange(len(nids)) if only_nids else nids, ['' for tick in yticks[nids]])
+        ax.yaxis.set_ticks_position('both')
+        plt.title(ms[i].routine_name, color=np.array([255, s * 197, s * 200]) / 255.)
+
+    # plt.colorbar()
+    plt.tight_layout()
+    plt.show()
+
+
 if __name__ == '__main__':
     from evaluation import evaluate, generate_behaviour_map
     target, target_s = generate_behaviour_map(cs_only=True)
@@ -402,7 +476,7 @@ if __name__ == '__main__':
     nb_kcs = 10
     kc1, kc2 = nb_kcs // 2, nb_kcs // 2
 
-    model = MotivationModel(learning_rule="dan-based", nb_apl=0, pn2kc_init="default", verbose=False,
+    model = MotivationModel(learning_rule="kc-based", nb_apl=0, pn2kc_init="default", verbose=False,
                             timesteps=3, trials=28, nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2,
                             is_single=True, has_fom=True, has_bm=True, has_rsom=True, has_ltm=True, has_mdm=True,
                             has_real_names=False)
@@ -428,4 +502,5 @@ if __name__ == '__main__':
     # MBModel.plot_overlap(models, nids=neurons, score=acc)
     # MBModel.plot_timeline(models=models, nids=neurons, score=acc, target=target, nb_trials=13)
     # plot_population(models, only_nids=True)
-    plot_individuals(models, only_nids=True)
+    plot_weights(models, vmin=-1.5, vmax=1.5, only_nids=True)
+    # plot_individuals(models, only_nids=True)
