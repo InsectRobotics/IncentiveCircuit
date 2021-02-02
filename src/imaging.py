@@ -1,5 +1,3 @@
-# from utils import err, debug, __root__
-
 import os
 import re
 import csv
@@ -201,213 +199,6 @@ def load_draft_data():
     return pd.DataFrame(data)
 
 
-def plot_traces(data, experiment="B+", diff=None, maxy=30):
-    import matplotlib.pyplot as plt
-
-    data_exp = data[experiment]
-    data_dif = None if diff is None else data[diff]
-    genotypes = np.sort(data_exp.index)
-    nb_subplots = len(genotypes)
-    if nb_subplots > 20:
-        nb_rows = (nb_subplots + 1) // 4
-        nb_cols = nb_subplots % 4 + 1
-    elif nb_subplots > 15:
-        nb_rows = (nb_subplots + 1) // 3
-        nb_cols = nb_subplots % 3 + 1
-    elif nb_subplots > 10:
-        nb_rows = (nb_subplots + 1) // 2
-        nb_cols = nb_subplots % 2 + 1
-    else:
-        nb_rows = nb_subplots
-        nb_cols = 1
-    plt.figure("traces-" + experiment, figsize=(10, 10))
-
-    xticks = []
-    for t in range(17):
-        if t < 12:
-            tick = "%d" % (t // 2 + 1) if t % 2 == 0 else ""
-        else:
-            tick = "%d" % ((t - 1) // 2 + 1) if t % 2 == 1 else ""
-        xticks.append(tick)
-
-    ymin, ymax = 0, 0
-    for genotype in genotypes:
-        if diff is not None:
-            data_gen = data_exp[genotype] - data_dif[genotype]
-        else:
-            data_gen = data_exp[genotype]
-
-        if np.all(np.isnan(data_gen)) or len(data_gen) < 1:
-            continue
-        yminn, ymaxx = np.nanmin(data_gen), np.minimum(np.nanmax(data_gen), maxy)
-        if yminn < ymin:
-            ymin = yminn
-        if ymaxx > ymax:
-            ymax = ymaxx
-    y_lim = [ymin * 1.1, ymax * 1.1]
-    x_fill = np.vstack([np.array([25, 25, 50, 50]) + i * 100 for i in range(17)])
-    xa_fill = x_fill[0::2].flatten()
-    xb_fill = x_fill[1::2].flatten()
-    ya_fill = np.array([y_lim[0], y_lim[1], y_lim[1], y_lim[0]] * 9)
-    yb_fill = np.array([y_lim[0], y_lim[1], y_lim[1], y_lim[0]] * 8)
-    if "+" in experiment:
-        s_mark = "-"
-    else:
-        s_mark = ":"
-    for i, genotype in enumerate(genotypes):
-        if diff is not None:
-            data_gen = data_exp[genotype] - data_dif[genotype]
-        else:
-            data_gen = data_exp[genotype]
-        plt.subplot(nb_rows, nb_cols, i+1)
-        plt.fill_between(xa_fill, np.full_like(ya_fill, y_lim[0]), ya_fill, color='C0', alpha=0.1)
-        plt.fill_between(xb_fill, np.full_like(yb_fill, y_lim[0]), yb_fill, color='C1', alpha=0.1)
-        for s in [2, 3, 4, 5, 6]:
-            plt.plot([(s - 1) * 200 + 145] * 2, y_lim, 'r%s' % s_mark, lw=1)
-        for s in [8, 9]:
-            plt.plot([(s - 1) * 200 + 45] * 2, y_lim, 'r%s' % s_mark, lw=1)
-        plt.plot(data_gen, 'k-', alpha=.2, lw=.5)
-        if np.any(~np.isnan(data_gen)):
-            plt.plot(data_gen.mean(axis=1), 'k-', lw=2)
-
-        odour_a_xs = np.array([np.arange(28, 43) + i * 200 for i in range(9)])
-        odour_b_xs = np.array([np.arange(28, 43) + i * 200 + 100 for i in range(8)])
-        data_a_mean = np.nanmean(np.array(data_gen)[odour_a_xs], axis=(1, 2))
-        data_a_std = np.nanstd(np.array(data_gen)[odour_a_xs], axis=(1, 2)) / 2
-        data_b_mean = np.nanmean(np.array(data_gen)[odour_b_xs], axis=(1, 2))
-        data_b_std = np.nanstd(np.array(data_gen)[odour_b_xs], axis=(1, 2)) / 2
-        xs_a = np.arange(0, 17)[::2] * 100 + 30
-        xs_b = np.arange(1, 17)[::2] * 100 + 30
-
-        plt.fill_between(xs_a, data_a_mean - data_a_std, data_a_mean + data_a_std, color='C0', alpha=0.2)
-        plt.fill_between(xs_b, data_b_mean - data_b_std, data_b_mean + data_b_std, color='C1', alpha=0.2)
-        plt.plot(xs_a, data_a_mean, "C0-", lw=2)
-        plt.plot(xs_b, data_b_mean, "C1-", lw=2)
-
-        plt.xticks(np.arange(50, 1700, 100), xticks)
-        plt.xlim([0, 1700])
-        plt.ylim(y_lim)
-        plt.ylabel(genotype)
-
-    plt.tight_layout()
-    plt.show()
-
-
-def plot_overlap(data, experiment="B+", phase2="reversal", title=None, score=None, zeros=False, individuals=False):
-    import matplotlib.pyplot as plt
-
-    sort_titles = {
-        "acquisition": "Aq",
-        "reversal": "Re",
-        "no shock": "Ex"
-    }
-    if not isinstance(data, list):
-        data = [data]
-    if not isinstance(phase2, list):
-        phase2 = [phase2]
-
-    if title is None:
-        title = "overlap-" + experiment + ("" if individuals else "avg") + ("_descr" if score is not None else "")
-
-    plt.figure(title, figsize=(7 + 3 * len(data), 10))
-    genotypes = np.sort(data[0][experiment].index)
-    if len(genotypes) == 6:
-        genotypes = genotypes[[0, 1, 2, 4, 5, 3]]
-    nb_rows = len(genotypes)
-    nb_cols = 2 + len(data) * 2
-    if nb_rows > 20:
-        nb_cols *= 4
-        nb_rows = (nb_rows + 1) // 4
-    elif nb_rows > 15:
-        nb_cols *= 3
-        nb_rows = (nb_rows + 1) // 3
-    elif nb_rows > 10:
-        nb_cols *= 2
-        nb_rows = (nb_rows + 1) // 2
-    xticks = np.linspace(0, 20, 5)
-    ymin, ymax = 0, 0
-
-    for genotype in genotypes:
-        if np.all(np.isnan(data[0][experiment][genotype])) or len(data[0][experiment][genotype]) < 1:
-            continue
-        if data[0][experiment][genotype].mean(axis=1).min() < ymin:
-            ymin = data[0][experiment][genotype].mean(axis=1).min()
-        if data[0][experiment][genotype].mean(axis=1).max() > ymax:
-            ymax = data[0][experiment][genotype].mean(axis=1).max()
-
-    y_lim = [np.minimum(ymin * 1.1, -.1), np.maximum(ymax * 1.1, +1.)]
-    x_fill = np.array([25, 25, 50, 50])
-    y_fill = np.array([y_lim[0], y_lim[1], y_lim[1], y_lim[0]])
-
-    if "+" in experiment:
-        s_mark = "-"
-    else:
-        s_mark = ":"
-    i = 1
-
-    acq = "acquisition" if nb_cols < 5 else sort_titles["acquisition"]
-    rev = "reversal" if nb_cols < 5 else sort_titles["reversal"]
-    nsk = "no shock" if nb_cols < 5 else sort_titles["no shock"]
-
-    for genotype in genotypes:
-        for k, dat_ in enumerate(data):
-            data_exp = dat_[experiment]
-            phase_k = (phase2[k] if nb_cols < 5 else sort_titles[phase2[k]])
-
-            titles = []
-            if k < 1:
-                titles += ["%s (A)" % acq, "%s (B)" % acq]
-            titles += ["%s (A)" % phase_k, "%s (B)" % phase_k]
-            for title in titles:
-                plt.subplot(nb_rows, nb_cols, i)
-                plt.fill_between(x_fill, np.full_like(y_fill, y_lim[0]), y_fill,
-                                 color='C%d' % (int("B" in title)), alpha=0.1)
-                plt.plot([45] * 2, y_lim, 'r%s' % (s_mark if title in ["%s (B)" % acq, "%s (A)" % rev] else ":"), lw=1)
-                if np.any(~np.isnan(data_exp[genotype])):
-                    trials = []
-                    if title == "%s (A)" % acq:
-                        trials.extend([3, 5, 7, 9, 11])
-                    elif title == "%s (B)" % acq:
-                        trials.extend([4, 6, 8, 10, 12])
-                    elif title == "%s (A)" % phase_k:
-                        trials.extend([15, 17, 19, 21, 23, 25])
-                    elif title == "%s (B)" % phase_k:
-                        trials.extend([14, 16, 18, 20, 22, 24])
-                    for tr in trials[::-1]:
-                        if tr * 100 >= data_exp[genotype].shape[0]:
-                            trials.remove(tr)
-                    for j, tr in enumerate(trials):  # A-
-                        if individuals:
-                            ddt = data_exp[genotype][(tr-1)*100:tr*100]
-                        else:
-                            ddt = data_exp[genotype][(tr-1)*100:tr*100].mean(axis=1)
-                        c = 1. / len(trials) * (j + 1)
-                        if score is not None and genotype in list(score.columns) and title in list(score.index):
-                            if score[genotype][title] > 0:
-                                c = [1-c, 1, 1-c]
-                            elif score[genotype][title] < 0 or (not zeros and score[genotype][title] == 0):
-                                c = [1, 1-c, 1-c]
-                        if not isinstance(c, list):
-                            c = .9 - .9 / len(trials) * (j + 1)
-                            c = [c, c, c]
-                        # print(c, ddt.shape)
-                        if individuals:
-                            plt.plot(np.array(ddt), '-', c=c, lw=.2)
-                        else:
-                            plt.plot(np.array(ddt), '-', c=c, lw=2)
-
-                plt.xticks([0, 25, 50, 75, 99], xticks)
-                plt.xlim([0, 100])
-                plt.ylim(y_lim)
-                if i % 4 == 1:
-                    plt.ylabel(genotype)
-                plt.xlabel(title)
-                i += 1
-
-    plt.tight_layout()
-    plt.show()
-
-
 def plot_individuals(data, experiment="B+", nids=None, only_nids=True, maxy=30):
     import matplotlib.pyplot as plt
 
@@ -440,7 +231,7 @@ def plot_individuals(data, experiment="B+", nids=None, only_nids=True, maxy=30):
         nb_rows += 2
         nb_cols = nb_plots // nb_rows + 1
 
-    plt.figure(title, figsize=(8, nb_rows))
+    plt.figure(title, figsize=(8 - 2 * int(not only_nids), nb_rows))
     for j, genotype in enumerate(genotypes):
 
         odour_a_mean = np.nanmean(np.array(data_exp[genotype])[odour_a_xs], axis=(1, 2))
@@ -485,7 +276,7 @@ def plot_individuals(data, experiment="B+", nids=None, only_nids=True, maxy=30):
             #     axa.set_xticklabels([""] * 5)
             # elif j % nb_cols == 0:
             if j % nb_cols == 0:
-                axa.text(-8, -.6e5, "Trial #", fontsize=8)
+                axa.text(-8, -.65, "Trial #", fontsize=8)
             axa.spines['top'].set_visible(False)
             axa.spines['right'].set_visible(False)
 
@@ -572,12 +363,23 @@ def plot_individuals(data, experiment="B+", nids=None, only_nids=True, maxy=30):
 
 
 if __name__ == '__main__':
-    # df = load_draft_data()
     df = load_data("B+")
-    # plot_traces(df, "A+", diff="A-")
-    # plot_traces(df, "B+")
-    neurons = [33, 39, 13, 16, 21, 42, 14, 17, 35, 37, 8, 2]
-    plot_individuals(df, "B+", nids=neurons)
+    nb_neurons, nb_flies, nb_flies_min, nb_flies_max = 0, 0, 14, 0
+    for name in df["B+"].index:
+        nb_flies += df["B+"][name].shape[1]
+        nb_neurons += 1
+        if nb_flies_min > df["B+"][name].shape[1]:
+            nb_flies_min = df["B+"][name].shape[1]
+        if nb_flies_max < df["B+"][name].shape[1]:
+            nb_flies_max = df["B+"][name].shape[1]
+        print(name, df["B+"][name].shape)
+    print("#neurons:", nb_neurons)
+    print("#flies:", nb_flies)
+    print("min #flies/neuron:", nb_flies_min)
+    print("max #flies/neuron:", nb_flies_max)
+    print("mean #flies/neuron:", nb_flies / nb_neurons)
+
+    neurons = [33, 39, 13, 16, 21, 42, 14, 17, 41, 28, 12, 2]
+    # plot_individuals(df, "B+", nids=neurons, only_nids=True)
     # plot_individuals(df, "B+")
     # print(df)
-    # plot_overlap(df, "B+")

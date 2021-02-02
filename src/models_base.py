@@ -1,5 +1,3 @@
-from imaging import plot_overlap
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -103,7 +101,6 @@ class MBModel(object):
         self.w_k2m = np.array([[[0.] * nb_dan + [1.] * nb_mbon] * nb_kc] * (trials * timesteps + 1))
         self.w_u2d = np.array(u)
         self.k2m_init = self.w_k2m[0, 0]
-        self.b_k2m = np.array([0.] * nb_dan + [1.] * nb_mbon)
 
         # MBON-to-MBON and MBON-to-DAN synaptic weights
         if nb_dan == 3 and nb_mbon == 3:
@@ -140,11 +137,8 @@ class MBModel(object):
         self.__shock_on = []
         self.__cs_on = []
 
-        if nb_dan == 3 and nb_mbon == 3:
-            self.names = ["PPL1-γ1ped", "PPL1-γ2α'1", "PAM-β'2a",
-                          "MBON-γ1ped", "MBON-γ2α'1", "MBON-γ5β'2a"]
-        else:
-            self.names = ["DAN-%d" % (i+1) for i in range(nb_dan)] + ["MBON-%d" % (i+1) for i in range(nb_mbon)]
+        self.names = ["DAN-%d" % (i+1) for i in range(nb_dan)] + ["MBON-%d" % (i+1) for i in range(nb_mbon)]
+        self.neuron_ids = []
 
     @property
     def w_m2v(self):
@@ -206,7 +200,7 @@ class MBModel(object):
                 w_k2m_post = self.update_weights(k, v_post, w_k2m_pre)
 
                 # update dynamic memory for repeating loop
-                v_pre = eta * (v_post - v_pre)
+                v_pre += eta * (v_post - v_pre)
                 w_k2m_pre += eta * (w_k2m_post - w_k2m_pre)
 
             # store values and weights in history
@@ -226,7 +220,8 @@ class MBModel(object):
         self.__cs_on = np.arange(self.nb_trials * 2)
         self.__us_on = np.array([3, 5, 7, 9, 11, 14, 16, 18, 20, 22, 24])
         self.__routine_name = "unpaired"
-        return self.__routine(odour=self.__cs_on, shock=self.__us_on, paired=[2, 3, 4, 5, 6])
+        return self.__routine(odour=self.__cs_on, shock=self.__us_on, paired=[3, 5, 7, 9, 11])
+        # return self.__routine(odour=self.__cs_on, shock=self.__us_on, paired=[2, 3, 4, 5, 6])
 
     def __no_shock_routine(self):
         self.__cs_on = np.arange(self.nb_trials * 2)
@@ -255,14 +250,16 @@ class MBModel(object):
 
                 # shock is presented only in specific trials
                 us__ = np.zeros(self.us_dims, dtype=float)
-                us__[4] = float(trial_ in shock)
-                # print(us__)
+                if self.us_dims > 2:
+                    us__[4] = float(trial_ in shock)
+                else:
+                    us__[1] = float(trial_ in shock)
 
                 for timestep in range(self.nb_timesteps):
 
                     # we skip odour in the first timestep of the trial
                     cs = cs__ * float(timestep > 0)
-                    if trial in paired:
+                    if trial_ in paired:
                         # shock is presented only after the 4th sec of the trial
                         us = us__ * float(4 <= 5 * (timestep + 1) / self.nb_timesteps)
                     else:
@@ -288,13 +285,12 @@ class MBModel(object):
 
         D = np.maximum(v, 0).dot(self.w_d2k)
 
-        if self.__learning_rule in ["dan-based", "default"]:
+        if self.__learning_rule in ["dopaminergic", "dlr", "dan-base", "default"]:
             # When DAN > 0 and KC > W - W_rest increase the weight (if DAN < 0 it is reversed)
             # When DAN > 0 and KC < W - W_rest decrease the weight (if DAN < 0 it is reversed)
             # When DAN = 0 no learning happens
-            w_state = self.k2m_init - w_k2m
-            w_new = w_k2m + eta_w * D * (k - w_state)
-        elif self.__learning_rule in ["kc-based"]:
+            w_new = w_k2m + eta_w * D * (k + w_k2m - self.k2m_init)
+        elif self.__learning_rule in ["rescorla-wagner", "rw", "kc-based"]:
             # When KC > 0 and DAN > W - W_rest increase the weight (if KC < 0 it is reversed)
             # When KC > 0 and DAN < W - W_rest decrease the weight (if KC < 0 it is reversed)
             # When KC = 0 no learning happens
@@ -306,6 +302,7 @@ class MBModel(object):
 
     def update_values(self, kc, v, mb):
         reduce = 1. / float(self.nb_timesteps)
+        # eta_v = 1. / float(self.nb_timesteps)
         eta_v = np.power(self.eta_v * reduce, reduce)
 
         if self.nb_apl > 0 and False:
@@ -365,207 +362,6 @@ class MBModel(object):
                 ap[name] = np.full_like(bp[name], np.nan)
 
         return pd.DataFrame({"A+": ap, "A-": am, "B+": bp, "B-": bm})
-
-    def plot(self, mode="timeline", **kwargs):
-        if mode == "timeline":
-            MBModel.plot_timeline([self], **kwargs)
-        elif mode == "overlap":
-            MBModel.plot_overlap([self], **kwargs)
-
-    @classmethod
-    def plot_overlap(cls, models: list, nids=None, score=None):
-        dfs, phases = [], []
-        for mdl in models:
-            dfs.append(mdl.as_dataframe(nids=nids))
-            phases.append(mdl.__routine_name)
-        title_comps = str(models[0]).split("'")[1:-1:2] + ["overlap"]
-
-        plot_overlap(dfs, experiment="B+", title="-".join(title_comps), phase2=phases, score=score)
-
-    @classmethod
-    def plot_timeline(cls, models: list = None, raw_data=None, nids=None, integration_func=np.mean,
-                      score=None, target=None, show_weights=True, show_values=True, show_cs=True, show_us=True,
-                      show_trace=False, nb_trials=None):
-
-        cs_on = np.arange(56)
-        us_on = np.array([3, 5, 7, 9, 11, 14, 16, 18, 20, 22, 24])
-        if models is not None and raw_data is None:
-            title_comps = str(models[0]).split("'")[1:-1:2] + ["timeline"]
-            data = cls._data_from_models(models, nids=nids, integration_func=integration_func)
-            cs_on = models[0].cs_on
-            us_on = models[0].us_on
-        elif raw_data is not None:
-            title_comps = ["timeline", "from", "data"]
-            data = _data_from_raw(raw_data)
-            show_weights = False
-        else:
-            raise AttributeError("Either 'model' or 'data' has to be given as input.")
-        if nb_trials is not None:
-            nb_trials *= 2
-
-        y_min, y_max = None, None
-
-        for name in data:
-            ndata = data[name]
-
-            vs = []  # Read the values in the data depending on the available phases
-            if show_trace:
-                if "reversal" in ndata and "v" in ndata["reversal"]:
-                    vs += ndata["reversal"]["v"]
-                if "no shock" in ndata and "v" in ndata["no shock"]:
-                    vs += ndata["no shock"]["v"]
-            else:
-                if "reversal" in ndata and "v_cs" in ndata["reversal"]:
-                    vs += ndata["reversal"]["v_cs"]
-                if "reversal" in ndata and "v_cs" in ndata["reversal"]:
-                    vs += ndata["reversal"]["v_us"]
-                if "no shock" in ndata and "v_cs" in ndata["no shock"]:
-                    vs += ndata["no shock"]["v_cs"]
-                if "no shock" in ndata and "v_us" in ndata["no shock"]:
-                    vs += ndata["no shock"]["v_us"]
-            # transform the lists of data with uneven lengths into an even NumPy array filled with NaNs
-            vs = _list2array(vs)
-            if nb_trials is None:
-                nb_trials = np.max([len(vss) for vss in vs]) * 2
-            if len(vs) > 0:
-                # compute the minimum and maximum values in the data
-                v_min = np.nanmin(vs - vs[:, :1])
-                v_max = np.nanmax(vs - vs[:, :1])
-            else:
-                v_min = v_max = 0.
-
-            ws = []  # Read the weights in the data depending on the available phases
-            if "reversal" in ndata and "w" in ndata["reversal"]:
-                ws += ndata["reversal"]["w"]
-            if "no shock" in ndata and "w" in ndata["no shock"]:
-                ws += ndata["no shock"]["w"]
-            ws = _list2array(ws)
-            if len(ws) > 0:
-                # compute the minimum and maximum weights in the data
-                w_min = np.nanmin(ws - ws[:, :1])
-                w_max = np.nanmax(ws - ws[:, :1])
-            else:
-                w_min = w_max = 0.
-
-            t_min = np.min([w_min * float(show_weights), v_min * float(show_values), -1]) * 1.1
-            t_max = np.max([w_max * float(show_weights), v_max * float(show_values), +1]) * 1.1
-
-            if y_min is None or y_max is None:
-                y_min = t_min
-                y_max = t_max
-            else:
-                y_min = np.minimum(t_min, y_min)
-                y_max = np.maximum(t_max, y_max)
-
-        xlim = [.5, nb_trials - .5]
-        ylim = [y_min, y_max]
-
-        x_cs_ = np.r_[[[.75 + i, .75 + i, 1. + i, 1. + i] for i in cs_on]]
-        y_cs_ = np.r_[[ylim + ylim[::-1]] * len(cs_on)]
-        x_us_ = np.array([us_on] * 2) + .9
-        y_us_ = np.array([[y_min] * 11, [y_max] * 11])
-
-        plt.figure("-".join(title_comps), figsize=(10.5, 5.25))
-
-        cs_mark = "-"
-        us_mark = "--"
-        w_mark = ":"
-        for j, name in enumerate(data):
-            smark = "-." if "no shock" in data[name] else "-"
-            plt.subplot(231 + j)
-            plt.plot(xlim, [0, 0], c=(.8, .8, .8), lw=2)
-            plt.fill_between(x_cs_[0::2].flatten(), np.full_like(y_cs_[0::2].flatten(), ylim[0]),
-                             y_cs_[0::2].flatten(),
-                             facecolor="C0", alpha=0.2)
-            plt.fill_between(x_cs_[1::2].flatten(), np.full_like(y_cs_[1::2].flatten(), ylim[0]),
-                             y_cs_[1::2].flatten(),
-                             facecolor="C1", alpha=0.2)
-            plt.plot(x_us_[x_us_ < 12].reshape((2, -1)), y_us_[x_us_ < 12].reshape((2, -1)), 'r-', lw=.5)
-            plt.plot(x_us_[x_us_ > 12].reshape((2, -1)), y_us_[x_us_ > 12].reshape((2, -1)), 'r%s' % smark, lw=.5)
-
-            ndata = data[name]
-            for mode in ndata:
-                mdata = ndata[mode]
-                shift = 0 if mode == "reversal" else 2
-
-                for i in range(2):
-                    amark = 'o'
-                    emark = 's'
-                    aw = 1.
-                    ew = 1.
-                    colour = 'C%d' % (i + shift)
-                    if target is not None:
-                        trg = target[name]["acquisition (%s)" % ["A", "B"][i]]
-                        if np.isnan(trg):
-                            amark = ','
-                        elif trg > 0:
-                            amark = '^'
-                        elif trg < 0:
-                            amark = 'v'
-                        if not np.isnan(trg):
-                            aw = np.absolute(trg)
-                    if score is not None:
-                        score_ = 1 - score[name]["acquisition (%s)" % ["A", "B"][i]]
-                        plt.text(xlim[1] / 20, 1.05 * y_max, "A", horizontalalignment="center", fontsize=8)
-                        plt.plot([xlim[1] / 20], [(0.9 - i / 6) * y_max],
-                                 '%s%s' % (colour, amark), alpha=score_ * aw)
-                    if show_values:
-                        if target is not None:
-                            trg = target[name]["%s (%s)" % (mode, ["A", "B"][i])]
-                            if np.isnan(trg):
-                                emark = ','
-                            elif trg > 0:
-                                emark = '^'
-                            elif trg < 0:
-                                emark = 'v'
-                            if not np.isnan(trg):
-                                ew = np.absolute(trg)
-                        if score is not None:
-                            score_ = 1 - score[name]["%s (%s)" % (mode, ["A", "B"][i])]
-                            mode_ = 2 if mode == "reversal" else 3
-                            plt.text(mode_ * xlim[1] / 20, 1.05 * y_max, ["R", "E"][mode_-2],
-                                     horizontalalignment="center", fontsize=8)
-                            plt.plot([mode_ * xlim[1] / 20], [(0.9 - i / 6) * y_max],
-                                     '%s%s' % (colour, emark), alpha=score_ * ew)
-                        if show_trace:
-                            x_i, v_i = mdata["x"][i], mdata["v"][i]
-                            if "s" in mdata:
-                                s_i = mdata["s"][i]
-                                plt.fill_between(x_i, v_i - s_i, v_i + s_i, facecolor=colour, alpha=0.2)
-                            plt.plot(x_i, v_i, '%s%s' % (colour, cs_mark))
-                        elif show_cs:
-                            x_cs, v_cs = np.array(mdata["x_cs"][i]), np.array(mdata["v_cs"][i])
-                            if "s_cs" in mdata:
-                                s_cs = np.array(mdata["s_cs"][i]) / 2
-                                plt.fill_between(x_cs, v_cs - s_cs, v_cs + s_cs, facecolor=colour, alpha=0.2)
-                            plt.plot(x_cs, v_cs - v_cs[0], '%s%s' % (colour, cs_mark),
-                                     label="Odour %s (%s phase)" % (["A", "B"][i], mode))
-                        if show_us and not show_trace:
-                            x_us, v_us = mdata["x_us"][i], mdata["v_us"][i]
-                            plt.plot(x_us, v_us - v_us[0], '%s%s' % (colour, us_mark),
-                                     label="Shock %s (%s phase)" % (["A", "B"][i], mode))
-                        if show_weights:
-                            xw, w_i = mdata["x_w"][i], mdata["w"][i]
-                            plt.plot(xw[1 + 2 * i::], np.r_[w_i[0], w_i[(1 + i):-(1 + i)]],
-                                     '%s%s' % (colour, w_mark),
-                                     label="Weight (%s phase)" % mode)
-
-            plt.ylabel(name)
-            if j // 3 > 0:
-                plt.xlabel("Trials")
-            plt.xticks(np.arange(nb_trials + 1) + .5,
-                       np.array([["", str(t + 1)] for t in range(6)] + [["", ""]] +
-                                [[str(t + 1), ""] for t in range(6, (nb_trials + 2) // 2)]).flatten()[
-                       :(nb_trials + 1)])
-            plt.xlim(xlim)
-            plt.ylim(ylim)
-            plt.grid(axis='y')
-
-        plt.subplot(234)
-        leg = plt.legend(ncol=4, loc='upper left', bbox_to_anchor=(-0.03, -0.25))
-        leg.set_in_layout(False)
-        plt.tight_layout(rect=[None, .13, None, None])
-        plt.show()
 
     @classmethod
     def _data_from_models(cls, models, nids=None, integration_func=np.mean):
@@ -734,70 +530,3 @@ def plot_relation(kc_vals, levels=None, origin='lower'):
 
     plt.tight_layout()
     plt.show()
-
-
-if __name__ == '__main__':
-    from evaluation import evaluate, create_behaviour_map
-    from imaging import load_draft_data
-    # from evaluation import behaviour as target
-    target = create_behaviour_map(cs_only=True)
-
-    pd.options.display.max_columns = 6
-    pd.options.display.max_rows = 6
-    pd.options.display.width = 1000
-
-    nb_kcs = 10
-    repeat_all = False
-
-    nb_kc1_best, nb_kc2_best = 0, 0
-    val_best, acc_best, pre_best, models_best = 0, None, None, None
-    vals = np.zeros((nb_kcs+1, nb_kcs+1))
-    for kc1 in (range(nb_kcs+1) if repeat_all else [nb_kcs//2]):
-        for kc2 in (range(nb_kcs+1) if repeat_all else [nb_kcs//2]):
-            # model = MBModel()
-            model = MBModel(learning_rule="dan-based", nb_apl=0, pn2kc_init="default", verbose=False,
-                            timesteps=2, trials=28, nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2)
-            vals[kc1, kc2], acc, prediction, models = evaluate(model, tolerance=.02, percentage=True, behav_mean=target,
-                                                               cs_only=True, mbon_only=False,
-                                                               reversal=True, no_shock=True)
-            val = vals[kc1, kc2]
-            if val > val_best:
-                val_best = val
-                acc_best = acc
-                pre_best = prediction
-                models_best = models
-                nb_kc1_best = kc1
-                nb_kc2_best = kc2
-            print("Odour A: %d, Odour B: %d -- Score: %.4f" % (kc1, kc2, val * 100))
-
-    # best_vals = np.full_like(vals, np.nan)
-    # best_vals[vals == val_best] = 1
-    # plt.figure("kcs-overlap", figsize=(6, 5))
-    # plt.imshow(vals * 100, vmin=0, vmax=100, cmap="Greys", origin='lower')
-    # cbar = plt.colorbar()
-    # plt.imshow(best_vals, cmap="Reds_r", origin='lower')
-    # plt.ylabel("#KCs for odour A")
-    # plt.xlabel("#KCs for odour B")
-    # cbar.ax.set_ylabel("Score (%)")
-    # plt.tight_layout()
-    # plt.show()
-
-    # if repeat_all:
-    #     plot_relation(vals)
-
-    print("TARGET")
-    print(target.T)
-    print("PREDICTION")
-    print(pre_best.T)
-    print("ACCURACY")
-    print(acc_best.T)
-    print(str(models_best))
-    print("Score: %.2f" % val_best)
-    print("#KC1: %d, #KC2: %d" % (nb_kc1_best, nb_kc2_best))
-
-    # MBModel.plot_overlap(models_best, score=acc_best)
-    MBModel.plot_timeline(models=models_best, score=acc_best, target=target, nb_trials=13)
-    # MBModel.plot_timeline(raw_data=load_draft_data()["B+"], nb_trials=13)
-    # for model in models:
-    #     # model.plot("trial", show_internal_values=False)
-    #     model.plot("overlap", show_internal_values=False, score=acc)
