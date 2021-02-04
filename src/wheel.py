@@ -162,48 +162,10 @@ class WheelModel(MBModel):
         self.neuron_ids = [0, 4, 16, 20, 8, 12, 24, 28, 13, 9, 29, 25]
         # self.neuron_ids = [4, 16, 8, 12, 24, 28]
 
-
-if __name__ == '__main__':
-    from plot import plot_weights, plot_individuals
-    from evaluation import evaluate, generate_behaviour_map
-    target, target_s = generate_behaviour_map(cs_only=True)
-
-    import pandas as pd
-
-    pd.options.display.max_columns = 16
-    pd.options.display.max_rows = 16
-    pd.options.display.width = 1000
-
-    get_score = False
-
-    nb_kcs = 10
-    kc1, kc2 = nb_kcs // 2, nb_kcs // 2
-
-    model = WheelModel(
-        learning_rule="dlr", nb_apl=0, pn2kc_init="default", verbose=False, timesteps=3, trials=28,
-        nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
-        has_fom=True, has_bm=True, has_rsom=True, has_ltm=True, has_mdm=True)
-
-    if get_score:
-        val, acc, prediction, models = evaluate(
-            model, nids=model.neuron_ids, behav_mean=target, behav_std=target_s, cs_only=True, liyans_frames=False,
-            reversal=True, no_shock=True, unpaired=True)
-
-        print("TARGET")
-        print(target.T)
-        print("PREDICTION")
-        print(prediction.T)
-        print("ACCURACY")
-        print(acc.T)
-        print(str(models))
-        print("Score: %.2f" % val)
-        print("#KC1: %d, #KC2: %d" % (kc1, kc2))
-    else:
-        val, acc, prediction, models = evaluate(model, behav_mean=pd.DataFrame({}), nids=model.neuron_ids,
-                                                cs_only=True, reversal=True, unpaired=True, no_shock=True)
-
-    # plot_model_structure(model, only_nids=True)
-    # plot_population(models, only_nids=True)
-    # plot_weights_matrices(models, vmin=-1.5, vmax=1.5, only_nids=True)
-    plot_individuals(models, only_nids=True)
-    plot_weights(models, only_nids=True)
+    def __repr__(self):
+        s = "WheelModel("
+        s += "lr='" + self._learning_rule + "'"
+        if self.nb_apl > 0:
+            s += ", apl=%d" % self.nb_apl
+        s += ")"
+        return s

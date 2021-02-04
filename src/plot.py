@@ -212,8 +212,8 @@ def plot_individuals(ms, nids=None, only_nids=True):
             if len(subs) <= j:
                 axa = plt.subplot(nb_rows, nb_cols, j+1)
                 # axa.plot([[15, 17, 19, 21, 23, 25]] * 2, [[0] * 6, [ylim] * 6], 'r-')
-                axa.set_xticks((nb_timesteps - 1) * np.arange(nb_trials // 4 - 1) + (nb_timesteps - 1) / 4)
-                axa.set_xticklabels(xticks[:(nb_trials // 4 - 1)])
+                axa.set_xticks((nb_timesteps - 1) * np.arange(nb_trials // 4) + (nb_timesteps - 1) / 4)
+                axa.set_xticklabels(xticks[:(nb_trials // 4)])
                 axa.set_yticks([0, 1, 2])
                 axa.set_ylim(ylim)
                 axa.set_xlim([1, 6 * (nb_timesteps - 1)])
@@ -259,8 +259,8 @@ def plot_individuals(ms, nids=None, only_nids=True):
 
             if len(subs) <= jn:
                 axb = plt.subplot(nb_rows, nb_cols, j + (nb_rows * nb_cols) // 2 + 1)
-                axb.set_xticks((nb_timesteps - 1) * np.arange(nb_trials // 4 - 1) + (nb_timesteps - 1) / 4)
-                axb.set_xticklabels(xticks[:(nb_trials // 4 - 1)])
+                axb.set_xticks((nb_timesteps - 1) * np.arange(nb_trials // 4) + (nb_timesteps - 1) / 4)
+                axb.set_xticklabels(xticks[:(nb_trials // 4)])
                 axb.set_yticks([0, 1, 2])
                 axb.set_ylim(ylim)
                 axb.set_xlim([1, 6 * (nb_timesteps - 1)])
@@ -338,8 +338,8 @@ def plot_weights(ms, nids=None, only_nids=True):
             if len(subs) <= j:
                 axa = plt.subplot(2, nb_plots // 2, j+1)
                 # axa.plot([[15, 17, 19, 21, 23, 25]] * 2, [[0] * 6, [ylim] * 6], 'r-')
-                axa.set_xticks((nb_timesteps - 1) * np.arange(nb_trials // 4 - 1) + (nb_timesteps - 1) / 4)
-                axa.set_xticklabels(xticks[:(nb_trials // 4 - 1)])
+                axa.set_xticks((nb_timesteps - 1) * np.arange(nb_trials // 4) + (nb_timesteps - 1) / 4)
+                axa.set_xticklabels(xticks[:(nb_trials // 4)])
                 axa.set_yticks([0, 1, 2])
                 axa.set_ylim(ylim)
                 axa.set_xlim([1, 6 * (nb_timesteps - 1)])
@@ -382,8 +382,8 @@ def plot_weights(ms, nids=None, only_nids=True):
 
             if len(subs) <= jn:
                 axb = plt.subplot(2, nb_plots // 2, jn+1)
-                axb.set_xticks((nb_timesteps - 1) * np.arange(nb_trials // 4 - 1) + (nb_timesteps - 1) / 4)
-                axb.set_xticklabels(xticks[:(nb_trials // 4 - 1)])
+                axb.set_xticks((nb_timesteps - 1) * np.arange(nb_trials // 4) + (nb_timesteps - 1) / 4)
+                axb.set_xticklabels(xticks[:(nb_trials // 4)])
                 axb.set_yticks([0, 1, 2])
                 axb.set_ylim(ylim)
                 axb.set_xlim([1, 6 * (nb_timesteps - 1)])
@@ -518,3 +518,155 @@ def plot_synapses(w, names_in, names_out, ax=None, cmap="coolwarm", vmin=-.5, vm
         ax.spines[p].set_visible(False)
     ax.yaxis.set_ticks_position("none")
     ax.xaxis.set_ticks_position("none")
+
+
+def plot_learning_rule():
+
+    plt.figure("dlr", figsize=(8, 4))
+    k_, d_, w_ = np.linspace(0, 1, 101), np.linspace(-1, 1, 101), np.linspace(0, 2, 101)
+
+    w, d = np.meshgrid(w_, d_)
+    for i, k in enumerate(np.linspace(0, 1, 7)):
+        y = d * (k + w - 1)
+        plt.subplot(3, 7, i + 1)
+        plt.contour(w, d, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
+        plt.xticks([0, 1, 2], fontsize=8)
+        plt.yticks([-1, 0, 1], fontsize=8)
+        plt.xlabel("w", fontsize=8)
+        plt.ylabel("d", fontsize=8)
+        plt.title("k=%.2f" % k, fontsize=8)
+
+    k, d = np.meshgrid(k_, d_)
+    for i, w in enumerate(np.linspace(0, 2, 7)):
+        y = d * (k + w - 1)
+        plt.subplot(3, 7, i + 8)
+        plt.contour(k, d, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
+        plt.xticks([0, .5, 1], fontsize=8)
+        plt.yticks([-1, 0, 1], fontsize=8)
+        plt.xlabel("k", fontsize=8)
+        plt.ylabel("d", fontsize=8)
+        plt.title("w=%.2f" % w, fontsize=8)
+
+    k, w = np.meshgrid(k_, w_)
+    for i, d in enumerate(np.linspace(-1, 1, 7)):
+        y = d * (k + w - 1)
+        plt.subplot(3, 7, i + 15)
+        plt.contour(k, w, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
+        plt.xticks([0, .5, 1], fontsize=8)
+        plt.yticks([0, 1, 2], fontsize=8)
+        plt.xlabel("k", fontsize=8)
+        plt.ylabel("w", fontsize=8)
+        plt.title("d=%.2f" % d, fontsize=8)
+
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_learning_rule_3d():
+    from mpl_toolkits.mplot3d import Axes3D
+
+    plt.figure("dlr-3d", figsize=(3, 3))
+    ax = plt.gca(projection='3d')
+
+    k_w_, d_, = np.linspace(0, 3, 16), np.linspace(-1, 1, 11)
+    k_w, d = np.meshgrid(k_w_, d_)
+    w = d * (k_w - 1)
+
+    ax.contour(k_w, d, w, 60, cmap="coolwarm")
+    ax.set_xlabel(r"$k^i(t) + W^{ij}(t)$", fontsize=8)
+    ax.set_ylabel(r"$d^j(t)$", fontsize=8)
+    ax.set_zlabel(r"$dW^{ij}/dt$", fontsize=8)
+    ax.set_xticks([0, 1, 2, 3])
+    ax.set_yticks([-1, 0, 1])
+    ax.set_zticks([-2, 0, 2])
+    ax.set_xlim([0, 3])
+    ax.set_ylim([-1, 1])
+    ax.set_zlim([-2, 2])
+    ax.tick_params(labelsize=8)
+    # ax.set_axis_off()
+
+    ax.view_init(5, -97)
+
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_fom(m: MBModel, nids=None):
+    if nids is None:
+        nids = [1, 6]
+    _plot_subcircuit(m, nids, nnames=[r"$d_{av}$", r"$a_{at}$"], title="fom",
+                     ncolours=["#db006aff", "#6adbb8ff"], uss=["r", None])
+
+
+def plot_ltm(m: MBModel, nids=None):
+    if nids is None:
+        nids = [2, 10]
+    _plot_subcircuit(m, nids, nnames=[r"$r_{at}$", r"$m_{at}$"], title="ltm",
+                     ncolours=["#6adb00ff", "#6adbb8ff"], uss=["g", None])
+
+
+def plot_bm(m: MBModel, nids=None):
+    if nids is None:
+        nids = [6, 9]
+    _plot_subcircuit(m, nids, nnames=[r"$a_{at}$", r"$h_{av}$"], title="bm",
+                     ncolours=["#6adbb8ff", "#db6a6aff"])
+
+
+def plot_rsom(m: MBModel, nids=None):
+    if nids is None:
+        nids = [3, 8, 2, 9]
+    _plot_subcircuit(m, nids, title="rsom", uss=["r", None, None, None],
+                     nnames=[r"$r_{av}$", r"$h_{at}$", r"$r_{at}$", r"$h_{av}$"],
+                     ncolours=["#db006aff", "#6adbb8ff", "#6adb00ff", "#db6a6aff"])
+
+
+def plot_rfm(m: MBModel, nids=None):
+    if nids is None:
+        nids = [5, 10, 4, 11]
+    _plot_subcircuit(m, nids, title="rfm",
+                     nnames=[r"$f_{av}$", r"$m_{at}$", r"$f_{at}$", r"$m_{av}$"],
+                     ncolours=["#db006aff", "#6adbb8ff", "#6adb00ff", "#db6a6aff"])
+
+
+def plot_mdm(m: MBModel, nids=None):
+    if nids is None:
+        nids = [4, 8, 2, 10]
+    _plot_subcircuit(m, nids, title="mdm", uss=[None, None, "g", None],
+                     nnames=[r"$f_{at}$", r"$h_{at}$", r"$r_{at}$", r"$m_{at}$"],
+                     ncolours=["#6adb00ff", "#6adbb8ff", "#6adb00ff", "#6adbb8ff"])
+
+
+def _plot_subcircuit(m: MBModel, nids, nnames, ncolours, uss=None, title="sub-circuit"):
+
+    if uss is None:
+        uss = [None] * len(nids)
+
+    nb_cols = len(nids) // 2
+
+    for i in range(nb_cols):
+        if nb_cols > 1:
+            fig_title = "%s_%d" % (title, i+1)
+        else:
+            fig_title = title
+        plt.figure(fig_title, figsize=(1, 1))
+        plt.clf()
+
+        ax = plt.subplot(111)
+        for nid, nname, colour, us in zip(
+                nids[i*2:(i+1)*2], nnames[i*2:(i+1)*2], ncolours[i*2:(i+1)*2], uss[i*2:(i+1)*2]):
+            v = m._v[:, nid]
+            plt.plot(v, c=colour, lw=2, label=nname)
+            if us is not None:
+                plt.plot(np.arange(len(v))[v > 1], v[v > 1], us + "*")
+        plt.ylim([-0.1, 2.1])
+        plt.yticks([0, 1, 2])
+        plt.xlim([1, 100])
+        plt.xticks([10, 30, 60, 80],
+                   [r"$t_{1}$", r"$t_{2}$", r"$t_{3}$", r"$t_{4}$"])
+        plt.tick_params(labelsize=8)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        # plt.legend(loc="upper right", fontsize=8)
+
+        plt.tight_layout()
+    plt.show()

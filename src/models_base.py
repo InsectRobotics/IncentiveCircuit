@@ -1,5 +1,6 @@
+from routines import no_shock_routine, unpaired_routine, reversal_routine
+
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
 from copy import copy
@@ -50,8 +51,8 @@ class MBModel(object):
         self.us_dims = 8
 
         self._t = 0
+        self._learning_rule = learning_rule
         self.__routine_name = ""
-        self.__learning_rule = learning_rule
         self.__verbose = verbose
 
         self.w_p2k = np.array([
@@ -91,7 +92,6 @@ class MBModel(object):
 
         self._v = np.array([np.array(v).T] * (trials * timesteps + 1))
         self._v_apl = np.zeros((trials * timesteps + 1, nb_apl), dtype=self._v.dtype)
-        self.w_diff = np.zeros(((trials * timesteps + 1), nb_dan + nb_mbon), dtype=self._v.dtype)
         self.v_init = self._v[0]
         self.v_max = np.array([+2.] * (nb_dan+nb_mbon))
         self.v_min = np.array([-2.] * (nb_dan+nb_mbon))
@@ -160,6 +160,14 @@ class MBModel(object):
     def routine_name(self):
         return self.__routine_name
 
+    @routine_name.setter
+    def routine_name(self, v):
+        self.__routine_name = v
+
+    @property
+    def verbose(self):
+        return self.__verbose
+
     def _a(self, v, v_max=None, v_min=None):
         if v_max is None:
             v_max = self.v_max
@@ -169,13 +177,13 @@ class MBModel(object):
 
     def __call__(self, *args, **kwargs):
         if kwargs.get('no_shock', False):
-            routine = self.__no_shock_routine()
+            routine = no_shock_routine(self)
         elif kwargs.get('unpaired', False):
-            routine = self.__unpaired_routine()
-        elif kwargs.get('reversal', True):
-            routine = self.__reversal_routine()
+            routine = unpaired_routine(self)
+        elif kwargs.get('reversal', False):
+            routine = reversal_routine(self)
         else:
-            routine = []
+            routine = kwargs.get('routine', reversal_routine(self))
         repeat = kwargs.get('repeat', 4)
 
         for _, _, cs, us in routine:
@@ -207,70 +215,6 @@ class MBModel(object):
             self._v[self._t + 1], self.w_k2m[self._t + 1] = v_post, w_k2m_post
             # self._v_apl[self._t + 1] = v_apl_post
 
-            # calculate weights difference
-            self.w_diff[self._t + 1] = self.integrate(self.w_k2m[self._t + 1], k)
-
-    def __reversal_routine(self):
-        self.__cs_on = np.arange(self.nb_trials * 2)
-        self.__us_on = np.array([3, 5, 7, 9, 11, 14, 16, 18, 20, 22, 24])
-        self.__routine_name = "reversal"
-        return self.__routine(odour=self.__cs_on, shock=self.__us_on)
-
-    def __unpaired_routine(self):
-        self.__cs_on = np.arange(self.nb_trials * 2)
-        self.__us_on = np.array([3, 5, 7, 9, 11, 14, 16, 18, 20, 22, 24])
-        self.__routine_name = "unpaired"
-        return self.__routine(odour=self.__cs_on, shock=self.__us_on, paired=[3, 5, 7, 9, 11])
-        # return self.__routine(odour=self.__cs_on, shock=self.__us_on, paired=[2, 3, 4, 5, 6])
-
-    def __no_shock_routine(self):
-        self.__cs_on = np.arange(self.nb_trials * 2)
-        self.__us_on = np.array([3, 5, 7, 9, 11])
-        self.__routine_name = "no shock"
-        return self.__routine(odour=self.__cs_on, shock=self.__us_on)
-
-    def __routine(self, odour=None, shock=None, paired=None):
-        self._t = 0
-        if odour is None:
-            odour = np.arange(self.nb_trials * 2)
-        if shock is None:
-            shock = np.arange(self.nb_trials * 2)
-        if paired is None:
-            paired = np.arange(self.nb_trials * 2)
-
-        for trial in range(1, self.nb_trials // 2 + 2):
-            for cs_ in [self.csa, self.csb]:
-                if self._t >= self.nb_trials * self.nb_timesteps:
-                    break
-
-                trial_ = self._t // self.nb_timesteps
-
-                # odour is presented only in specific trials
-                cs__ = cs_ * float(trial_ in odour)
-
-                # shock is presented only in specific trials
-                us__ = np.zeros(self.us_dims, dtype=float)
-                if self.us_dims > 2:
-                    us__[4] = float(trial_ in shock)
-                else:
-                    us__[1] = float(trial_ in shock)
-
-                for timestep in range(self.nb_timesteps):
-
-                    # we skip odour in the first timestep of the trial
-                    cs = cs__ * float(timestep > 0)
-                    if trial_ in paired:
-                        # shock is presented only after the 4th sec of the trial
-                        us = us__ * float(4 <= 5 * (timestep + 1) / self.nb_timesteps)
-                    else:
-                        us = us__ * float(timestep < 1)
-                    # print(self.__routine_name, trial, timestep, cs, us)
-                    if self.__verbose:
-                        print("Trial: %d / %d, %s" % (trial_ + 1, self.nb_trials, ["CS-", "CS+"][self._t % 2]))
-                    yield trial, timestep, cs, us
-
-                    self._t += 1
-
     def update_weights(self, kc, v, w_k2m):
         eta_w = self.eta_w / float(self.nb_timesteps - 1)
         # eta_w = np.sqrt(self.eta_w / float(self.nb_timesteps))
@@ -285,12 +229,12 @@ class MBModel(object):
 
         D = np.maximum(v, 0).dot(self.w_d2k)
 
-        if self.__learning_rule in ["dopaminergic", "dlr", "dan-base", "default"]:
+        if self._learning_rule in ["dopaminergic", "dlr", "dan-base", "default"]:
             # When DAN > 0 and KC > W - W_rest increase the weight (if DAN < 0 it is reversed)
             # When DAN > 0 and KC < W - W_rest decrease the weight (if DAN < 0 it is reversed)
             # When DAN = 0 no learning happens
             w_new = w_k2m + eta_w * D * (k + w_k2m - self.k2m_init)
-        elif self.__learning_rule in ["rescorla-wagner", "rw", "kc-based"]:
+        elif self._learning_rule in ["rescorla-wagner", "rw", "kc-based"]:
             # When KC > 0 and DAN > W - W_rest increase the weight (if KC < 0 it is reversed)
             # When KC > 0 and DAN < W - W_rest decrease the weight (if KC < 0 it is reversed)
             # When KC = 0 no learning happens
@@ -312,9 +256,6 @@ class MBModel(object):
         v_temp = (1 - eta_v) * v + eta_v * (nr.dot(self.w_m2v) - v)
         return self._a(v_temp)
 
-    def integrate(self, v, kc):
-        return kc.dot(v)
-
     def copy(self):
         return copy(self)
 
@@ -331,178 +272,16 @@ class MBModel(object):
             s += "routine='" + self.__routine_name + "'"
         else:
             s += "routine=None"
-        if self.__learning_rule != "default":
-            s += ", lr='" + self.__learning_rule + "'"
+        if self._learning_rule != "default":
+            s += ", lr='" + self._learning_rule + "'"
         if self.nb_apl > 0:
             s += ", apl=%d" % self.nb_apl
         s += ")"
         return s
 
-    def as_dataframe(self, nids=None, reconstruct=True):
-        if nids is None:
-            nids = np.arange(self._v.shape[1])
-        v = self._v.copy()[1:, nids].reshape((-1, self.nb_timesteps, len(nids)))
 
-        pattern = np.exp(-np.square(np.arange(100) - 27.5) / 32)
-        pattern[25:50] = 1.
-        cs_pattern = np.exp(-np.square(np.arange(100) - 30) / 200) * pattern
-        us_pattern = np.exp(-np.square(np.arange(100) - 45) / 2) * pattern
-
-        ap, am, bp, bm = {}, {}, {}, {}
-        for j, name in enumerate(np.array(self.names)[nids]):
-            if reconstruct:
-                bp[name] = np.concatenate([vv[0] * cs_pattern + vv[1] * us_pattern for vv in v[..., j]]).reshape((-1, 1))
-                ap[name] = np.full_like(bp[name], np.nan)
-                am[name] = np.full_like(bp[name], np.nan)
-                bm[name] = np.full_like(bp[name], np.nan)
-            else:
-                bp[name] = v[..., j]
-                ap[name] = np.full_like(bp[name], np.nan)
-                bm[name] = np.full_like(bp[name], np.nan)
-                ap[name] = np.full_like(bp[name], np.nan)
-
-        return pd.DataFrame({"A+": ap, "A-": am, "B+": bp, "B-": bm})
-
-    @classmethod
-    def _data_from_models(cls, models, nids=None, integration_func=np.mean):
-        transform = lambda x, w_, norm: np.tensordot(x, np.array(w_ > 0, dtype=float), axes=(1, 0)) / (
-            np.sum(np.array(~np.isclose(w_, 0), dtype=float), axis=0) if norm else 1.)
-
-        if nids is None:
-            nids = np.arange(len(models[0].names))
-        neurons = np.array(models[0].names)[nids]
-        nb_neurons = len(neurons)
-        nb_timesteps = models[0].nb_timesteps
-
-        cs_k = np.arange(nb_timesteps)[:int(np.round(.4 * nb_timesteps))]
-        us_k = np.arange(nb_timesteps)[int(np.round(.4 * nb_timesteps)):]
-
-        data = {}
-        for m in models[::-1]:
-            w_k2p = np.linalg.pinv(m.w_p2k)
-
-            v = m._v[:, nids].copy()
-            w = (transform(m.w_k2m[..., nids], w_k2p, norm=False) * m.nb_pn / m.nb_kc -
-                 m.k2m_init[np.newaxis, nids, np.newaxis])
-
-            nb_timesteps = np.maximum(m.nb_timesteps, 2)
-            xw = ((np.arange(nb_timesteps * (m.nb_trials + 1))) / nb_timesteps).reshape(
-                (-1, nb_timesteps))
-            for i in range(m.nb_timesteps):
-                xw[:, i] += .75 - i / nb_timesteps + .25 * i / nb_timesteps
-            xw = xw.flatten()[nb_timesteps - 1:]
-            xs = xw.copy() - 1
-            mode = m.__routine_name
-
-            for j, name in enumerate(neurons):
-                ndata = data[name] = data.get(name, {})
-                mdata = ndata[mode] = {}
-
-                mdata["x"] = [None] * 2
-                mdata["x_cs"] = [None] * 2
-                mdata["x_us"] = [None] * 2
-                mdata["x_w"] = [None] * 2
-                mdata["v"] = [None] * 2
-                mdata["v_cs"] = [None] * 2
-                mdata["v_us"] = [None] * 2
-                mdata["w"] = [None] * 2
-                for i in range(2):
-                    s, e = i, xs.shape[0] - 1 + i
-                    mdata["x"][i] = x_i = xs[s:e].reshape((-1, nb_timesteps))[i::2].flatten()
-                    mdata["x_cs"][i] = x_i[int(1 * nb_timesteps / 3)::nb_timesteps]
-                    mdata["x_us"][i] = x_i[int(2 * nb_timesteps / 3)::nb_timesteps]
-                    mdata["x_w"][i] = xw
-                    mdata["v"][i] = v_i = v[1:].reshape((-1, nb_timesteps, nb_neurons))[i::2, :, j].flatten()
-                    mdata["v_cs"][i] = integration_func(v_i.reshape((-1, nb_timesteps))[:, cs_k], axis=1).flatten()
-                    mdata["v_us"][i] = integration_func(v_i.reshape((-1, nb_timesteps))[:, us_k], axis=1).flatten()
-                    mdata["w"][i] = w[:, j, i]
-        return data
-
-
-def leaky_relu(v, alpha=.8, v_max=np.inf, v_min=-np.inf):
+def leaky_relu(v, alpha=.1, v_max=np.inf, v_min=-np.inf):
     return np.clip(v, np.maximum(alpha * v, v_min), v_max)
-
-
-def _data_from_raw(raw_data, integration_func=np.mean):
-    from evaluation import _get_trend, _get_trial
-
-    names = np.array(raw_data.index.sort_values())[[4, 5, 3, 0, 1, 2]]
-    data = {}
-    for name in names:
-        ndata = data[name] = {}
-        mdata = ndata["reversal"] = {
-            "x": [None] * 2,
-            "x_cs": [None] * 2,
-            "x_us": [None] * 2,
-            "v": [None] * 2,
-            "v_cs": [None] * 2,
-            "v_us": [None] * 2,
-            "s": [None] * 2,
-            "s_cs": [None] * 2,
-            "s_us": [None] * 2
-        }
-
-        nb_timesteps = 100
-        nb_trials = 17
-        trials = [[], []]
-        for trial in [0, 1, 2, 3, 4, 5, 6, 7, 8]:
-            # A-
-            trial_0 = _get_trial(raw_data[name], trial, odour="A")
-            if trial_0.shape[0] > 0 and trial_0[0].shape[0] > 0:
-                trials[0].append(trial_0)
-
-            # B+
-            trial_1 = _get_trial(raw_data[name], trial, odour="B")
-            if trial_1.shape[0] > 0 and trial_1[0].shape[0] > 0:
-                trials[1].append(trial_1)
-
-        xw = ((np.arange(nb_timesteps * (nb_trials + 1))) / nb_timesteps).reshape(
-            (-1, nb_timesteps))
-        # for i in range(nb_timesteps):
-        #     xw[:, i] += .75 - i / nb_timesteps + .25 * i / nb_timesteps
-        xw = xw.flatten()[nb_timesteps - 1:]
-        xs = xw.copy() - 1
-
-        for j in range(2):
-            s, e = j, xs.shape[0] - 1 + j
-            mdata["x"][j] = x_i = xs[s:e].reshape((-1, nb_timesteps))[j::2].flatten()
-            mdata["x_cs"][j] = x_i[int(1 * nb_timesteps / 3)::nb_timesteps]
-            mdata["x_us"][j] = x_i[int(2 * nb_timesteps / 3)::nb_timesteps]
-            mdata["v_cs"][j] = []
-            mdata["v_us"][j] = []
-            mdata["v"][j] = []
-            mdata["s_cs"][j] = []
-            mdata["s_us"][j] = []
-            mdata["s"][j] = []
-            for i in range(len(trials[j])):
-                trial_i = np.array(np.array(trials[j])[[0, i]])
-                if len(trial_i) < 2:
-                    v_cs, s_cs = np.nan, np.nan
-                    v_us, s_us = np.nan, np.nan
-                    v, s = np.nan, np.nan
-                else:
-                    v_cs, s_cs = _get_trend(trial_i, cs_only=True, us_only=False, integration=integration_func)
-                    v_us, s_us = _get_trend(trial_i, cs_only=False, us_only=True, integration=integration_func)
-                    v, s = _get_trend(trial_i, cs_only=False, us_only=False, integration=integration_func, axis=(0, 2))
-                mdata["v_cs"][j].append(v_cs)
-                mdata["v_us"][j].append(v_us)
-                mdata["v"][j].append(v)
-                mdata["s_cs"][j].append(s_cs)
-                mdata["s_us"][j].append(s_us)
-                mdata["s"][j].append(s)
-
-    return data
-
-
-def _list2array(v, fill_val=np.nan):
-    if len(v) < 1:
-        out = np.array(v)
-    else:
-        lens = np.array([len(vv) for vv in v])
-        mask = lens[:, None] > np.arange(lens.max())
-        out = np.full(mask.shape, fill_val)
-        out[mask] = np.concatenate(v)
-    return out
 
 
 def plot_relation(kc_vals, levels=None, origin='lower'):

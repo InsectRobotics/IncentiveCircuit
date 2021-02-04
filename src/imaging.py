@@ -130,7 +130,7 @@ def load_data(experiments='B+'):
                 if len(gdata[t]) == 0:
                     gdata[t] = np.zeros_like(temp)
 
-            data[experiment][name] = pd.DataFrame(np.concatenate(gdata))
+            data[experiment][name+"_"+genotype] = pd.DataFrame(np.concatenate(gdata))
 
     return pd.DataFrame(data)
 
@@ -360,26 +360,3 @@ def plot_individuals(data, experiment="B+", nids=None, only_nids=True, maxy=30):
     # subs[-1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.), loc='upper left', framealpha=0., labelspacing=1)
     plt.tight_layout()
     plt.show()
-
-
-if __name__ == '__main__':
-    df = load_data("B+")
-    nb_neurons, nb_flies, nb_flies_min, nb_flies_max = 0, 0, 14, 0
-    for name in df["B+"].index:
-        nb_flies += df["B+"][name].shape[1]
-        nb_neurons += 1
-        if nb_flies_min > df["B+"][name].shape[1]:
-            nb_flies_min = df["B+"][name].shape[1]
-        if nb_flies_max < df["B+"][name].shape[1]:
-            nb_flies_max = df["B+"][name].shape[1]
-        print(name, df["B+"][name].shape)
-    print("#neurons:", nb_neurons)
-    print("#flies:", nb_flies)
-    print("min #flies/neuron:", nb_flies_min)
-    print("max #flies/neuron:", nb_flies_max)
-    print("mean #flies/neuron:", nb_flies / nb_neurons)
-
-    neurons = [33, 39, 13, 16, 21, 42, 14, 17, 41, 28, 12, 2]
-    # plot_individuals(df, "B+", nids=neurons, only_nids=True)
-    # plot_individuals(df, "B+")
-    # print(df)

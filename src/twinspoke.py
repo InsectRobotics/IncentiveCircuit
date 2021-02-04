@@ -15,10 +15,13 @@ class TwinSpokeModel(MBModel):
         has_ltm = kwargs.pop("has_ltm", True)
         has_mdm = kwargs.pop("has_mdm", True)
         has_real_names = kwargs.pop("has_real_names", False)
+        as_subcircuits = kwargs.pop("as_subcircuits", False)
         super().__init__(*args, **kwargs)
 
         shock_magnitude = 2.
         odour_magnitude = 2.
+        ltm_speed = .3 if as_subcircuits else .05
+
         p_dan_abs_s, p_dan_abs_e = 0, 2
         p_dan_stm_s, p_dan_stm_e = 2, 4
         p_dan_ltm_s, p_dan_ltm_e = 4, 6
@@ -35,6 +38,9 @@ class TwinSpokeModel(MBModel):
         self._v[:, p_mbon_abs_s:p_mbon_abs_e] = self.v_init[p_mbon_abs_s:p_mbon_abs_e] = -2.  # A-MBONs
         self._v[:, p_mbon_stm_s:p_mbon_stm_e] = self.v_init[p_mbon_stm_s:p_mbon_stm_e] = -.5  # H-MBONs
         self._v[:, p_mbon_ltm_s:p_mbon_ltm_e] = self.v_init[p_mbon_ltm_s:p_mbon_ltm_e] = -.5  # M-MBONs
+        if as_subcircuits:
+            self._v[:, p_mbon_stm_s:p_mbon_stm_e] = self.v_init[p_mbon_stm_s:p_mbon_stm_e] = -2.  # H-MBONs
+            self._v[:, p_mbon_ltm_s:p_mbon_ltm_e] = self.v_init[p_mbon_ltm_s:p_mbon_ltm_e] = -4.  # M-MBONs
 
         self._w_m2v = np.zeros((self.nb_mbon + self.nb_dan, self.nb_mbon + self.nb_dan), dtype=float)
         self._w_d2k = np.zeros((self.nb_dan + self.nb_mbon, self.nb_dan + self.nb_mbon), dtype=float)
@@ -87,7 +93,7 @@ class TwinSpokeModel(MBModel):
                 [float(m == (d + ((p_dan_stm_e-p_dan_stm_s) // 2) + 1) % (p_dan_stm_e-p_dan_stm_s))
                  for m in range(p_mbon_ltm_e-p_mbon_ltm_s)]
                 for d in range(p_dan_stm_e-p_dan_stm_s)
-            ]) * .05
+            ]) * ltm_speed
 
         # reciprocal forgetting memories (RFM) sub-circuit
         if has_rfm:
@@ -110,7 +116,7 @@ class TwinSpokeModel(MBModel):
                 [float(m == (d + ((p_dan_stm_e-p_dan_stm_s) // 2) - 1) % (p_dan_stm_e-p_dan_stm_s))
                  for m in range(p_mbon_ltm_e-p_mbon_ltm_s)]
                 for d in range(p_dan_stm_e-p_dan_stm_s)
-            ]) * .05
+            ]) * ltm_speed
 
         u = np.zeros((2, self.nb_dan + self.nb_mbon), dtype=float)
         u[:, p_dan_abs_s:p_dan_abs_e] = np.eye(p_dan_abs_e-p_dan_abs_s) * shock_magnitude
@@ -131,24 +137,10 @@ class TwinSpokeModel(MBModel):
 
         self.neuron_ids = [0, 1, 6, 7, 2, 3, 8, 9, 4, 5, 10, 11]
 
-
-if __name__ == '__main__':
-    from evaluation import evaluate
-    from plot import plot_model_structure, plot_weights, plot_individuals
-
-    import pandas as pd
-
-    nb_kcs = 10
-    kc1, kc2 = nb_kcs // 2, nb_kcs // 2
-
-    model = TwinSpokeModel(
-        learning_rule="dlr", nb_apl=0, pn2kc_init="default", verbose=False, timesteps=3, trials=24,
-        nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
-        has_fom=True, has_bm=True, has_ltm=True, has_rsom=True, has_rfm=True, has_mdm=True)
-
-    val, acc, prediction, models = evaluate(model, behav_mean=pd.DataFrame({}), nids=model.neuron_ids,
-                                            cs_only=True, reversal=True, unpaired=True, no_shock=True)
-
-    # plot_model_structure(model, only_nids=True)
-    plot_individuals(models, only_nids=True)
-    plot_weights(models, only_nids=True)
+    def __repr__(self):
+        s = "TwinSpokeModel("
+        s += "lr='" + self._learning_rule + "'"
+        if self.nb_apl > 0:
+            s += ", apl=%d" % self.nb_apl
+        s += ")"
+        return s
