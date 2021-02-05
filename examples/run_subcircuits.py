@@ -6,10 +6,11 @@ from tools import read_arg
 
 
 if __name__ == '__main__':
+
+    # read the parameters
     nb_kcs = read_arg(["-k", "--nb-kc", "--nb-kcs"], vtype=int, default=10)
     kc1 = read_arg(["-k1", "--nb-kc1", "--odour1"], vtype=int, default=nb_kcs // 2)
     kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=nb_kcs // 2)
-    # must set h-mbons bias to -2 and m-mbons bias to -4 in order for this to produce the desired results
 
     # First Order Memory Sub-circuit
     if read_arg(["--fom", "--first-order-memory"]):
