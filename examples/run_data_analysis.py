@@ -4,12 +4,12 @@ from tools import read_arg
 
 if __name__ == '__main__':
 
-    # load the data
-    df = load_data("B+")
-
     # read the parameters
     experiment = read_arg(["-e", "--experiment"], vtype=str, default="B+")
     verbose = read_arg(["-v", "--verbose"])
+
+    # load the data
+    df = load_data(experiment)
 
     # generate statistics
     if read_arg(["-s", "--stats", "--statistics"]):
