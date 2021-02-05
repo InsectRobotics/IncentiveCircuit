@@ -5,6 +5,28 @@ import numpy as np
 
 class WheelModel(MBModel):
     def __init__(self, *args, **kwargs):
+        """
+        The wheel of motivations model (WOM) is a simplified version of the mushroom body from the Drosophila
+        melanogaster brain, which is a hypothetical circuit of it. It contains the connections from the Kenyon cells
+        (KCs) to the output neurons (MBONs), from the MBONs to the dopaminergic neurons (DANs) and from the DANs to the
+        connections from the KCs to MBONs. It takes as input a routine and produces the responses and weights of the
+        mushroom body for every time-step. Its parameters are discussed in the manuscript.
+
+        :param has_fom: indicates if synapses of the FOM sub-circuit are included
+        :type has_fom: bool
+        :param has_bm: indicates if synapses of the BM sub-circuit are included
+        :type has_bm: bool
+        :param has_rsom: indicates if synapses of the RSOM sub-circuit are included
+        :type has_rsom: bool
+        :param has_rfm: indicates if synapses of the RFM sub-circuit are included
+        :type has_rfm: bool
+        :param has_ltm: indicates if synapses of the LTM sub-circuit are included
+        :type has_ltm: bool
+        :param has_mdm: indicates if synapses of the MDM sub-circuit are included
+        :type has_mdm: bool
+        :param has_real_names: indicates if real neuron names are to be used instead of code names
+        :type has_real_names: bool
+        """
         kwargs.setdefault("nb_dan", 16)
         kwargs.setdefault("nb_mbon", 16)
         kwargs.setdefault("leak", .0)
@@ -28,12 +50,12 @@ class WheelModel(MBModel):
         self.us_dims = 8
         self.w_p2k *= odour_magnitude
 
-        self._v[:, p_dan_abs_s:p_dan_abs_e] = self.v_init[p_dan_abs_s:p_dan_abs_e] = -0.5  # D-DANs
-        self._v[:, p_dan_stm_s:p_dan_stm_e] = self.v_init[p_dan_stm_s:p_dan_stm_e] = -0.15  # R-DANs
-        self._v[:, p_dan_ltm_s:p_dan_ltm_e] = self.v_init[p_dan_ltm_s:p_dan_ltm_e] = -0.15  # F-DANs
-        self._v[:, p_mbon_abs_s:p_mbon_abs_e] = self.v_init[p_mbon_abs_s:p_mbon_abs_e] = -2.  # A-MBONs
-        self._v[:, p_mbon_stm_s:p_mbon_stm_e] = self.v_init[p_mbon_stm_s:p_mbon_stm_e] = -.5  # H-MBONs
-        self._v[:, p_mbon_ltm_s:p_mbon_ltm_e] = self.v_init[p_mbon_ltm_s:p_mbon_ltm_e] = -.5  # M-MBONs
+        self._v[:, p_dan_abs_s:p_dan_abs_e] = self.bias[p_dan_abs_s:p_dan_abs_e] = -0.5  # D-DANs
+        self._v[:, p_dan_stm_s:p_dan_stm_e] = self.bias[p_dan_stm_s:p_dan_stm_e] = -0.15  # R-DANs
+        self._v[:, p_dan_ltm_s:p_dan_ltm_e] = self.bias[p_dan_ltm_s:p_dan_ltm_e] = -0.15  # F-DANs
+        self._v[:, p_mbon_abs_s:p_mbon_abs_e] = self.bias[p_mbon_abs_s:p_mbon_abs_e] = -2.  # A-MBONs
+        self._v[:, p_mbon_stm_s:p_mbon_stm_e] = self.bias[p_mbon_stm_s:p_mbon_stm_e] = -.5  # H-MBONs
+        self._v[:, p_mbon_ltm_s:p_mbon_ltm_e] = self.bias[p_mbon_ltm_s:p_mbon_ltm_e] = -.5  # M-MBONs
         # self._v[:, 0] = +2.  # PPL1-γ1ped
         # self._v[:, 9] = 1.   # PPL1-γ1β'2a
         # self._v[:, 13] = 1.  # PAM-β'2a

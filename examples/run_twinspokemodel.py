@@ -10,7 +10,7 @@ if __name__ == '__main__':
     kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=nb_kcs // 2)
 
     model = TwinSpokeModel(
-        learning_rule="dlr", nb_apl=0, pn2kc_init="default", verbose=False, timesteps=3, trials=26,
+        learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=26,
         nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
         has_fom=True, has_bm=True, has_ltm=True, has_rsom=True, has_rfm=True, has_mdm=True)
 

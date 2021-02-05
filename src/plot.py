@@ -1,10 +1,27 @@
 from models_base import MBModel
 
+from typing import List
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 
 def plot_population(ms, nids=None, vmin=-2., vmax=2., only_nids=False):
+    """
+    Plots the responses as a matrix where the rows are different neurons and the columns are the time-steps. The colour
+    reveals the actual responses of the neurons.
+
+    :param ms: the models where the values are taken from
+    :type ms: List[MBModel]
+    :param nids: the indices of the neurons that we want to show their names
+    :type nids: List[int]
+    :param vmin: the lower bound for the colour map. Default is -2.
+    :type vmin: float
+    :param vmax: the upper bound for the colour map. Default is 2.
+    :type vmin: float
+    :param only_nids: when True, only the specified neurons are plotted.
+    :type only_nids: bool
+    """
     title = "motivation-" + '-'.join(str(ms[0]).split("'")[1:-1:2])
 
     nb_models = len(ms)
@@ -86,6 +103,22 @@ def plot_population(ms, nids=None, vmin=-2., vmax=2., only_nids=False):
 
 
 def plot_weights_matrices(ms, nids=None, vmin=-2., vmax=2., only_nids=False):
+    """
+    Plots the KC-MBON synaptic weights strength as a matrix where the rows are different neurons and the columns are the
+    time-steps. The colour reveals the actual strength of the synaptic weights from the KCs to MBONs. The data are split
+    in two groups related to odour A and odour B, and the average synaptic strength for each group is plotted.
+
+    :param ms: the models where the values are taken from
+    :type ms: List[MBModel]
+    :param nids: the indices of the neurons that we want to show their names
+    :type nids: List[int]
+    :param vmin: the lower bound for the colour map. Default is -2
+    :type vmin: float
+    :param vmax: the upper bound for the colour map. Default is 2
+    :type vmin: float
+    :param only_nids: when True, only the specified neurons are plotted.
+    :type only_nids: bool
+    """
     title = "weights-" + '-'.join(str(ms[0]).split("'")[1:-1:2])
 
     nb_models = len(ms)
@@ -159,7 +192,18 @@ def plot_weights_matrices(ms, nids=None, vmin=-2., vmax=2., only_nids=False):
     plt.show()
 
 
-def plot_individuals(ms, nids=None, only_nids=True):
+def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True):
+    """
+    Plots the average responses of the neurons per phase/trial with overlapping lines.
+
+
+    :param ms:the models where the values are taken from
+    :type ms: List[MBModel]
+    :param nids: the indices of the neurons that we want to show their names
+    :type nids: List[int]
+    :param only_nids: when True, only the specified neurons are plotted.
+    :type only_nids: bool
+    """
     title = "individuals-" + '-'.join(str(ms[0]).split("'")[1:-1:2])
 
     nb_odours = 2
@@ -297,6 +341,17 @@ def plot_individuals(ms, nids=None, only_nids=True):
 
 
 def plot_weights(ms, nids=None, only_nids=True):
+    """
+    Plots the average synaptic weights of the post-synaptic neurons per phase/trial for a specific experiment with
+    overlapping phases. The average weight is calculated per odour.
+
+    :param ms:the models where the values are taken from
+    :type ms: List[MBModel]
+    :param nids: the indices of the neurons that we want to show their names
+    :type nids: List[int]
+    :param only_nids: when True, only the specified neurons are plotted.
+    :type only_nids: bool
+    """
     title = "weights-" + '-'.join(str(ms[0]).split("'")[1:-1:2])
 
     nb_odours = 2
@@ -416,6 +471,22 @@ def plot_weights(ms, nids=None, only_nids=True):
 
 
 def plot_model_structure(m: MBModel, nids=None, vmin=-.5, vmax=.5, only_nids=False):
+    """
+    Plots the structure of the model for each synaptic weights matrix where input comes from the left and output goes to
+    the bottom. The connections are drawn as bonds between the axon of each input neuron (horizontal line) and the
+    dendrite of each output neuron (vertical line), where the colour and size of the bond illustrates its strength.
+
+    :param m: the model where the values are taken from
+    :type m: MBModel
+    :param nids: the indices of the neurons that we want to show their names
+    :type nids: List[int]
+    :param vmin: the lower bound of the colour map
+    :type vmin: float
+    :param vmax: the upper bound of the colour map
+    :type vmax: float
+    :param only_nids: when True, only the specified neurons are plotted.
+    :type only_nids: bool
+    """
     fig = plt.figure("weight-tables-" + m.__class__.__name__.lower(), figsize=(5, 4))
     ax = fig.subplot_mosaic(
         """
@@ -472,11 +543,11 @@ def plot_model_structure(m: MBModel, nids=None, vmin=-.5, vmax=.5, only_nids=Fal
                   names_out=neur_names[nids[nids >= 16]], vmin=vmin, vmax=vmax, ax=ax['f'])
     # fig.colorbar(im, ax=ax['f'], ticks=[-.5, 0, .5])
     ax['g'].set_title(r"$w_{rest}$", fontsize=8)
-    plot_synapses(w=np.array([m.v_init[neurs[nids < 16]]]).T, vmin=vmin, vmax=vmax,
+    plot_synapses(w=np.array([m.bias[neurs[nids < 16]]]).T, vmin=vmin, vmax=vmax,
                   names_in=[r"$1$"], names_out=neur_names[nids[nids < 16]], ax=ax['g'])
 
     ax['h'].set_title(r"", fontsize=8)
-    plot_synapses(w=np.array([m.v_init[neurs[nids >= 16]]]).T, vmin=vmin, vmax=vmax,
+    plot_synapses(w=np.array([m.bias[neurs[nids >= 16]]]).T, vmin=vmin, vmax=vmax,
                   names_in=[r"$1$"], names_out=neur_names[nids[nids >= 16]], ax=ax['h'])
 
     plt.tight_layout()
@@ -484,6 +555,25 @@ def plot_model_structure(m: MBModel, nids=None, vmin=-.5, vmax=.5, only_nids=Fal
 
 
 def plot_synapses(w, names_in, names_out, ax=None, cmap="coolwarm", vmin=-.5, vmax=.5):
+    """
+    Plots the synaptic weights matrix where input comes from the left and output goes to the bottom. The connections are
+    drawn as bonds between the axon of each input neuron (horizontal line) and the dendrite of each output neuron
+    (vertical line), where the colour and size of the bond illustrates its strength.
+
+    :param w: the weights matrix where the synaptic weights are drawn from
+    :type w: np.ndarray
+    :param names_in: the names of the pre-synaptic neurons
+    :type names_in: List[str]
+    :param names_out: the names of the post-synaptic neurons
+    :type names_out: List[str]
+    :param ax: (optional) a matplotlib axis to draw the plot in
+    :param cmap: the colour map name to use for  specifying the direction and amplitude of synaptic weight
+    :type cmap: str
+    :param vmin: the lower bound of the colour map
+    :type vmin: float
+    :param vmax: the upper bound of the colour map
+    :type vmax: float
+    """
     x, y = np.meshgrid(np.arange(w.shape[0]), np.arange(w.shape[1]))
 
     if ax is None:
@@ -521,6 +611,10 @@ def plot_synapses(w, names_in, names_out, ax=None, cmap="coolwarm", vmin=-.5, vm
 
 
 def plot_learning_rule():
+    """
+    Plots 21 contour sub-plots in a 3-by-7 grid where the relationship among the parameters of the dopaminergic learning
+    rule is visualised. In each row contours are created for 7 values of one of the parameters: KC+W(t), D(t) or W(t+1).
+    """
 
     plt.figure("dlr", figsize=(8, 4))
     k_, d_, w_ = np.linspace(0, 1, 101), np.linspace(-1, 1, 101), np.linspace(0, 2, 101)
@@ -563,6 +657,9 @@ def plot_learning_rule():
 
 
 def plot_learning_rule_3d():
+    """
+    Three-dimensional plot of the relationship between the parameters of the dopaminergic learning rule.
+    """
     from mpl_toolkits.mplot3d import Axes3D
 
     plt.figure("dlr-3d", figsize=(3, 3))
@@ -591,28 +688,60 @@ def plot_learning_rule_3d():
     plt.show()
 
 
-def plot_fom(m: MBModel, nids=None):
+def plot_fom(m, nids=None):
+    """
+    The responses of the first order memory (FOM) sub-circuit.
+
+    :param m: the model to get the responses from
+    :type m: MBModel
+    :param nids: (optional) the 2 neuron indices which we want to plot their responses. Default is 1 and 6.
+    :type nids: List[int]
+    """
     if nids is None:
         nids = [1, 6]
     _plot_subcircuit(m, nids, nnames=[r"$d_{av}$", r"$a_{at}$"], title="fom",
                      ncolours=["#db006aff", "#6adbb8ff"], uss=["r", None])
 
 
-def plot_ltm(m: MBModel, nids=None):
+def plot_ltm(m, nids=None):
+    """
+    The responses of the long-term memory (LTM) sub-circuit.
+
+    :param m: the model to get the responses from
+    :type m: MBModel
+    :param nids: (optional) the 2 neuron indices which we want to plot their responses. Default is 2 and 10.
+    :type nids: List[int]
+    """
     if nids is None:
         nids = [2, 10]
     _plot_subcircuit(m, nids, nnames=[r"$r_{at}$", r"$m_{at}$"], title="ltm",
                      ncolours=["#6adb00ff", "#6adbb8ff"], uss=["g", None])
 
 
-def plot_bm(m: MBModel, nids=None):
+def plot_bm(m, nids=None):
+    """
+    The responses of the blocking memory (BM) sub-circuit.
+
+    :param m: the model to get the responses from
+    :type m: MBModel
+    :param nids: (optional) the 2 neuron indices which we want to plot their responses. Default is 6 and 9.
+    :type nids: List[int]
+    """
     if nids is None:
         nids = [6, 9]
     _plot_subcircuit(m, nids, nnames=[r"$a_{at}$", r"$h_{av}$"], title="bm",
                      ncolours=["#6adbb8ff", "#db6a6aff"])
 
 
-def plot_rsom(m: MBModel, nids=None):
+def plot_rsom(m, nids=None):
+    """
+    The responses of the reciprocal second order memories (RSOM) sub-circuit.
+
+    :param m: the model to get the responses from
+    :type m: MBModel
+    :param nids: (optional) the 4 neuron indices which we want to plot their responses. Default is 3, 8, 2 and 9.
+    :type nids: List[int]
+    """
     if nids is None:
         nids = [3, 8, 2, 9]
     _plot_subcircuit(m, nids, title="rsom", uss=["r", None, None, None],
@@ -620,7 +749,15 @@ def plot_rsom(m: MBModel, nids=None):
                      ncolours=["#db006aff", "#6adbb8ff", "#6adb00ff", "#db6a6aff"])
 
 
-def plot_rfm(m: MBModel, nids=None):
+def plot_rfm(m, nids=None):
+    """
+    The responses of the reciprocal forgetting memories (RFM) sub-circuit.
+
+    :param m: the model to get the responses from
+    :type m: MBModel
+    :param nids: (optional) the 4 neuron indices which we want to plot their responses. Default is 5, 10, 4 and 11.
+    :type nids: List[int]
+    """
     if nids is None:
         nids = [5, 10, 4, 11]
     _plot_subcircuit(m, nids, title="rfm",
@@ -628,7 +765,15 @@ def plot_rfm(m: MBModel, nids=None):
                      ncolours=["#db006aff", "#6adbb8ff", "#6adb00ff", "#db6a6aff"])
 
 
-def plot_mdm(m: MBModel, nids=None):
+def plot_mdm(m, nids=None):
+    """
+    The responses of the memory digestion mechanism (MDM).
+
+    :param m: the model to get the responses from
+    :type m: MBModel
+    :param nids: (optional) the 4 neuron indices which we want to plot their responses. Default is 4, 8, 2 and 10.
+    :type nids: List[int]
+    """
     if nids is None:
         nids = [4, 8, 2, 10]
     _plot_subcircuit(m, nids, title="mdm", uss=[None, None, "g", None],
@@ -636,7 +781,28 @@ def plot_mdm(m: MBModel, nids=None):
                      ncolours=["#6adb00ff", "#6adbb8ff", "#6adb00ff", "#6adbb8ff"])
 
 
-def _plot_subcircuit(m: MBModel, nids, nnames, ncolours, uss=None, title="sub-circuit"):
+def _plot_subcircuit(m, nids, nnames, ncolours, uss=None, title="sub-circuit"):
+    """
+    Plots pairs of the responses of the specified neurons for the mushroom body model. The IDs of the neurons to plot
+    are specified in a list of IDs (nids). Neurons are drawn in pairs from the list and are plotted the one on the top
+    of the other in separate figures (if the specified neurons are more than 2).
+
+    :param m: the model where the values are taken from
+    :type m: MBModel
+    :param nids: the indices of the neurons that we want to plot
+    :type nids: List[int]
+    :param nnames: a list with the names of the neurons
+    :type nnames: List[str]
+    :param ncolours: colour for the line representing the neuron with the same index
+    :type ncolours: List[str]
+    :param uss: (optional) a list of colour-names for the US of the same size as the nids;'r' for red (punishment), or
+    'g' for green (reward), None for no reinforcement. Default is None.
+    :type uss: List[str]
+    :param title: (optional) the title of the figure. If more than 1 plots are to be generated, a number is added at the
+    end of the title. Default is 'sub-circuit'
+    :type title: str
+    :return:
+    """
 
     if uss is None:
         uss = [None] * len(nids)

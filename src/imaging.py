@@ -1,52 +1,24 @@
-import os
-import re
-import csv
+from typing import List
+
 import yaml
 import pandas as pd
 import numpy as np
+import os
+import re
+import csv
 
+# the directory of the file
 __dir__ = os.path.dirname(os.path.abspath(__file__))
+# the directory of the data
 __data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "data", "FruitflyMB"))
-__draft_data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "data", "FruitflyMB", "draft"))
-
-__dir = {
-    "MBON-γ1ped": {
-        "A+": ["MBON-g1ped", "OCT+shock"],
-        "B-": ["MBON-g1ped", "MCH+noshock"],
-        "B+": ["MBON-g1ped", "MCH+shock"]
-    },
-    "MBON-γ2α'1": {
-        "A+": ["MBON-g2a'1", "OCT+shock"],
-        "B-": ["MBON-g2a'1", "MCH+noshock"],
-        "B+": ["MBON-g2a'1", "MCH+shock"]
-    },
-    "MBON-γ5β'2a": {
-        # "A": "",
-        "B-": ["MBON-g5b'2a", "MCH+noshock"],
-        "B+": ["MBON-g5b'2a", "MCH+shock"]
-    },
-    "PPL1-γ1ped": {
-        "A+": ["PPL1-g1ped", "OCT+shock"],
-        "B-": ["PPL1-g1ped", "MCH+noshock"],
-        "B+": ["PPL1-g1ped", "MCH+shock"],
-    },
-    "PAM-β'2a": {
-        "A-": ["PAM-b'2a", "OCT+noshock"],
-        "A+": ["PAM-b'2a", "OCT+shock"],
-        "B-": ["PAM-b'2a", "MCH+noshock"],
-        "B+": ["PAM-b'2a", "MCH+shock"]
-    },
-    "PPL1-γ2α'1": {
-        "B+": ["PPL1-g2a'1", "MCH+shock (1-9,1-8)"]
-    }
-}
+# sub-directories of each of the experiments
 __dirs = {
     'B+': '',
     'A+': 'SF traces imaging controls',
     'B-': 'SF traces imaging controls',
     'KC': 'neural traces KC sub-compartments'
 }
-_pattern_ = r'realSCREEN_([\d\w\W]+)\.xlsx_finaldata([\w\W]+)_timepoint(\d)\.csv'
+# pattern of the files for each of the experiments
 _patterns_ = {
     # pattern for the initial data
     'B+': r'realSCREEN_([\d\w\W]+)\.xlsx_finaldata([\w\W]+)_timepoint(\d)\.csv',
@@ -57,28 +29,48 @@ _patterns_ = {
     # pattern for the KC data
     'KC': r'realSCREEN_([\d\w\W]+)\.xlsx_finaldata([\w\W]+)_timepoint(\d)\.csv'
 }
+# load the meta-data of the genotypes and neurons from the file
 with open(os.path.join(__data_dir__, 'meta.yaml'), 'rb') as f:
     _meta_ = yaml.load(f, Loader=yaml.BaseLoader)
 
 
 def load_data(experiments='B+'):
+    """
+    Creates a DataFrame containing all the data from the specified experiments with keys in this order:
+    1. {experiment}
+    2. {name}_{genotype}
+    3. {#trial}
+
+    :param experiments: (optional) list of names (or single name) of the experiments to load. Default is 'B+'.
+    :type experiments: List[str] | str
+    :return: a DataFrame with the data from the experiments requested
+    """
+
+    # Convert the argument of the function to a list of names
     if isinstance(experiments, str):
         if experiments == 'all':
             experiments = _patterns_.keys()
         elif experiments == 'draft':
+            # special case where we run a different function to load the data
+            from _imaging import load_draft_data
             return load_draft_data()
         else:
             experiments = [experiments]
 
     data = {}
+    # Load the data for every experiment requested
     for experiment in experiments:
         experiment_dir = os.path.join(__data_dir__, __dirs[experiment])
+        # for each file in the directory of the experiment
         for fname in os.listdir(experiment_dir):
+            # get the details from the name of the file
             details = re.findall(_patterns_[experiment], fname)
             if len(details) == 0:
+                # if the name of the file does not follow the correct pattern then skip it
                 continue
 
             temp = details[0]
+            # assign the details extracted from the file-name to the appropriate variables
             if len(temp) > 3:
                 _, genotype, odour, trial = temp[:4]
             elif len(temp) > 2:
@@ -88,118 +80,85 @@ def load_data(experiments='B+'):
                 print('Skipping file!')
                 continue
 
-            trial = int(trial)
+            trial = int(trial)  # transform the trial number from string to integer
 
             timepoint = None
-            fname = os.path.join(experiment_dir, fname)
+            fname = os.path.join(experiment_dir, fname)  # get the absolute path
             with open(fname, 'r') as csvfile:
+                # read the CSV file
                 reader = csv.reader(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_NONNUMERIC)
+                # create a matrix where each row is a time-point and each column is a different fly
                 for row in reader:
                     if timepoint is None:
                         timepoint = row
                     else:
-                        timepoint = np.vstack([timepoint, row])  # {timepoint} x {datapoint}
+                        timepoint = np.vstack([timepoint, row])  # {time-point} x {datapoint}
 
+            # specify if odour is odour A (OCT) or B (MCH)
             a, b = "O" in odour or "A" in odour or "B" in odour, "M" in odour
+            # identify if the odour is CS+ depending on the experiment
             csp = "B" in experiment and b or "A" in experiment and a
 
             if experiment not in data:
+                # initialise the data-dict for the experiment
                 data[experiment] = {}
             if genotype not in data[experiment]:
+                # initialise the genotype for the experiment
                 data[experiment][genotype] = [[]] * 18
+            # assign the collected data to the appropriate genotype and trial number
             data[experiment][genotype][2 * (trial - 1) + int(csp)] = timepoint
 
+    # transform the data from [experiment, genotype, trial, time-step, fly]
+    # to [experiment, name_genotype, trial, time-step, fly]
     for experiment in data:
+        # get all genotypes
         genotypes = list(data[experiment].keys())
         for genotype in genotypes:
             temp = []
+            # get and remove from the data-set the data for the specific genotype
             gdata = data[experiment].pop(genotype)
+            # get the prefix and compartment of the specific genotype from the meta-data
             if genotype in _meta_ and "MBON" in _meta_[genotype]['type']:
                 name = "MBON-%s" % _meta_[genotype]['name']
             elif genotype in _meta_ and _meta_[genotype]['type'] in ["PAM", "PPL1"]:
                 name = "%s-%s" % (_meta_[genotype]['type'], _meta_[genotype]['name'])
             else:
+                # if the genotype does not exist in the meta-data then skip it
                 continue
+
             if name in data[experiment]:
+                # resolve conflicting data with the same name (compartment)
                 name += "_1"
+            # find a trial with with data
             for t in range(len(gdata)):
                 if len(gdata[t]) > 0:
                     temp = gdata[t]
                     break
+            # fill the data of every empty trial with zeros
             for t in range(len(gdata)):
                 if len(gdata[t]) == 0:
                     gdata[t] = np.zeros_like(temp)
 
+            # add a new entry in the data-set with the cleaned data and the {name}_{genotype} as key
             data[experiment][name+"_"+genotype] = pd.DataFrame(np.concatenate(gdata))
 
+    # transform the dictionary into a pandas DaraFrame
     return pd.DataFrame(data)
 
 
-def load_draft_data():
-    data = {}
-    for genotype in __dir:
-        for experiment in __dir[genotype]:
-            if experiment not in data:
-                data[experiment] = {genotype: []}
-            data[experiment][genotype] = [[]] * 18
-            for r, _, flist in os.walk(__draft_data_dir__):
-                match = True
-                for d in __dir[genotype][experiment]:
-                    if d not in r:
-                        match = False
-                if not match:
-                    continue
+def plot_phase_overlap_mean_responses_from_data(data, experiment="B+", nids=None, only_nids=True):
+    """
+    Plots the average responses of the neurons per phase/trial for a specific experiment with overlapping phases.
 
-                labels = re.findall(r'.*\(\d\-(\d),\d\-(\d)\).*', r)
-                if len(labels) < 1:
-                    print("Unknown directory pattern:", r)
-                    continue
-                nb_csm, nb_csp = labels[0]
-                nb_csm, nb_csp = int(nb_csm), int(nb_csp)
-
-                for filename in flist:
-                    details = re.findall(_pattern_, filename)
-                    if len(details) < 1:
-                        print("Unknown file pattern:", os.path.join(r, filename))
-                        continue
-                    _, cs, trial = details[0]
-                    trial = int(trial)
-
-                    timepoint = None
-                    with open(os.path.join(r, filename), 'r') as csvfile:
-                        reader = csv.reader(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_NONNUMERIC)
-                        for row in reader:
-                            if timepoint is None:
-                                timepoint = row
-                            else:
-                                timepoint = np.vstack([timepoint, row])  # {timepoint} x {datapoint}
-                    a, b = "O" in cs, "M" in cs
-                    csm = "B" in experiment and a or "A" in experiment and b
-                    csp = "B" in experiment and b or "A" in experiment and a
-
-                    if csp and nb_csp < 8:
-                        trial += 1
-                    if csm and nb_csp < 8:
-                        trial += 1
-                    if csm and nb_csp < 8 and 6 < trial < 9:
-                        trial += 1
-
-                    data[experiment][genotype][2 * (trial - 1) + int(csp)] = timepoint
-
-            temp = []
-            for t in range(len(data[experiment][genotype])):
-                if len(data[experiment][genotype][t]) > 0:
-                    temp = data[experiment][genotype][t]
-                    break
-            for t in range(len(data[experiment][genotype])):
-                if len(data[experiment][genotype][t]) == 0:
-                    data[experiment][genotype][t] = np.zeros_like(temp)
-            data[experiment][genotype] = pd.DataFrame(np.concatenate(data[experiment][genotype]))
-
-    return pd.DataFrame(data)
-
-
-def plot_individuals(data, experiment="B+", nids=None, only_nids=True, maxy=30):
+    :param data: The DataFrame with the responses
+    :type data: pd.DataFrame
+    :param experiment: (optional) The experiment whose data we want to plot. Default is 'B+'.
+    :type experiment: str
+    :param nids: (optional) List of neuron IDs that we want to show their name. If None, it shows all the names.
+    :type nids: List[int]
+    :param only_nids: If to plot only the responses of the specified neurons. Default is True.
+    :type only_nids: bool
+    """
     import matplotlib.pyplot as plt
 
     title = "individuals-from-data"

@@ -1,4 +1,4 @@
-from imaging import load_data, plot_individuals
+from imaging import load_data, plot_phase_overlap_mean_responses_from_data
 from tools import read_arg
 
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
         print("mean #flies/neuron:", nb_flies / nb_neurons)
 
     if read_arg(["-a", "--all"]):
-        plot_individuals(df, experiment)
+        plot_phase_overlap_mean_responses_from_data(df, experiment)
     else:
         neurons = [33, 39, 13, 16, 21, 42, 14, 17, 41, 28, 12, 2]
-        plot_individuals(df, experiment, nids=neurons, only_nids=read_arg(["--only-nids"]))
+        plot_phase_overlap_mean_responses_from_data(df, experiment, nids=neurons, only_nids=read_arg(["--only-nids"]))
