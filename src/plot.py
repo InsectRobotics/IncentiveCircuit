@@ -1,6 +1,8 @@
 from models_base import MBModel
 
 from typing import List
+from matplotlib import cm
+from matplotlib.colors import Normalize
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -610,47 +612,68 @@ def plot_synapses(w, names_in, names_out, ax=None, cmap="coolwarm", vmin=-.5, vm
     ax.xaxis.set_ticks_position("none")
 
 
-def plot_learning_rule():
+def plot_learning_rule(wrt_k=True, wrt_w=True, wrt_d=True, colour_bar=False):
     """
     Plots 21 contour sub-plots in a 3-by-7 grid where the relationship among the parameters of the dopaminergic learning
     rule is visualised. In each row contours are created for 7 values of one of the parameters: KC+W(t), D(t) or W(t+1).
     """
 
-    plt.figure("dlr", figsize=(8, 4))
-    k_, d_, w_ = np.linspace(0, 1, 101), np.linspace(-1, 1, 101), np.linspace(0, 2, 101)
+    k_, d_, w_ = np.linspace(0, 1, 101), np.linspace(-1, 1, 101), np.linspace(0, 1, 101)
 
-    w, d = np.meshgrid(w_, d_)
-    for i, k in enumerate(np.linspace(0, 1, 7)):
-        y = d * (k + w - 1)
-        plt.subplot(3, 7, i + 1)
-        plt.contour(w, d, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
-        plt.xticks([0, 1, 2], fontsize=8)
-        plt.yticks([-1, 0, 1], fontsize=8)
-        plt.xlabel("w", fontsize=8)
-        plt.ylabel("d", fontsize=8)
-        plt.title("k=%.2f" % k, fontsize=8)
+    nb_rows = int(wrt_k) + int(wrt_w) + int(wrt_d)
+    nb_cols = 7 + int(colour_bar)
+    plt.figure("dlr", figsize=(nb_cols - 1, nb_rows + 1 - .5 * float(colour_bar)))
+    if wrt_k:
+        w, d = np.meshgrid(w_, d_)
+        for i, k in enumerate(np.linspace(0, 1, 7)):
+            y = d * (k + w - 1)
+            plt.subplot(nb_rows, nb_cols, i + 1)
+            plt.contour(w, d, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
+            plt.xticks([0, .5, 1], fontsize=8)
+            plt.xlabel("w", fontsize=8)
+            if i < 1:
+                plt.yticks([-1, 0, 1], fontsize=8)
+                plt.ylabel("D", fontsize=8)
+            else:
+                plt.yticks([-1, 0, 1], [""] * 3, fontsize=8)
 
-    k, d = np.meshgrid(k_, d_)
-    for i, w in enumerate(np.linspace(0, 2, 7)):
-        y = d * (k + w - 1)
-        plt.subplot(3, 7, i + 8)
-        plt.contour(k, d, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
-        plt.xticks([0, .5, 1], fontsize=8)
-        plt.yticks([-1, 0, 1], fontsize=8)
-        plt.xlabel("k", fontsize=8)
-        plt.ylabel("d", fontsize=8)
-        plt.title("w=%.2f" % w, fontsize=8)
+            plt.title("k=%.2f" % k, fontsize=8)
 
-    k, w = np.meshgrid(k_, w_)
-    for i, d in enumerate(np.linspace(-1, 1, 7)):
-        y = d * (k + w - 1)
-        plt.subplot(3, 7, i + 15)
-        plt.contour(k, w, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
-        plt.xticks([0, .5, 1], fontsize=8)
-        plt.yticks([0, 1, 2], fontsize=8)
-        plt.xlabel("k", fontsize=8)
-        plt.ylabel("w", fontsize=8)
-        plt.title("d=%.2f" % d, fontsize=8)
+    if wrt_w:
+        k, d = np.meshgrid(k_, d_)
+        for i, w in enumerate(np.linspace(0, 1, 7)):
+            y = d * (k + w - 1)
+            plt.subplot(nb_rows, nb_cols, int(wrt_k) * nb_cols + i + 1)
+            plt.contour(k, d, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
+            plt.xticks([0, .5, 1], fontsize=8)
+            plt.xlabel("k", fontsize=8)
+            if i < 1:
+                plt.yticks([-1, 0, 1], fontsize=8)
+                plt.ylabel("D", fontsize=8)
+            else:
+                plt.yticks([-1, 0, 1], [""] * 3, fontsize=8)
+
+            plt.title("w=%.2f" % w, fontsize=8)
+
+    if wrt_d:
+        k, w = np.meshgrid(k_, w_)
+        for i, d in enumerate(np.linspace(-1, 1, 7)):
+            y = d * (k + w - 1)
+            plt.subplot(nb_rows, nb_cols, (int(wrt_k) + int(wrt_w)) * nb_cols + i + 1)
+            plt.contour(k, w, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
+            plt.xticks([0, .5, 1], fontsize=8)
+            plt.xlabel("k", fontsize=8)
+            if i < 1:
+                plt.yticks([0, 0.5, 1], fontsize=8)
+                plt.ylabel("w", fontsize=8)
+            else:
+                plt.yticks([0, 0.5, 1], [""] * 3, fontsize=8)
+
+            plt.title("D=%.2f" % d, fontsize=8)
+
+    if colour_bar:
+        cax = plt.axes([0.9, 0.34, 0.01, 0.45])
+        plt.colorbar(cm.ScalarMappable(norm=Normalize(vmin=-1, vmax=1), cmap="coolwarm"), cax=cax, ticks=[-1, 0, 1])
 
     plt.tight_layout()
     plt.show()

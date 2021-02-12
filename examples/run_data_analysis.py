@@ -38,5 +38,5 @@ if __name__ == '__main__':
         plot_phase_overlap_mean_responses_from_data(df, experiment)
     else:
         # plot the data from the selected neurons for the TSM model
-        neurons = [33, 39, 13, 16, 21, 42, 14, 17, 41, 28, 12, 2]
+        neurons = [33, 39, 13, 16, 21, 41, 14, 17, 42, 28, 12, 2]
         plot_phase_overlap_mean_responses_from_data(df, experiment, nids=neurons, only_nids=read_arg(["--only-nids"]))
