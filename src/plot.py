@@ -846,7 +846,7 @@ def _plot_subcircuit(m, nids, nnames, ncolours, uss=None, title="sub-circuit"):
             v = m._v[:, nid]
             plt.plot(v, c=colour, lw=2, label=nname)
             if us is not None:
-                plt.plot(np.arange(len(v))[v > 1], v[v > 1], us + "*")
+                plt.plot(np.arange(len(v))[v > 1.5], v[v > 1.5], us + "*")
         plt.ylim([-0.1, 2.1])
         plt.yticks([0, 1, 2])
         plt.xlim([1, 100])

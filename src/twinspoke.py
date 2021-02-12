@@ -44,7 +44,7 @@ class TwinSpokeModel(MBModel):
 
         shock_magnitude = 2.
         odour_magnitude = 2.
-        ltm_speed = .3 if as_subcircuits else .05
+        ltm_speed = .5 if as_subcircuits else .05
 
         p_dan_abs_s, p_dan_abs_e = 0, 2
         p_dan_stm_s, p_dan_stm_e = 2, 4
@@ -111,7 +111,7 @@ class TwinSpokeModel(MBModel):
             self._w_m2v[p_mbon_ltm_s:p_mbon_ltm_e, p_dan_stm_s:p_dan_stm_e] += np.array([  # M-MBONs to R-DANs
                 [+1.0, +.0],  # MBON-γ2α'1 (h_at)
                 [+.0, +1.0],  # MBON-γ5β'2a (h_av)
-            ]) * .05
+            ]) * ltm_speed
             # Relative DANs enhance their respective memory MBONs
             self._w_d2k[p_dan_stm_s:p_dan_stm_e, p_mbon_ltm_s:p_mbon_ltm_e] += np.array([
                 [float(m == (d + ((p_dan_stm_e-p_dan_stm_s) // 2) + 1) % (p_dan_stm_e-p_dan_stm_s))

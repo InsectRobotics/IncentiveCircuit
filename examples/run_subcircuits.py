@@ -13,7 +13,7 @@ if __name__ == '__main__':
     kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=nb_kcs // 2)
 
     # First Order Memory Sub-circuit
-    if read_arg(["--fom", "--first-order-memory"]):
+    if read_arg(["--sm", "--susceptible-memory"]):
         model = TwinSpokeModel(
             learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=24,
             nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
@@ -40,7 +40,7 @@ if __name__ == '__main__':
         plot_bm(run_custom_routine(model, routine=shock_routine))
 
     # Reciprocal Second Order Memory Sub-circuit
-    if read_arg(["--rsom", "--reciprocal-second-order-memory"]):
+    if read_arg(["--rrm", "--reciprocal-relative-memory"]):
         model = TwinSpokeModel(
             learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=24,
             nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
