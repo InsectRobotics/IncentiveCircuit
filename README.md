@@ -1,8 +1,10 @@
-# FlyMushroomBody
+# WheelOfMotivations
 
 Python replication for the results from the eLife manuscript:
 
 Name and DOI/ref
+
+The **wheel of motivations** is a model of the mushroom body in the fruit fly brain that is recieving sensory input and reinforcements and modulates the motivation state of the system. This creates a ranking of available tasks with respect to their inportance given the current context.
 
 ## Environment
 
