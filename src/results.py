@@ -59,4 +59,3 @@ def run_custom_routine(mb_model, routine):
     new_model = mb_model.copy()
     new_model(routine=routine(new_model))
     return new_model
-

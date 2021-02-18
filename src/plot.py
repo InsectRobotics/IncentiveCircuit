@@ -1,6 +1,7 @@
 from models_base import MBModel
 
 from typing import List
+from scipy.stats import circmean, circstd
 from matplotlib import cm
 from matplotlib.colors import Normalize
 
@@ -612,12 +613,15 @@ def plot_synapses(w, names_in, names_out, ax=None, cmap="coolwarm", vmin=-.5, vm
     ax.xaxis.set_ticks_position("none")
 
 
-def plot_learning_rule(wrt_k=True, wrt_w=True, wrt_d=True, colour_bar=False):
+def plot_learning_rule(wrt_k=True, wrt_w=True, wrt_d=True, colour_bar=False, fill=True):
     """
     Plots 21 contour sub-plots in a 3-by-7 grid where the relationship among the parameters of the dopaminergic learning
     rule is visualised. In each row contours are created for 7 values of one of the parameters: KC+W(t), D(t) or W(t+1).
     """
 
+    contour = plt.contour
+    if fill:
+        contour = plt.contourf
     k_, d_, w_ = np.linspace(0, 1, 101), np.linspace(-1, 1, 101), np.linspace(0, 1, 101)
 
     nb_rows = int(wrt_k) + int(wrt_w) + int(wrt_d)
@@ -628,7 +632,7 @@ def plot_learning_rule(wrt_k=True, wrt_w=True, wrt_d=True, colour_bar=False):
         for i, k in enumerate(np.linspace(0, 1, 7)):
             y = d * (k + w - 1)
             plt.subplot(nb_rows, nb_cols, i + 1)
-            plt.contour(w, d, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
+            contour(w, d, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
             plt.xticks([0, .5, 1], fontsize=8)
             plt.xlabel("w", fontsize=8)
             if i < 1:
@@ -644,7 +648,7 @@ def plot_learning_rule(wrt_k=True, wrt_w=True, wrt_d=True, colour_bar=False):
         for i, w in enumerate(np.linspace(0, 1, 7)):
             y = d * (k + w - 1)
             plt.subplot(nb_rows, nb_cols, int(wrt_k) * nb_cols + i + 1)
-            plt.contour(k, d, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
+            contour(k, d, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
             plt.xticks([0, .5, 1], fontsize=8)
             plt.xlabel("k", fontsize=8)
             if i < 1:
@@ -660,7 +664,7 @@ def plot_learning_rule(wrt_k=True, wrt_w=True, wrt_d=True, colour_bar=False):
         for i, d in enumerate(np.linspace(-1, 1, 7)):
             y = d * (k + w - 1)
             plt.subplot(nb_rows, nb_cols, (int(wrt_k) + int(wrt_w)) * nb_cols + i + 1)
-            plt.contour(k, w, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
+            contour(k, w, y, 30, cmap="coolwarm", vmin=-2, vmax=2)
             plt.xticks([0, .5, 1], fontsize=8)
             plt.xlabel("k", fontsize=8)
             if i < 1:
@@ -859,3 +863,354 @@ def _plot_subcircuit(m, nids, nnames, ncolours, uss=None, title="sub-circuit"):
 
         plt.tight_layout()
     plt.show()
+
+
+def plot_arena_paths(data, name="arena", lw=1., alpha=.2, ax=None, save=False, show=True):
+    if ax is None:
+        plt.figure(name, figsize=(2, 2))
+        ax = plt.subplot(111, polar=True)
+
+    # ax.set_theta_offset(np.pi)
+    ax.set_theta_zero_location("W")
+
+    draw_gradients(ax, radius=1.)
+
+    nb_flies, nb_steps = data.shape
+    e_pre = int(.2 * nb_steps)
+    s_post = int(.5 * nb_steps)
+    for i in range(nb_flies):
+        ax.plot(np.angle(data[i, :e_pre]), np.absolute(data[i, :e_pre]), color='b', alpha=alpha, lw=lw)
+        ax.plot(np.angle(data[i, e_pre:s_post]), np.absolute(data[i, e_pre:s_post]),
+                color='r' if 'quinine' in name else 'g', alpha=alpha, lw=lw)
+        ax.plot(np.angle(data[i, s_post:]), np.absolute(data[i, s_post:]), color='k', alpha=alpha, lw=lw)
+
+    ax.set_yticks([])
+    ax.set_xticks([])
+    ax.set_ylim([0, 1])
+
+    if save:
+        plt.savefig(name + ".svg", dpi=600)
+    if show:
+        plt.show()
+
+
+def plot_arena_stats(df, name="arena-stats"):
+
+    mechanisms = ["susceptible", "reciprocal", "long-term memory", ["susceptible", "reciprocal", "long-term memory"]]
+    reinforcements = ["punishment", "reward"]
+    odours = ["A", "B", "AB"]
+    ms, rs, os = np.meshgrid(mechanisms, reinforcements, odours)
+
+    plt.figure(name, figsize=(5, 4))
+    for mechanism, reinforcement, odour in zip(ms.flatten(), rs.flatten(), os.flatten()):
+        m = mechanisms.index(mechanism)
+        r = reinforcements.index(reinforcement)
+        o = odours.index(odour)
+        ax = plt.subplot(4, 6, m * 6 + r * 3 + o + 1, polar=True)
+        ax.set_theta_zero_location("W")
+        _plot_arena_stats(df, mechanisms=mechanism, reinforcements=reinforcement, odours=odour, ax=ax,
+                          name="%s-%s-%s" % ("".join([m[0] for m in mechanism]) if isinstance(mechanism, list)
+                                             else mechanism[0], reinforcement[0], odour.lower()))
+    plt.tight_layout()
+    plt.show()
+
+
+def _plot_arena_stats(data, mechanisms=None, reinforcements=None, odours=None, name="arena-stats",
+                      bimodal_tol=np.pi/2, print_stats=False, ax=None):
+
+    if ax is None:
+        plt.figure(name, figsize=(2, 2))
+        ax = plt.subplot(111, polar=True)
+    else:
+        ax.set_title(name, fontsize=8)
+    if mechanisms is None:
+        mechanisms = ["susceptible", "reciprocal", "long-term memory"]
+    if not isinstance(mechanisms, list):
+        mechanisms = [mechanisms]
+    if reinforcements is None:
+        reinforcements = ["reward"]
+    if not isinstance(reinforcements, list):
+        reinforcements = [reinforcements]
+    if odours is None:
+        odours = ["B"]
+    if not isinstance(odours, list):
+        odours = [odours]
+
+    mechanisms_not = list({"susceptible", "reciprocal", "long-term memory"} - set(mechanisms))
+
+    df = data[np.all([data[m] for m in mechanisms] + [~data[m] for m in mechanisms_not], axis=0)]
+    df = df[np.any([df["reinforcement"] == r for r in reinforcements], axis=0)]
+    df = df[np.any([df["paired odour"] == o for o in odours], axis=0)]
+
+    d_pre = np.deg2rad(df[df["phase"] == "pre"]["angle"])
+    d_learn = np.deg2rad(df[df["phase"] == "learn"]["angle"])
+    d_post = np.deg2rad(df[df["phase"] == "post"]["angle"])
+
+    if print_stats:
+        from scipy.stats import circmean, circstd
+
+        n_pre = len(d_pre)
+        d_pre_mean = circmean(d_pre)
+        d_pre_std = circstd(d_pre)
+        print("pre:", np.rad2deg(d_pre_mean), np.rad2deg(d_pre_std), n_pre)
+
+        if d_pre_std > np.pi/2:
+            d_pre_000 = d_pre[np.all([-bimodal_tol/2 <= ((d_pre + np.pi) % (2 * np.pi) - np.pi),
+                                      ((d_pre + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
+            d_pre_090 = d_pre[np.all([-bimodal_tol/2 <= ((d_pre - np.pi/2 + np.pi) % (2 * np.pi) - np.pi),
+                                     ((d_pre - np.pi/2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
+            d_pre_180 = d_pre[np.all([-bimodal_tol/2 <= ((d_pre - np.pi + np.pi) % (2 * np.pi) - np.pi),
+                                     ((d_pre - np.pi + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
+            d_pre_270 = d_pre[np.all([-bimodal_tol/2 <= ((d_pre + np.pi/2 + np.pi) % (2 * np.pi) - np.pi),
+                                     ((d_pre + np.pi/2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
+
+            n_pre_000 = len(d_pre_000)
+            d_pre_000_mean = circmean(d_pre_000)
+            d_pre_000_std = circstd(d_pre_000)
+            print("pre   0:", np.rad2deg(d_pre_000_mean), np.rad2deg(d_pre_000_std), n_pre_000)
+
+            n_pre_090 = len(d_pre_090)
+            d_pre_090_mean = circmean(d_pre_090)
+            d_pre_090_std = circstd(d_pre_090)
+            print("pre  90:", np.rad2deg(d_pre_090_mean), np.rad2deg(d_pre_090_std), n_pre_090)
+
+            n_pre_180 = len(d_pre_180)
+            d_pre_180_mean = circmean(d_pre_180)
+            d_pre_180_std = circstd(d_pre_180)
+            print("pre 180:", np.rad2deg(d_pre_180_mean), np.rad2deg(d_pre_180_std), n_pre_180)
+
+            n_pre_270 = len(d_pre_270)
+            d_pre_270_mean = circmean(d_pre_270)
+            d_pre_270_std = circstd(d_pre_270)
+            print("pre 270:", np.rad2deg(d_pre_270_mean), np.rad2deg(d_pre_270_std), n_pre_270)
+
+        n_learn = len(d_learn)
+        d_learn_mean = circmean(d_learn, high=np.pi, low=-np.pi)
+        d_learn_std = circstd(d_learn)
+        print("learn:", np.rad2deg(d_learn_mean), np.rad2deg(d_learn_std), n_learn)
+
+        if d_learn_std > np.pi/2:
+            d_learn_000 = d_learn[np.all([-bimodal_tol/2 <= ((d_learn + np.pi) % (2 * np.pi) - np.pi),
+                                         ((d_learn + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
+            d_learn_090 = d_learn[np.all([-bimodal_tol/2 <= ((d_learn - np.pi/2 + np.pi) % (2 * np.pi) - np.pi),
+                                         ((d_learn - np.pi/2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
+            d_learn_180 = d_learn[np.all([-bimodal_tol/2 <= ((d_learn - np.pi + np.pi) % (2 * np.pi) - np.pi),
+                                         ((d_learn - np.pi + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
+            d_learn_270 = d_learn[np.all([-bimodal_tol/2 <= ((d_learn + np.pi/2 + np.pi) % (2 * np.pi) - np.pi),
+                                         ((d_learn + np.pi/2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
+
+            n_learn_000 = len(d_learn_000)
+            d_learn_000_mean = circmean(d_learn_000)
+            d_learn_000_std = circstd(d_learn_000)
+            print("learn   0:", np.rad2deg(d_learn_000_mean), np.rad2deg(d_learn_000_std), n_learn_000)
+
+            n_learn_090 = len(d_learn_090)
+            d_learn_090_mean = circmean(d_learn_090)
+            d_learn_090_std = circstd(d_learn_090)
+            print("learn  90:", np.rad2deg(d_learn_090_mean), np.rad2deg(d_learn_090_std), n_learn_090)
+
+            n_learn_180 = len(d_learn_180)
+            d_learn_180_mean = circmean(d_learn_180)
+            d_learn_180_std = circstd(d_learn_180)
+            print("learn 180:", np.rad2deg(d_learn_180_mean), np.rad2deg(d_learn_180_std), n_learn_180)
+
+            n_learn_270 = len(d_learn_270)
+            d_learn_270_mean = circmean(d_learn_270)
+            d_learn_270_std = circstd(d_learn_270)
+            print("learn 270:", np.rad2deg(d_learn_270_mean), np.rad2deg(d_learn_270_std), n_learn_270)
+
+        n_post = len(d_post)
+        d_post_mean = circmean(d_post, high=np.pi, low=-np.pi)
+        d_post_std = circstd(d_post)
+        print("post:", np.rad2deg(d_post_mean), np.rad2deg(d_post_std), n_post)
+
+        if d_post_std > np.pi/2:
+            d_post_000 = d_post[np.all([-bimodal_tol/2 <= ((d_post + np.pi) % (2 * np.pi) - np.pi),
+                                       ((d_post + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
+            d_post_090 = d_post[np.all([-bimodal_tol/2 <= ((d_post - np.pi/2 + np.pi) % (2 * np.pi) - np.pi),
+                                       ((d_post - np.pi/2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
+            d_post_180 = d_post[np.all([-bimodal_tol/2 <= ((d_post - np.pi + np.pi) % (2 * np.pi) - np.pi),
+                                       ((d_post - np.pi + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
+            d_post_270 = d_post[np.all([-bimodal_tol/2 <= ((d_post + np.pi/2 + np.pi) % (2 * np.pi) - np.pi),
+                                       ((d_post + np.pi/2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
+
+            n_post_000 = len(d_post_000)
+            d_post_000_mean = circmean(d_post_000)
+            d_post_000_std = circstd(d_post_000)
+            print("post   0:", np.rad2deg(d_post_000_mean), np.rad2deg(d_post_000_std), n_post_000)
+
+            n_post_090 = len(d_post_090)
+            d_post_090_mean = circmean(d_post_090)
+            d_post_090_std = circstd(d_post_090)
+            print("post  90:", np.rad2deg(d_post_090_mean), np.rad2deg(d_post_090_std), n_post_090)
+
+            n_post_180 = len(d_post_180)
+            d_post_180_mean = circmean(d_post_180)
+            d_post_180_std = circstd(d_post_180)
+            print("post 180:", np.rad2deg(d_post_180_mean), np.rad2deg(d_post_180_std), n_post_180)
+
+            n_post_270 = len(d_post_270)
+            d_post_270_mean = circmean(d_post_270)
+            d_post_270_std = circstd(d_post_270)
+            print("post 270:", np.rad2deg(d_post_270_mean), np.rad2deg(d_post_270_std), n_post_270)
+
+    draw_gradients(ax, radius=1.)
+
+    # density_pre = gaussian_kde(d_pre, bw_method=partial(my_kde_bandwidth, fac=.5))
+    x, density_pre = vonmises_fft_kde(d_pre, kappa=10, n_bins=36)
+    x, density_learn = vonmises_fft_kde(d_learn, kappa=10, n_bins=36)
+    x, density_post = vonmises_fft_kde(d_post, kappa=10, n_bins=36)
+
+    rein_c = 'r' if "punishment" in reinforcements else "g"
+    ax.fill_between(x, density_pre * 0., density_pre, facecolor='b', alpha=.2)
+    ax.plot(x, density_pre, 'b', lw=.5)
+    ax.fill_between(x, density_learn * 0., density_learn, facecolor=rein_c, alpha=.2)
+    ax.plot(x, density_learn, rein_c, lw=.5)
+    ax.fill_between(x, density_post * 0., density_post, facecolor='k', alpha=.2)
+    ax.plot(x, density_post, 'k', lw=.5)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_ylim([0, 1])
+
+
+def plot_arena_box(df, name="arena-box", bimodal_tol=np.pi, print_stats=False):
+
+    mechanisms = [["susceptible"], ["reciprocal"], ["long-term memory"],
+                  ["susceptible", "reciprocal", "long-term memory"]]
+    reinforcements = ["punishment", "reward"]
+    odours = ["A", "B", "AB"]
+    ms, rs, os = np.meshgrid(mechanisms, reinforcements, odours)
+
+    labels, means, data = [], [], []
+    for mechanism, reinforcement, odour in zip(ms.flatten(), rs.flatten(), os.flatten()):
+
+        mechanisms_not = list({"susceptible", "reciprocal", "long-term memory"} - set(mechanism))
+        dff = df[np.all([df[m] for m in mechanism] + [~df[m] for m in mechanisms_not], axis=0)]
+        dff = dff[np.any([dff["reinforcement"] == reinforcement], axis=0)]
+        dff = dff[np.any([dff["paired odour"] == odour], axis=0)]
+
+        d_pre = np.deg2rad(dff[dff["phase"] == "pre"]["angle"])
+        d_learn = np.deg2rad(dff[dff["phase"] == "learn"]["angle"])
+        d_post = np.deg2rad(dff[dff["phase"] == "post"]["angle"])
+
+        print("PRE", mechanism, reinforcement, odour)
+        d_pre_mean, d_pre_std, n_pre = _get_bimodal_mean(d_pre, bimodal_tol, verbose=print_stats)
+        print("pre:", np.rad2deg(d_pre_mean), np.rad2deg(d_pre_std), n_pre)
+        print("LEARN", mechanism, reinforcement, odour)
+        d_learn_mean, d_learn_std, n_learn = _get_bimodal_mean(d_learn, bimodal_tol, verbose=print_stats)
+        print("learn:", np.rad2deg(d_learn_mean), np.rad2deg(d_learn_std), n_learn)
+        print("POST", mechanism, reinforcement, odour)
+        d_post_mean, d_post_std, n_post = _get_bimodal_mean(d_post, bimodal_tol, verbose=print_stats)
+        print("post:", np.rad2deg(d_post_mean), np.rad2deg(d_post_std), n_post)
+
+        label = "%s%s-%s" % (reinforcement[0],
+                             "".join([m[0] for m in mechanism]) if isinstance(mechanism, list) else mechanism[0],
+                             odour.lower())
+        labels.append("%s (pre)" % label)
+        means.append(d_pre_mean)
+        data.append(d_pre)
+        labels.append("%s (learn)" % label)
+        means.append(d_learn_mean)
+        data.append(d_learn)
+        labels.append("%s (post)" % label)
+        means.append(d_post_mean)
+        data.append(d_post)
+
+
+def _get_bimodal_mean(data, bimodal_tol=np.pi, verbose=False):
+    n = [len(data)]
+    d_mean = [circmean(data)]
+    d_std = [circstd(data)]
+
+    if d_std[0] > np.pi / 3:
+        d_000 = data[np.all([-bimodal_tol / 2 <= ((data + np.pi) % (2 * np.pi) - np.pi),
+                             ((data + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol / 2], axis=0)]
+        d_090 = data[np.all([-bimodal_tol / 2 <= ((data - np.pi / 2 + np.pi) % (2 * np.pi) - np.pi),
+                             ((data - np.pi / 2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol / 2], axis=0)]
+        d_180 = data[np.all([-bimodal_tol / 2 <= ((data - np.pi + np.pi) % (2 * np.pi) - np.pi),
+                             ((data - np.pi + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol / 2], axis=0)]
+        d_270 = data[np.all([-bimodal_tol / 2 <= ((data + np.pi / 2 + np.pi) % (2 * np.pi) - np.pi),
+                             ((data + np.pi / 2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol / 2], axis=0)]
+
+        n_000 = len(d_000)
+        d_000_mean = circmean(d_000)
+        d_000_std = circstd(d_000)
+        if verbose:
+            print("data   0:", np.rad2deg(d_000_mean), np.rad2deg(d_000_std), n_000)
+
+        n_090 = len(d_090)
+        d_090_mean = circmean(d_090)
+        d_090_std = circstd(d_090)
+        if verbose:
+            print("data  90:", np.rad2deg(d_090_mean), np.rad2deg(d_090_std), n_090)
+
+        n_180 = len(d_180)
+        d_180_mean = circmean(d_180)
+        d_180_std = circstd(d_180)
+        if verbose:
+            print("data 180:", np.rad2deg(d_180_mean), np.rad2deg(d_180_std), n_180)
+
+        n_270 = len(d_270)
+        d_270_mean = circmean(d_270)
+        d_270_std = circstd(d_270)
+        if verbose:
+            print("data 270:", np.rad2deg(d_270_mean), np.rad2deg(d_270_std), n_270)
+
+        if d_000_std < np.pi / 6 and d_180_std < np.pi / 6:
+            # bimodal on horizontal axis
+            d_mean = [d_000_mean, d_180_mean]
+            d_std = [d_000_std, d_180_std]
+            n = [n_000, n_180]
+
+        elif d_090_std < np.pi / 6 and d_270_std < np.pi / 6:
+            # bimodal on vertical axis
+            d_mean = [d_090_mean, d_270_mean]
+            d_std = [d_090_std, d_270_std]
+            n = [n_090, n_270]
+
+    return d_mean, d_std, n
+
+
+def draw_gradients(ax, radius=1., draw_sources=True, cmap="coolwarm", levels=20, vminmax=3):
+    from arena import FruitFly, gaussian_p
+
+    a_mean, a_sigma = FruitFly.a_source, FruitFly.a_sigma
+    b_mean, b_sigma = FruitFly.b_source, FruitFly.b_sigma
+    x, y = np.meshgrid(np.linspace(-radius, radius, int(radius * 100) + 1),
+                       np.linspace(-radius, radius, int(radius * 100) + 1))
+    p = (x + y * 1j).T
+
+    p_a = gaussian_p(p, a_mean, a_sigma)
+    p_b = gaussian_p(p, b_mean, b_sigma)
+
+    rho, dist = np.angle(p), np.absolute(p)
+    ax.contourf(rho-np.pi/2, dist, p_b - p_a, cmap=cmap, levels=levels, vmin=-vminmax, vmax=vminmax)
+    ax.contour(rho-np.pi/2, dist, p_b - p_a, levels=[-.0001, .0001], colors='lightsteelblue', linestyles='--')
+
+    if draw_sources:
+        ax.scatter(np.angle(a_mean), np.absolute(a_mean), s=20, color="C0", label="odour A")
+        ax.scatter(np.angle(b_mean), np.absolute(b_mean), s=20, color="C1", label="odour B")
+
+    return ax
+
+
+def vonmises_pdf(x, mu, kappa):
+    from scipy.special import i0
+
+    return np.exp(kappa * np.cos(x - mu)) / (2. * np.pi * i0(kappa))
+
+
+def vonmises_fft_kde(data, kappa, n_bins):
+    bins = np.linspace(-np.pi, np.pi, n_bins + 1, endpoint=True)
+    hist_n, bin_edges = np.histogram(data, bins=bins)
+    bin_centers = np.mean([bin_edges[1:], bin_edges[:-1]], axis=0)
+    kernel = vonmises_pdf(
+        x=bin_centers,
+        mu=0,
+        kappa=kappa
+    )
+    kde = np.fft.fftshift(np.fft.irfft(np.fft.rfft(kernel) * np.fft.rfft(hist_n)))
+    kde /= np.trapz(kde, x=bin_centers)
+    bin_centers = np.r_[bin_centers, bin_centers[0]]
+    kde = np.r_[kde, kde[0]]
+    return bin_centers, kde
