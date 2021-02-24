@@ -1,10 +1,11 @@
-# The Wheel of Motivations
+# The Incentive Complex
 
 Python replication for the results from the eLife manuscript:
 
 Name and DOI/ref
 
-The "**wheel of motivations**" is a model of the mushroom body in the fruit fly brain that recieves sensory input and reinforcements and modulates the motivation state of the animal. This creates a ranking of available tasks with respect to their importance given the current context. This is an extension of the "**twin-spoke model**", which is limited into two motivation states: *attraction* and *avoidance*.
+The "**incentive complex**" is a model of the mushroom body in the fruit fly brain that recieves sensory input and reinforcements and modulates the motivation state of the animal. In this model, the motivation states are limited into: *attraction* and *avoidance*. An extenstion of this is the "**wheel of incentives**",
+which creates a ranking of available tasks with respect to their importance given the current context.
 
 ## Environment
 
@@ -12,6 +13,7 @@ In order to be able to use this code, the required packages are listed below:
 * [Python 3.7](https://www.python.org/downloads/release/python-370/)
 * [NumPy](https://numpy.org/)
 * [Matplotlib](https://matplotlib.org/)
+* [pandas](https://pandas.pydata.org/)
 
 ## Usage
 
@@ -25,17 +27,20 @@ install the package.
 
 You can reproduce the results by running:
 ```commandline
-python run_subcircuit.py --nb-kc 10 --fom --ltm --bm --rsom --rfm --mdm
+python run_subcircuit.py --nb-kc 10 --sm --rm --ltm --rrm --rfm --mam
 python run_twinspokemodel.py --nb-kc 10 --only-nids --structure
 python run_twinspokemodel.py --nb-kc 10 --only-nids --values --weights
 python run_wheelmodel.py --nb-kc 10 --only-nids --structure
 python run_wheelmodel.py --nb-kc 10 --only-nids --values --weights
 python run_data_analysis.py --stats --only-nids --verbose
+python run_arena_paths.py
+python run_arena_stats.py
+python create_paths.py
 ```
 where `--nb-kc` specifies the number of KCs (default is 10), `--odour1` specifies the
 number of KCs associated to odour A and `--odour2` specifies the number of KCs
-associated to odour B; `--fom`, `--ltm`, `--bm`, `--rsom`, `--rfm` and `--mdm` flags
-the generating of the sub-circuit results for the FOM, LTM, BM, RSOM, RFM and MDM
+associated to odour B; `--sm`, `--rm`, `--ltm`, `--rrm`, `--rfm` and `--mam` flags
+the generating of the sub-circuit results for the SM, RM, LTM, RRM, RFM and MAM
 sub-circuits respectively; `--only-nids` plots only the neurons associated to the
 twin-spoke model; `--structure`, `--values` and `--weights` enable plotting of the
 structure, responses and KC-MBON synaptic weights of the model over time respectively;
