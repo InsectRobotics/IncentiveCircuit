@@ -259,7 +259,7 @@ class MBModel(object):
             # When KC > 0 and DAN > W - W_rest increase the weight (if KC < 0 it is reversed)
             # When KC > 0 and DAN < W - W_rest decrease the weight (if KC < 0 it is reversed)
             # When KC = 0 no learning happens
-            w_new = w_k2m + eta_w * k * (D - w_k2m + self.w_rest)
+            w_new = w_k2m + eta_w * k * (D - v + self.w_rest)
         else:
             # if the learning rule is not valid then do nothing
             w_new = w_k2m

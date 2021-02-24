@@ -14,7 +14,7 @@ if __name__ == '__main__':
     model = WheelModel(
         learning_rule="dlr", nb_apl=0, pn2kc_init="default", verbose=False, timesteps=3, trials=24,
         nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
-        has_fom=True, has_bm=True, has_rsom=True, has_ltm=True, has_mdm=True)
+        has_sm=True, has_rm=True, has_rrm=True, has_ltm=True, has_mam=True)
 
     # run all the experiments and get a copy of the model with the history of their responses and parameters for each
     # one of them

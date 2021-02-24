@@ -1,4 +1,4 @@
-from twinspoke import TwinSpokeModel
+from twinspoke import IncentiveComplex
 
 import numpy as np
 
@@ -9,12 +9,12 @@ class FruitFly(object):
     b_source = -.6+0j
     b_sigma = .3
 
-    def __init__(self, nb_kcs=10, nb_kc_odour_a=5, nb_kc_odour_b=5, nb_steps=1000, nb_in_trial=1,
+    def __init__(self, nb_kcs=10, nb_kc_odour_a=5, nb_kc_odour_b=5, nb_steps=1000, nb_in_trial=1, learning_rule="dlr",
                  rng=np.random.RandomState()):
-        self.mb = TwinSpokeModel(
-            learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=nb_in_trial, nb_trials=nb_steps,
+        self.mb = IncentiveComplex(
+            learning_rule=learning_rule, nb_apl=0, pn2kc_init="default", nb_timesteps=nb_in_trial, nb_trials=nb_steps,
             nb_kc=nb_kcs, nb_kc_odour_1=nb_kc_odour_a, nb_kc_odour_2=nb_kc_odour_b, has_real_names=False,
-            has_fom=True, has_bm=True, has_ltm=True, has_rsom=True, has_rfm=True, has_mdm=True)
+            has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
 
         self.xy = np.zeros(nb_steps, dtype=np.complex)
         self.p_a = np.zeros(nb_steps, dtype=float)

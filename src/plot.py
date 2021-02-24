@@ -788,6 +788,7 @@ def plot_rfm(m, nids=None):
     if nids is None:
         nids = [5, 10, 4, 11]
     _plot_subcircuit(m, nids, title="rfm",
+                     uss=["r", None, None, None],
                      nnames=[r"$f_{av}$", r"$m_{at}$", r"$f_{at}$", r"$m_{av}$"],
                      ncolours=["#db006aff", "#6adbb8ff", "#6adb00ff", "#db6a6aff"])
 
@@ -850,7 +851,12 @@ def _plot_subcircuit(m, nids, nnames, ncolours, uss=None, title="sub-circuit"):
             v = m._v[:, nid]
             plt.plot(v, c=colour, lw=2, label=nname)
             if us is not None:
-                plt.plot(np.arange(len(v))[v > 1.5], v[v > 1.5], us + "*")
+                plt.plot(np.arange(len(v))[v > 1.5], v[v > 1.5], us + ".")
+
+        ax.plot([10, 10, 80, 80], [-.1, .5, .5, -.1], color=[.7]*3, linestyle=':')
+        if np.any(uss):
+            c = [1., .7, .7] if 'r' in uss else [.7, 1., .7]
+            ax.plot([30, 30, 60, 60], [-.1, 2, 2, -.1], color=c, linestyle=':')
         plt.ylim([-0.1, 2.1])
         plt.yticks([0, 1, 2])
         plt.xlim([1, 100])

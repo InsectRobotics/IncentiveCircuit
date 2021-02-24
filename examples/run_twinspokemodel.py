@@ -1,4 +1,4 @@
-from twinspoke import TwinSpokeModel
+from twinspoke import IncentiveComplex
 from results import run_main_experiments
 from tools import read_arg, run_arg
 
@@ -11,10 +11,10 @@ if __name__ == '__main__':
     kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=nb_kcs // 2)
 
     # create the Twin-Spoke Model
-    model = TwinSpokeModel(
+    model = IncentiveComplex(
         learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=26,
         nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
-        has_fom=True, has_bm=True, has_ltm=True, has_rsom=True, has_rfm=True, has_mdm=True)
+        has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
 
     # run all the experiments and get a copy of the model with the history of their responses and parameters for each
     # one of them
