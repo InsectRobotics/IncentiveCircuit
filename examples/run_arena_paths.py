@@ -15,6 +15,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import numpy as np
 
+    rw = read_arg(["-rw", "--rescorla-wagner"])
     file_names = [read_arg(["-f"], vtype=str, default=None)]
 
     if file_names[0] is None:
@@ -50,10 +51,15 @@ if __name__ == '__main__':
                "paired odour", "phase", "angle"]
     d_raw = [[], [], [], [], [], [], []]
 
-    plt.figure("arena-paths", figsize=(5, 4))
-
+    plt.figure("%sarena-paths" % ("rw-" if rw else ""), figsize=(5, 4))
     for fname in file_names:
-        details = re.findall(r'arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})', fname)
+        if rw:
+            pattern = r'rw-arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})'
+        else:
+            pattern = r'arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})'
+        details = re.findall(pattern, fname)
+        if len(details) < 1:
+            continue
         punishment = "p" if 'quinine' in details[0] else "r"
         neurons = (
             ("s" if 's' in details[0] else "") +

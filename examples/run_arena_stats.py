@@ -15,6 +15,7 @@ if __name__ == '__main__':
     import pandas as pd
     import numpy as np
 
+    rw = read_arg(["-rw", "--rescorla-wagner"])
     file_names = [read_arg(["-f"], vtype=str, default=None)]
 
     if file_names[0] is None:
@@ -25,7 +26,13 @@ if __name__ == '__main__':
     d_raw = [[], [], [], [], [], [], []]
 
     for fname in file_names:
-        details = re.findall(r'arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})', fname)
+        if rw:
+            pattern = r'rw-arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})'
+        else:
+            pattern = r'arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})'
+        details = re.findall(pattern, fname)
+        if len(details) < 1:
+            continue
         punishment = 'quinine' in details[0]
         susceptible = 's' in details[0]
         reciprocal = 'r' in details[0]
@@ -59,5 +66,5 @@ if __name__ == '__main__':
     df["reciprocal"] = np.array(df["reciprocal"] == "True", dtype=bool)
     df["long-term memory"] = np.array(df["long-term memory"] == "True", dtype=bool)
 
-    plot_arena_stats(df, "arena-stats")
+    plot_arena_stats(df, "%sarena-stats" % ("rw-" if rw else ""))
     # plot_arena_box(df, "arena-box", print_stats=False)
