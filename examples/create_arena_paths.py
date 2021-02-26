@@ -10,11 +10,9 @@ __dir__ = os.path.dirname(os.path.abspath(__file__))
 __data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "data", "arena"))
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    from arena import FruitFly, gaussian_p
+    from arena import FruitFly
 
     nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=100)
-    # nb_timesteps = 1000
     nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=100)
 
     if read_arg(["-p", "--punishment"]):
@@ -29,9 +27,9 @@ if __name__ == '__main__':
         susceptible = [False]
     else:
         susceptible = [True, False]
-    if read_arg(["-r", "--reciprocal"]):
+    if read_arg(["-r", "--restrained"]):
         reciprocal = [True]
-    elif read_arg(["-nr", "--not-reciprocal"]):
+    elif read_arg(["-nr", "--not-restrained"]):
         reciprocal = [False]
     else:
         reciprocal = [True, False]

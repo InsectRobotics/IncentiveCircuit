@@ -1,6 +1,14 @@
 from incentivecomplex import IncentiveComplex
 
 import numpy as np
+import pandas as pd
+import re
+import os
+
+# the directory of the file
+__dir__ = os.path.dirname(os.path.abspath(__file__))
+# the directory of the data
+__data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "data", "arena"))
 
 
 class FruitFly(object):
@@ -88,14 +96,16 @@ def arena_routine(agent, noise=0.1, r_start=.2, r_end=.5, reward=False, punishme
 
         sw, rw, mw = float(susceptible), float(reciprocal), float(ltm)
         attraction = (sw * s + rw * r + mw * m) / (sw + rw + mw)
+        if p_a > p_b:
+            direction = a_odour_source - agent.xy[t-1]
+        else:
+            direction = b_odour_source - agent.xy[t-1]
+        direction /= np.maximum(np.absolute(direction), np.finfo(float).eps)
         if t < 2:
             vel = 0+0j
         else:
             vel = agent.xy[t-1] - agent.xy[t-2]
-        if p_a > p_b:
-            rho = attraction * (a_odour_source - agent.xy[t-1])
-        else:
-            rho = attraction * (b_odour_source - agent.xy[t-1])
+        rho = attraction * direction
 
         vel += rho + agent.rng.randn() * .1 + agent.rng.randn() * .1j
         z = np.maximum(np.absolute(vel), np.finfo(float).eps)
@@ -103,6 +113,70 @@ def arena_routine(agent, noise=0.1, r_start=.2, r_end=.5, reward=False, punishme
 
         agent.xy[t] = agent.xy[t-1] + vel
         agent.xy[t] = agent.xy[t] / np.maximum(np.absolute(agent.xy[t]), 1)
+
+
+def load_arena_stats(file_names, rw=False):
+
+    d_names = ["susceptible", "reciprocal", "long-term memory", "reinforcement",
+               "paired odour", "phase", "angle", "dist_A", "dist_B", "ang_A", "ang_B"]
+    d_raw = [[], [], [], [], [], [], [], [], [], [], []]
+
+    for fname in file_names:
+        if rw:
+            pattern = r'rw-arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})'
+        else:
+            pattern = r'arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})'
+        details = re.findall(pattern, fname)
+        if len(details) < 1:
+            continue
+        punishment = 'quinine' in details[0]
+        susceptible = 's' in details[0]
+        reciprocal = 'r' in details[0]
+        ltm = 'm' in details[0]
+        only_a = 'a' in details[0]
+        only_b = 'b' in details[0]
+
+        data = np.load(os.path.join(__data_dir__, fname))["data"]
+
+        nb_flies, nb_time_steps = data.shape
+
+        e_pre, s_post = int(.2 * nb_time_steps), int(.5 * nb_time_steps)
+
+        d_raw[0].extend([susceptible] * 3 * nb_flies)
+        d_raw[1].extend([reciprocal] * 3 * nb_flies)
+        d_raw[2].extend([ltm] * 3 * nb_flies)
+        d_raw[3].extend(["punishment" if punishment else "reward"] * 3 * nb_flies)
+        d_raw[4].extend([("A+B" if only_b else "A") if only_a else ("B" if only_b else "AB")] * 3 * nb_flies)
+        d_raw[5].extend(["pre"] * nb_flies)
+        d_raw[5].extend(["learn"] * nb_flies)
+        d_raw[5].extend(["post"] * nb_flies)
+        d_raw[6].extend(np.angle(data[:, e_pre-1]))
+        d_raw[6].extend(np.angle(data[:, s_post-1]))
+        d_raw[6].extend(np.angle(data[:, -1]))
+        d_raw[7].extend(np.absolute(data[:, e_pre-1] - FruitFly.a_source))
+        d_raw[7].extend(np.absolute(data[:, s_post-1] - FruitFly.a_source))
+        d_raw[7].extend(np.absolute(data[:, -1] - FruitFly.a_source))
+        d_raw[8].extend(np.absolute(data[:, e_pre-1] - FruitFly.b_source))
+        d_raw[8].extend(np.absolute(data[:, s_post-1] - FruitFly.b_source))
+        d_raw[8].extend(np.absolute(data[:, -1] - FruitFly.b_source))
+        d_raw[9].extend(np.angle(data[:, e_pre-1] - FruitFly.a_source))
+        d_raw[9].extend(np.angle(data[:, s_post-1] - FruitFly.a_source))
+        d_raw[9].extend(np.angle(data[:, -1] - FruitFly.a_source))
+        d_raw[10].extend(np.angle(data[:, e_pre-1] - FruitFly.b_source))
+        d_raw[10].extend(np.angle(data[:, s_post-1] - FruitFly.b_source))
+        d_raw[10].extend(np.angle(data[:, -1] - FruitFly.b_source))
+    d_raw = np.array(d_raw)
+    df = pd.DataFrame(d_raw, index=d_names).T
+    df["angle"] = np.rad2deg(np.array(df["angle"], dtype=float))
+    df["dist_A"] = np.array(df["dist_A"], dtype=float)
+    df["dist_B"] = np.array(df["dist_B"], dtype=float)
+    df["ang_A"] = np.rad2deg(np.array(df["ang_A"], dtype=float))
+    df["ang_B"] = np.rad2deg(np.array(df["ang_B"], dtype=float))
+    df["susceptible"] = np.array(df["susceptible"] == "True", dtype=bool)
+    df["reciprocal"] = np.array(df["reciprocal"] == "True", dtype=bool)
+    df["long-term memory"] = np.array(df["long-term memory"] == "True", dtype=bool)
+
+    return df
 
 
 def gaussian_p(pos, mean, sigma):

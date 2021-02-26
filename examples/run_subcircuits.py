@@ -1,7 +1,7 @@
 from incentivecomplex import IncentiveComplex
 from results import run_custom_routine
 from routines import rewarding_routine, shock_routine
-from plot import plot_fom, plot_ltm, plot_bm, plot_rsom, plot_rfm, plot_mdm
+from plot import plot_sm, plot_ltm, plot_rm, plot_rrm, plot_rfm, plot_mam
 from tools import read_arg
 
 
@@ -19,7 +19,7 @@ if __name__ == '__main__':
             nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
             has_sm=True, has_rm=False, has_ltm=False, has_rrm=False, has_rfm=False, has_mam=False,
             as_subcircuits=True)
-        plot_fom(run_custom_routine(model, routine=shock_routine))
+        plot_sm(run_custom_routine(model, routine=shock_routine))
 
     # Restrained Memory Sub-circuit
     if read_arg(["--rm", "--restrained-memory"]):
@@ -28,7 +28,7 @@ if __name__ == '__main__':
             nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=False, has_rrm=False, has_rfm=False, has_mam=False,
             as_subcircuits=True)
-        plot_bm(run_custom_routine(model, routine=shock_routine))
+        plot_rm(run_custom_routine(model, routine=shock_routine))
 
     # Long-Term Memory Sub-circuit
     if read_arg(["--ltm", "--long-term-memory"]):
@@ -46,7 +46,7 @@ if __name__ == '__main__':
             nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=False, has_mam=False,
             as_subcircuits=True)
-        plot_rsom(run_custom_routine(model, routine=shock_routine))
+        plot_rrm(run_custom_routine(model, routine=shock_routine))
 
     # Reciprocal Forgetting Memory Sub-circuit
     if read_arg(["--rfm", "--reciprocal-forgetting-memory"]):
@@ -64,5 +64,5 @@ if __name__ == '__main__':
             nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True,
             as_subcircuits=True)
-        plot_mdm(run_custom_routine(model, routine=rewarding_routine))
+        plot_mam(run_custom_routine(model, routine=rewarding_routine))
 

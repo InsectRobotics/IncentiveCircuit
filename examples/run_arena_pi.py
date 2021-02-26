@@ -1,5 +1,6 @@
 from tools import read_arg
 
+import numpy as np
 import os
 
 # the directory of the file
@@ -20,4 +21,12 @@ if __name__ == '__main__':
 
     df = load_arena_stats(file_names, rw=rw)
 
-    plot_arena_stats(df, "%sarena-stats" % ("rw-" if rw else ""))
+    df["avoid A"] = df["dist_A"] / 0.6 - 1
+    df["avoid B"] = df["dist_B"] / 0.6 - 1
+    df["avoid A/B"] = np.max([df["dist_A"], df["dist_B"]], axis=0) / 0.6 - 1
+    df["attract A"] = df["dist_A"] / 0.6 - 1
+    df["attract B"] = df["dist_B"] / 0.6 - 1
+    df["attract A/B"] = np.min([df["dist_A"], df["dist_B"]], axis=0) / 0.6 - 1
+    print(df.columns)
+
+    plot_arena_box(df, "%sarena-box" % ("rw-" if rw else ""))

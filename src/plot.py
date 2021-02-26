@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_population(ms, nids=None, vmin=-2., vmax=2., only_nids=False):
+def plot_population(ms, nids=None, vmin=-2., vmax=2., only_nids=False, figsize=None):
     """
     Plots the responses as a matrix where the rows are different neurons and the columns are the time-steps. The colour
     reveals the actual responses of the neurons.
@@ -30,7 +30,9 @@ def plot_population(ms, nids=None, vmin=-2., vmax=2., only_nids=False):
     nb_models = len(ms)
     xticks = ["%d" % (i+1) for i in range(16)]
 
-    plt.figure(title, figsize=(7.5, 10))
+    if figsize is None:
+        figsize = (7.5, 10)
+    plt.figure(title, figsize=figsize)
 
     for i in range(nb_models):
         nb_timesteps = ms[i].nb_timesteps
@@ -105,7 +107,7 @@ def plot_population(ms, nids=None, vmin=-2., vmax=2., only_nids=False):
     plt.show()
 
 
-def plot_weights_matrices(ms, nids=None, vmin=-2., vmax=2., only_nids=False):
+def plot_weights_matrices(ms, nids=None, vmin=-2., vmax=2., only_nids=False, figsize=None):
     """
     Plots the KC-MBON synaptic weights strength as a matrix where the rows are different neurons and the columns are the
     time-steps. The colour reveals the actual strength of the synaptic weights from the KCs to MBONs. The data are split
@@ -127,7 +129,9 @@ def plot_weights_matrices(ms, nids=None, vmin=-2., vmax=2., only_nids=False):
     nb_models = len(ms)
     xticks = ["%d" % (i+1) for i in range(16)]
 
-    plt.figure(title, figsize=(7.5, 5))
+    if figsize is None:
+        figsize = (7.5, 5)
+    plt.figure(title, figsize=figsize)
 
     for i in range(nb_models):
         nb_timesteps = ms[i].nb_timesteps
@@ -195,7 +199,7 @@ def plot_weights_matrices(ms, nids=None, vmin=-2., vmax=2., only_nids=False):
     plt.show()
 
 
-def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True):
+def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=None):
     """
     Plots the average responses of the neurons per phase/trial with overlapping lines.
 
@@ -228,12 +232,13 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True):
     if only_nids:
         nb_rows = 2
         nb_cols = 12
-        figsize = (8, 2)
+        if figsize is None:
+            figsize = (8, 2)
     else:
         nb_rows = 8
         nb_cols = 8
-        figsize = (5, 7)
-        # figsize = (5, 5)
+        if figsize is None:
+            figsize = (5, 7)
     plt.figure(title, figsize=figsize)
 
     subs = []
@@ -343,7 +348,7 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True):
     plt.show()
 
 
-def plot_weights(ms, nids=None, only_nids=True):
+def plot_weights(ms, nids=None, only_nids=True, figsize=None):
     """
     Plots the average synaptic weights of the post-synaptic neurons per phase/trial for a specific experiment with
     overlapping phases. The average weight is calculated per odour.
@@ -361,7 +366,9 @@ def plot_weights(ms, nids=None, only_nids=True):
     nb_models = len(ms)
     xticks = ["%d" % i for i in range(16)]
 
-    plt.figure(title, figsize=(8, 2))
+    if figsize is None:
+        figsize = (8, 2)
+    plt.figure(title, figsize=figsize)
 
     subs = []
     for i in range(nb_models-1, -1, -1):
@@ -473,7 +480,7 @@ def plot_weights(ms, nids=None, only_nids=True):
     plt.show()
 
 
-def plot_model_structure(m: MBModel, nids=None, vmin=-.5, vmax=.5, only_nids=False):
+def plot_model_structure(m: MBModel, nids=None, vmin=-.5, vmax=.5, only_nids=False, figsize=None):
     """
     Plots the structure of the model for each synaptic weights matrix where input comes from the left and output goes to
     the bottom. The connections are drawn as bonds between the axon of each input neuron (horizontal line) and the
@@ -490,7 +497,9 @@ def plot_model_structure(m: MBModel, nids=None, vmin=-.5, vmax=.5, only_nids=Fal
     :param only_nids: when True, only the specified neurons are plotted.
     :type only_nids: bool
     """
-    fig = plt.figure("weight-tables-" + m.__class__.__name__.lower(), figsize=(5, 4))
+    if figsize is None:
+        figsize = (5, 4)
+    fig = plt.figure("weight-tables-" + m.__class__.__name__.lower(), figsize=figsize)
     ax = fig.subplot_mosaic(
         """
         bbbb.aaa
@@ -613,7 +622,7 @@ def plot_synapses(w, names_in, names_out, ax=None, cmap="coolwarm", vmin=-.5, vm
     ax.xaxis.set_ticks_position("none")
 
 
-def plot_learning_rule(wrt_k=True, wrt_w=True, wrt_d=True, colour_bar=False, fill=True):
+def plot_learning_rule(wrt_k=True, wrt_w=True, wrt_d=True, colour_bar=False, fill=True, figsize=None):
     """
     Plots 21 contour sub-plots in a 3-by-7 grid where the relationship among the parameters of the dopaminergic learning
     rule is visualised. In each row contours are created for 7 values of one of the parameters: KC+W(t), D(t) or W(t+1).
@@ -626,7 +635,9 @@ def plot_learning_rule(wrt_k=True, wrt_w=True, wrt_d=True, colour_bar=False, fil
 
     nb_rows = int(wrt_k) + int(wrt_w) + int(wrt_d)
     nb_cols = 7 + int(colour_bar)
-    plt.figure("dlr", figsize=(nb_cols - 1, nb_rows + 1 - .5 * float(colour_bar)))
+    if figsize is None:
+        figsize = (nb_cols - 1, nb_rows + 1 - .5 * float(colour_bar))
+    plt.figure("dlr", figsize=figsize)
     if wrt_k:
         w, d = np.meshgrid(w_, d_)
         for i, k in enumerate(np.linspace(0, 1, 7)):
@@ -683,41 +694,9 @@ def plot_learning_rule(wrt_k=True, wrt_w=True, wrt_d=True, colour_bar=False, fil
     plt.show()
 
 
-def plot_learning_rule_3d():
+def plot_sm(m, nids=None, sub=None):
     """
-    Three-dimensional plot of the relationship between the parameters of the dopaminergic learning rule.
-    """
-    from mpl_toolkits.mplot3d import Axes3D
-
-    plt.figure("dlr-3d", figsize=(3, 3))
-    ax = plt.gca(projection='3d')
-
-    k_w_, d_, = np.linspace(0, 3, 16), np.linspace(-1, 1, 11)
-    k_w, d = np.meshgrid(k_w_, d_)
-    w = d * (k_w - 1)
-
-    ax.contour(k_w, d, w, 60, cmap="coolwarm")
-    ax.set_xlabel(r"$k^i(t) + W^{ij}(t)$", fontsize=8)
-    ax.set_ylabel(r"$d^j(t)$", fontsize=8)
-    ax.set_zlabel(r"$dW^{ij}/dt$", fontsize=8)
-    ax.set_xticks([0, 1, 2, 3])
-    ax.set_yticks([-1, 0, 1])
-    ax.set_zticks([-2, 0, 2])
-    ax.set_xlim([0, 3])
-    ax.set_ylim([-1, 1])
-    ax.set_zlim([-2, 2])
-    ax.tick_params(labelsize=8)
-    # ax.set_axis_off()
-
-    ax.view_init(5, -97)
-
-    plt.tight_layout()
-    plt.show()
-
-
-def plot_fom(m, nids=None):
-    """
-    The responses of the first order memory (FOM) sub-circuit.
+    The responses of the susceptible memory (SM) sub-circuit.
 
     :param m: the model to get the responses from
     :type m: MBModel
@@ -726,11 +705,26 @@ def plot_fom(m, nids=None):
     """
     if nids is None:
         nids = [1, 6]
-    _plot_subcircuit(m, nids, nnames=[r"$d_{av}$", r"$a_{at}$"], title="fom",
-                     ncolours=["#db006aff", "#6adbb8ff"], uss=["r", None])
+    _plot_subcircuit(m, nids, nnames=[r"$d_{av}$", r"$s_{at}$"], title="SM",
+                     ncolours=["#db006aff", "#6adbb8ff"], uss=["r", None], sub=sub)
 
 
-def plot_ltm(m, nids=None):
+def plot_rm(m, nids=None, sub=None):
+    """
+    The responses of the restrained memory (RM) sub-circuit.
+
+    :param m: the model to get the responses from
+    :type m: MBModel
+    :param nids: (optional) the 2 neuron indices which we want to plot their responses. Default is 6 and 9.
+    :type nids: List[int]
+    """
+    if nids is None:
+        nids = [6, 9]
+    _plot_subcircuit(m, nids, nnames=[r"$s_{at}$", r"$r_{av}$"], title="RM",
+                     ncolours=["#6adbb8ff", "#db6a6aff"], sub=sub)
+
+
+def plot_ltm(m, nids=None, sub=None):
     """
     The responses of the long-term memory (LTM) sub-circuit.
 
@@ -741,28 +735,13 @@ def plot_ltm(m, nids=None):
     """
     if nids is None:
         nids = [2, 10]
-    _plot_subcircuit(m, nids, nnames=[r"$r_{at}$", r"$m_{at}$"], title="ltm",
-                     ncolours=["#6adb00ff", "#6adbb8ff"], uss=["g", None])
+    _plot_subcircuit(m, nids, nnames=[r"$c_{at}$", r"$m_{at}$"], title="LTM",
+                     ncolours=["#6adb00ff", "#6adbb8ff"], uss=["g", None], sub=sub)
 
 
-def plot_bm(m, nids=None):
+def plot_rrm(m, nids=None, sub=None):
     """
-    The responses of the blocking memory (BM) sub-circuit.
-
-    :param m: the model to get the responses from
-    :type m: MBModel
-    :param nids: (optional) the 2 neuron indices which we want to plot their responses. Default is 6 and 9.
-    :type nids: List[int]
-    """
-    if nids is None:
-        nids = [6, 9]
-    _plot_subcircuit(m, nids, nnames=[r"$a_{at}$", r"$h_{av}$"], title="bm",
-                     ncolours=["#6adbb8ff", "#db6a6aff"])
-
-
-def plot_rsom(m, nids=None):
-    """
-    The responses of the reciprocal second order memories (RSOM) sub-circuit.
+    The responses of the reciprocal restrained memories (RRM) sub-circuit.
 
     :param m: the model to get the responses from
     :type m: MBModel
@@ -771,12 +750,12 @@ def plot_rsom(m, nids=None):
     """
     if nids is None:
         nids = [3, 8, 2, 9]
-    _plot_subcircuit(m, nids, title="rsom", uss=["r", None, None, None],
-                     nnames=[r"$r_{av}$", r"$h_{at}$", r"$r_{at}$", r"$h_{av}$"],
-                     ncolours=["#db006aff", "#6adbb8ff", "#6adb00ff", "#db6a6aff"])
+    _plot_subcircuit(m, nids, title="RRM", uss=["r", None, None, None],
+                     nnames=[r"$c_{av}$", r"$r_{at}$", r"$c_{at}$", r"$r_{av}$"],
+                     ncolours=["#db006aff", "#6adbb8ff", "#6adb00ff", "#db6a6aff"], sub=sub)
 
 
-def plot_rfm(m, nids=None):
+def plot_rfm(m, nids=None, sub=None):
     """
     The responses of the reciprocal forgetting memories (RFM) sub-circuit.
 
@@ -787,15 +766,15 @@ def plot_rfm(m, nids=None):
     """
     if nids is None:
         nids = [5, 10, 4, 11]
-    _plot_subcircuit(m, nids, title="rfm",
+    _plot_subcircuit(m, nids, title="RFM",
                      uss=["r", None, None, None],
                      nnames=[r"$f_{av}$", r"$m_{at}$", r"$f_{at}$", r"$m_{av}$"],
-                     ncolours=["#db006aff", "#6adbb8ff", "#6adb00ff", "#db6a6aff"])
+                     ncolours=["#db006aff", "#6adbb8ff", "#6adb00ff", "#db6a6aff"], sub=sub)
 
 
-def plot_mdm(m, nids=None):
+def plot_mam(m, nids=None, sub=None):
     """
-    The responses of the memory digestion mechanism (MDM).
+    The responses of the memory assimilation mechanism (MAM).
 
     :param m: the model to get the responses from
     :type m: MBModel
@@ -804,12 +783,12 @@ def plot_mdm(m, nids=None):
     """
     if nids is None:
         nids = [4, 8, 2, 10]
-    _plot_subcircuit(m, nids, title="mdm", uss=[None, None, "g", None],
-                     nnames=[r"$f_{at}$", r"$h_{at}$", r"$r_{at}$", r"$m_{at}$"],
-                     ncolours=["#6adb00ff", "#6adbb8ff", "#6adb00ff", "#6adbb8ff"])
+    _plot_subcircuit(m, nids, title="MAM", uss=[None, None, "g", None],
+                     nnames=[r"$f_{at}$", r"$r_{at}$", r"$c_{at}$", r"$m_{at}$"],
+                     ncolours=["#6adb00ff", "#6adbb8ff", "#6adb00ff", "#6adbb8ff"], sub=sub)
 
 
-def _plot_subcircuit(m, nids, nnames, ncolours, uss=None, title="sub-circuit"):
+def _plot_subcircuit(m, nids, nnames, ncolours, uss=None, title="sub-circuit", sub=None):
     """
     Plots pairs of the responses of the specified neurons for the mushroom body model. The IDs of the neurons to plot
     are specified in a list of IDs (nids). Neurons are drawn in pairs from the list and are plotted the one on the top
@@ -836,16 +815,22 @@ def _plot_subcircuit(m, nids, nnames, ncolours, uss=None, title="sub-circuit"):
         uss = [None] * len(nids)
 
     nb_cols = len(nids) // 2
+    show_figure = sub is None
 
     for i in range(nb_cols):
-        if nb_cols > 1:
-            fig_title = "%s_%d" % (title, i+1)
+        if show_figure and nb_cols > 1:
+            plt.figure("%s_%d" % (title, i+1), figsize=(1, 1))
+        elif show_figure:
+            plt.figure(title, figsize=(1, 1))
+            plt.clf()
+            sub = 111
         else:
-            fig_title = title
-        plt.figure(fig_title, figsize=(1, 1))
-        plt.clf()
+            plt.figure("sub-circuits", figsize=(10, 1.5))
 
-        ax = plt.subplot(111)
+        if not isinstance(sub, list):
+            sub = [sub]
+
+        ax = plt.subplot(sub[i])
         for nid, nname, colour, us in zip(
                 nids[i*2:(i+1)*2], nnames[i*2:(i+1)*2], ncolours[i*2:(i+1)*2], uss[i*2:(i+1)*2]):
             v = m._v[:, nid]
@@ -866,14 +851,20 @@ def _plot_subcircuit(m, nids, nnames, ncolours, uss=None, title="sub-circuit"):
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         # plt.legend(loc="upper right", fontsize=8)
+        if not show_figure:
+            ax.set_title(title)
 
         plt.tight_layout()
-    plt.show()
+
+    if show_figure:
+        plt.show()
 
 
-def plot_arena_paths(data, name="arena", lw=1., alpha=.2, ax=None, save=False, show=True):
+def plot_arena_paths(data, name="arena", lw=1., alpha=.2, ax=None, save=False, show=True, figsize=None):
     if ax is None:
-        plt.figure(name, figsize=(2, 2))
+        if figsize is None:
+            figsize = (2, 2)
+        plt.figure(name, figsize=figsize)
         ax = plt.subplot(111, polar=True)
 
     # ax.set_theta_offset(np.pi)
@@ -900,14 +891,16 @@ def plot_arena_paths(data, name="arena", lw=1., alpha=.2, ax=None, save=False, s
         plt.show()
 
 
-def plot_arena_stats(df, name="arena-stats"):
+def plot_arena_stats(df, name="arena-stats", figsize=None):
 
     mechanisms = ["susceptible", "reciprocal", "long-term memory", ["susceptible", "reciprocal", "long-term memory"]]
     reinforcements = ["punishment", "reward"]
     odours = ["A", "B", "AB"]
     ms, rs, os = np.meshgrid(mechanisms, reinforcements, odours)
 
-    plt.figure(name, figsize=(5, 4))
+    if figsize is None:
+        figsize = (5, 4)
+    plt.figure(name, figsize=figsize)
     for mechanism, reinforcement, odour in zip(ms.flatten(), rs.flatten(), os.flatten()):
         m = mechanisms.index(mechanism)
         r = reinforcements.index(reinforcement)
@@ -1062,10 +1055,11 @@ def _plot_arena_stats(data, mechanisms=None, reinforcements=None, odours=None, n
 
     draw_gradients(ax, radius=1.)
 
+    kappa = 10
     # density_pre = gaussian_kde(d_pre, bw_method=partial(my_kde_bandwidth, fac=.5))
-    x, density_pre = vonmises_fft_kde(d_pre, kappa=10, n_bins=36)
-    x, density_learn = vonmises_fft_kde(d_learn, kappa=10, n_bins=36)
-    x, density_post = vonmises_fft_kde(d_post, kappa=10, n_bins=36)
+    x, density_pre = vonmises_fft_kde(d_pre, kappa=kappa, n_bins=36)
+    x, density_learn = vonmises_fft_kde(d_learn, kappa=kappa, n_bins=36)
+    x, density_post = vonmises_fft_kde(d_post, kappa=kappa, n_bins=36)
 
     rein_c = 'r' if "punishment" in reinforcements else "g"
     ax.fill_between(x, density_pre * 0., density_pre, facecolor='b', alpha=.2)
@@ -1079,7 +1073,7 @@ def _plot_arena_stats(data, mechanisms=None, reinforcements=None, odours=None, n
     ax.set_ylim([0, 1])
 
 
-def plot_arena_box(df, name="arena-box", bimodal_tol=np.pi, print_stats=False):
+def plot_arena_box(df, name="arena-box"):
 
     mechanisms = [["susceptible"], ["reciprocal"], ["long-term memory"],
                   ["susceptible", "reciprocal", "long-term memory"]]
@@ -1087,7 +1081,7 @@ def plot_arena_box(df, name="arena-box", bimodal_tol=np.pi, print_stats=False):
     odours = ["A", "B", "AB"]
     ms, rs, os = np.meshgrid(mechanisms, reinforcements, odours)
 
-    labels, means, data = [], [], []
+    labels, data = [""] * 24, [[]] * 24
     for mechanism, reinforcement, odour in zip(ms.flatten(), rs.flatten(), os.flatten()):
 
         mechanisms_not = list({"susceptible", "reciprocal", "long-term memory"} - set(mechanism))
@@ -1095,32 +1089,91 @@ def plot_arena_box(df, name="arena-box", bimodal_tol=np.pi, print_stats=False):
         dff = dff[np.any([dff["reinforcement"] == reinforcement], axis=0)]
         dff = dff[np.any([dff["paired odour"] == odour], axis=0)]
 
-        d_pre = np.deg2rad(dff[dff["phase"] == "pre"]["angle"])
-        d_learn = np.deg2rad(dff[dff["phase"] == "learn"]["angle"])
-        d_post = np.deg2rad(dff[dff["phase"] == "post"]["angle"])
+        if reinforcement == "punishment":
+            if odour == "A":
+                d_pre = np.array(dff[dff["phase"] == "pre"]["avoid A"])
+                d_learn = np.array(dff[dff["phase"] == "learn"]["avoid A"])
+                d_post = np.array(dff[dff["phase"] == "post"]["avoid A"])
+            elif odour == "B":
+                d_pre = np.array(dff[dff["phase"] == "pre"]["avoid B"])
+                d_learn = np.array(dff[dff["phase"] == "learn"]["avoid B"])
+                d_post = np.array(dff[dff["phase"] == "post"]["avoid B"])
+            else:
+                d_pre = np.array(dff[dff["phase"] == "pre"]["avoid A/B"])
+                d_learn = np.array(dff[dff["phase"] == "learn"]["avoid A/B"])
+                d_post = np.array(dff[dff["phase"] == "post"]["avoid A/B"])
+        else:
+            if odour == "A":
+                d_pre = np.array(dff[dff["phase"] == "pre"]["attract A"])
+                d_learn = np.array(dff[dff["phase"] == "learn"]["attract A"])
+                d_post = np.array(dff[dff["phase"] == "post"]["attract A"])
+            elif odour == "B":
+                d_pre = np.array(dff[dff["phase"] == "pre"]["attract B"])
+                d_learn = np.array(dff[dff["phase"] == "learn"]["attract B"])
+                d_post = np.array(dff[dff["phase"] == "post"]["attract B"])
+            else:
+                d_pre = np.array(dff[dff["phase"] == "pre"]["attract A/B"])
+                d_learn = np.array(dff[dff["phase"] == "learn"]["attract A/B"])
+                d_post = np.array(dff[dff["phase"] == "post"]["attract A/B"])
 
-        print("PRE", mechanism, reinforcement, odour)
-        d_pre_mean, d_pre_std, n_pre = _get_bimodal_mean(d_pre, bimodal_tol, verbose=print_stats)
-        print("pre:", np.rad2deg(d_pre_mean), np.rad2deg(d_pre_std), n_pre)
-        print("LEARN", mechanism, reinforcement, odour)
-        d_learn_mean, d_learn_std, n_learn = _get_bimodal_mean(d_learn, bimodal_tol, verbose=print_stats)
-        print("learn:", np.rad2deg(d_learn_mean), np.rad2deg(d_learn_std), n_learn)
-        print("POST", mechanism, reinforcement, odour)
-        d_post_mean, d_post_std, n_post = _get_bimodal_mean(d_post, bimodal_tol, verbose=print_stats)
-        print("post:", np.rad2deg(d_post_mean), np.rad2deg(d_post_std), n_post)
+        # d_pre = np.array(dff[dff["phase"] == "pre"]["pref A"] - dff[dff["phase"] == "pre"]["pref B"])
+        # d_learn = np.array(dff[dff["phase"] == "learn"]["pref A"] - dff[dff["phase"] == "learn"]["pref B"])
+        # d_post = np.array(dff[dff["phase"] == "post"]["pref A"] - dff[dff["phase"] == "post"]["pref B"])
 
+        i_mecha = mechanisms.index(mechanism)
+        i_reinf = reinforcements.index(reinforcement)
+        i_odour = odours.index(odour)
+        i = i_mecha * 6 + i_reinf * 3 + i_odour
         label = "%s%s-%s" % (reinforcement[0],
                              "".join([m[0] for m in mechanism]) if isinstance(mechanism, list) else mechanism[0],
                              odour.lower())
-        labels.append("%s (pre)" % label)
-        means.append(d_pre_mean)
-        data.append(d_pre)
-        labels.append("%s (learn)" % label)
-        means.append(d_learn_mean)
-        data.append(d_learn)
-        labels.append("%s (post)" % label)
-        means.append(d_post_mean)
-        data.append(d_post)
+
+        labels[i] = label
+        data[i] = [d_pre, d_learn, d_post]
+
+    plt.figure(name, figsize=(6, 4))
+    for i in range(len(labels)):
+        plt.subplot(4, 6, i + 1)
+        plt.boxplot(np.array(data[i][0]), positions=[1], notch=True, patch_artist=True,
+                    boxprops=dict(color="b", facecolor="b"),
+                    whiskerprops=dict(color="b"),
+                    flierprops=dict(color="b", markeredgecolor="b", marker="."),
+                    capprops=dict(color="b"),
+                    medianprops=dict(color="b"))
+        plt.boxplot(np.array(data[i][1]), positions=[2], notch=True, patch_artist=True,
+                    boxprops=dict(color="r", facecolor="r"),
+                    whiskerprops=dict(color="r"),
+                    flierprops=dict(color="r", markeredgecolor="r", marker="."),
+                    capprops=dict(color="r"),
+                    medianprops=dict(color="r"))
+        plt.boxplot(np.array(data[i][2]), positions=[3], notch=True, patch_artist=True,
+                    boxprops=dict(color="k", facecolor="k"),
+                    whiskerprops=dict(color="k"),
+                    flierprops=dict(color="k", markeredgecolor="k", marker="."),
+                    capprops=dict(color="k"),
+                    medianprops=dict(color="k"))
+        if i < 6:
+            title = labels[i][3:].upper() + "+" + labels[i][0]
+            title = title.replace("p", "shock")
+            title = title.replace("r", "sugar")
+            title = title.replace("AB", "A/B")
+            plt.title(title)
+        if i >= 18:
+            plt.xticks([1, 2, 3], ["pre", "train", "post"])
+        else:
+            plt.xticks([1, 2, 3], [""] * 3)
+
+        if i % 6 == 0:
+            label = labels[i][1:-2].replace("l", "m").upper()
+            if len(label) > 1:
+                label = label[0] + "+" + label[1] + "+" + label[2]
+            plt.ylabel(label)
+            plt.yticks([-1, 0, 1], ["av", "0", "at"])
+        else:
+            plt.yticks([-1, 0, 1], [""] * 3)
+        plt.ylim([-1.05, 1.05])
+    plt.tight_layout()
+    plt.show()
 
 
 def _get_bimodal_mean(data, bimodal_tol=np.pi, verbose=False):

@@ -150,7 +150,7 @@ class IncentiveComplex(MBModel):
         self.us_names = ["sugar", "shock"]
         if has_real_names:
             self.names[0], self.names[4], self.names[8], self.names[12], self.names[13], self.names[9] = (
-                "PAM-γ4<γ1γ2", "PPL1-γ1ped", "PAM-β'2a", "PPL1-γ2α'1_2", "PPL1-γ2α'1_1", "PAM-β2")
+                "PAM-γ4<γ1γ2", "PPL1-γ1ped", "PAM-β'2a", "PPL1-γ2α'1_2", "PPL1-γ2α'1_1", "PAM-β2β'2a")
             self.names[16], self.names[20], self.names[24], self.names[28], self.names[29], self.names[25] = (
                 "MBON-γ1ped", "MBON-γ4>γ1γ2", "MBON-γ2α'1", "MBON-γ5β'2a", "MBON-β2β'2a", "MBON-α'1")
         else:
@@ -159,7 +159,7 @@ class IncentiveComplex(MBModel):
                 r"s_{at}", r"s_{av}", r"r_{at}", r"r_{av}", r"m_{at}", r"m_{av}"
             ]
 
-        self.neuron_ids = [0, 1, 6, 7, 2, 3, 8, 9, 4, 5, 10, 11]
+        self.neuron_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
     def __repr__(self):
         s = "IncentiveComplex("

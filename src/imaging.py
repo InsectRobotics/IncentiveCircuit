@@ -146,7 +146,7 @@ def load_data(experiments='B+'):
     return pd.DataFrame(data)
 
 
-def plot_phase_overlap_mean_responses_from_data(data, experiment="B+", nids=None, only_nids=True):
+def plot_phase_overlap_mean_responses_from_data(data, experiment="B+", nids=None, only_nids=True, figsize=None):
     """
     Plots the average responses of the neurons per phase/trial for a specific experiment with overlapping phases.
 
@@ -190,7 +190,9 @@ def plot_phase_overlap_mean_responses_from_data(data, experiment="B+", nids=None
         nb_rows += 2
         nb_cols = nb_plots // nb_rows + 1
 
-    plt.figure(title, figsize=(8 - 2 * int(not only_nids), nb_rows))
+    if figsize is None:
+        figsize = (8 - 2 * int(not only_nids), nb_rows)
+    plt.figure(title, figsize=figsize)
     for j, genotype in enumerate(genotypes):
 
         odour_a_mean = np.nanmean(np.array(data_exp[genotype])[odour_a_xs], axis=(1, 2))
