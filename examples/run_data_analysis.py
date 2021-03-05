@@ -1,5 +1,5 @@
-from imaging import load_data, plot_phase_overlap_mean_responses_from_data
-from tools import read_arg
+from incentive.imaging import load_data, plot_phase_overlap_mean_responses_from_data
+from incentive.tools import read_arg
 
 
 if __name__ == '__main__':

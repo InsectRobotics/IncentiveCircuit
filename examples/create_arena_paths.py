@@ -1,7 +1,33 @@
-from tools import read_arg
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Creates the paths of the freely-moving flies using the incentive circuit.
+
+Examples:
+In order to create all the possible combinations for 100 flies each and for 500 seconds, run
+    $ python3 create_arena_paths.py --nb-flies 100 --nb-time-steps 500
+or
+    $ python3 create_arena_paths.py -f 100 -t 500
+
+In order to generate the data for 100 flies and for 500 seconds, for the punishment delivery case where the motivation
+is being set by the restrained MBONs only, run
+    $ python3 create_arena_paths.py -f 100 -t 500 -p -ns -r -nm
+
+"""
+
+from incentive.tools import read_arg
 
 import numpy as np
 import os
+
+__author__ = "Evripidis Gkanias"
+__copyright__ = "Copyright 2021, School of Informatics, the University of Edinburgh"
+__licence__ = "MIT"
+__version__ = "1.0.0"
+__maintainer__ = "Evripidis Gkanias"
+__email__ = "ev.gkanias@ed.ac.uk"
+__status__ = "Production"
 
 
 # the directory of the file
@@ -10,13 +36,13 @@ __dir__ = os.path.dirname(os.path.abspath(__file__))
 __data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "data", "arena"))
 
 if __name__ == '__main__':
-    from arena import FruitFly
+    from incentive.arena import FruitFly
 
     sv = 1.
     rv = 1.
     mv = 10.
     nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=100)
-    nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=100)
+    nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=100)  # seconds
 
     if read_arg(["-p", "--punishment"]):
         punishment = [True]

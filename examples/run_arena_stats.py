@@ -1,4 +1,4 @@
-from tools import read_arg
+from incentive.tools import read_arg
 
 import os
 
@@ -9,8 +9,8 @@ __data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "data", "arena"))
 
 
 if __name__ == '__main__':
-    from plot import plot_arena_stats, plot_arena_box
-    from arena import load_arena_stats
+    from incentive.plot import plot_arena_stats
+    from incentive.arena import load_arena_stats
 
     rw = read_arg(["-rw", "--rescorla-wagner"])
     file_names = [read_arg(["-f"], vtype=str, default=None)]

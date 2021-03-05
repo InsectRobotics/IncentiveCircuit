@@ -1,4 +1,4 @@
-from tools import read_arg
+from incentive.tools import read_arg
 
 import numpy as np
 import os
@@ -10,7 +10,7 @@ __dir__ = os.path.dirname(os.path.abspath(__file__))
 __data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "data", "arena"))
 
 if __name__ == '__main__':
-    from arena import FruitFly
+    from incentive.arena import FruitFly
 
     sv = 1.
     rv = 1.

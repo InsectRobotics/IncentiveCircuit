@@ -1,4 +1,4 @@
-from incentivebody import IncentiveBody
+from circuit import IncentiveCircuit
 
 import numpy as np
 import pandas as pd
@@ -8,7 +8,7 @@ import os
 # the directory of the file
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 # the directory of the data
-__data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "data", "arena"))
+__data_dir__ = os.path.realpath(os.path.join(__dir__, "../..", "data", "arena"))
 
 
 class FruitFly(object):
@@ -19,7 +19,7 @@ class FruitFly(object):
 
     def __init__(self, nb_kcs=10, nb_kc_odour_a=5, nb_kc_odour_b=5, nb_steps=1000, nb_in_trial=1, learning_rule="dlr",
                  gain=.04, rng=np.random.RandomState()):
-        self.mb = IncentiveBody(
+        self.mb = IncentiveCircuit(
             learning_rule=learning_rule, nb_apl=0, pn2kc_init="default", nb_timesteps=nb_in_trial, nb_trials=nb_steps,
             nb_kc=nb_kcs, nb_kc_odour_1=nb_kc_odour_a, nb_kc_odour_2=nb_kc_odour_b, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)

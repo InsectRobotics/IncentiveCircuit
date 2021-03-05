@@ -1,4 +1,4 @@
-from plot import plot_learning_rule
+from incentive.plot import plot_learning_rule
 
 
 if __name__ == '__main__':

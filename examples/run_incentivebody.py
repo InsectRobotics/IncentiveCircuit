@@ -1,6 +1,6 @@
-from incentivebodymotif import IncentiveBodyMotif
-from results import run_main_experiments
-from tools import read_arg, run_arg
+from incentive.circuit import IncentiveCircuit
+from incentive.results import run_main_experiments
+from incentive.tools import read_arg, run_arg
 
 if __name__ == '__main__':
 
@@ -11,7 +11,7 @@ if __name__ == '__main__':
     kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=nb_kcs // 2)
 
     # create the Incentive Complex
-    model = IncentiveBodyMotif(
+    model = IncentiveCircuit(
         learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=26,
         nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
         has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)

@@ -10,7 +10,7 @@ import csv
 # the directory of the file
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 # the directory of the data
-__data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "data", "FruitflyMB"))
+__data_dir__ = os.path.realpath(os.path.join(__dir__, "../..", "data", "FruitflyMB"))
 # sub-directories of each of the experiments
 __dirs = {
     'B+': '',

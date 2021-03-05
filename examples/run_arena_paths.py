@@ -1,4 +1,4 @@
-from tools import read_arg
+from incentive.tools import read_arg
 
 import re
 import os
@@ -10,7 +10,7 @@ __data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "data", "arena"))
 
 
 if __name__ == '__main__':
-    from plot import plot_arena_paths
+    from incentive.plot import plot_arena_paths
 
     import matplotlib.pyplot as plt
     import numpy as np

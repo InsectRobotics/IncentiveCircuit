@@ -3,10 +3,10 @@ from models_base import MBModel
 import numpy as np
 
 
-class WheelModel(MBModel):
+class IncentiveWheel(MBModel):
     def __init__(self, *args, **kwargs):
         """
-        The wheel of incentives model (WOI) is a simplified version of the mushroom body from the Drosophila
+        The incentive wheel model (IW) is a simplified version of the mushroom body from the Drosophila
         melanogaster brain, which is a hypothetical circuit of it. It contains the connections from the Kenyon cells
         (KCs) to the output neurons (MBONs), from the MBONs to the dopaminergic neurons (DANs) and from the DANs to the
         connections from the KCs to MBONs. It takes as input a routine and produces the responses and weights of the
@@ -165,7 +165,7 @@ class WheelModel(MBModel):
         # self.neuron_ids = [4, 16, 8, 12, 24, 28]
 
     def __repr__(self):
-        s = "WheelModel("
+        s = "IncentiveWheel("
         s += "lr='" + self._learning_rule + "'"
         if self.nb_apl > 0:
             s += ", apl=%d" % self.nb_apl

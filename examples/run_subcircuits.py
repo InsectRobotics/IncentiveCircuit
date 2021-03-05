@@ -1,8 +1,8 @@
-from incentivebodymotif import IncentiveBodyMotif
-from results import run_custom_routine
-from routines import rewarding_routine, shock_routine
-from plot import plot_sm, plot_ltm, plot_rm, plot_rrm, plot_rfm, plot_mam
-from tools import read_arg
+from incentive.circuit import IncentiveCircuit
+from incentive.results import run_custom_routine
+from incentive.routines import rewarding_routine, shock_routine
+from incentive.plot import plot_sm, plot_ltm, plot_rm, plot_rrm, plot_rfm, plot_mam
+from incentive.tools import read_arg
 
 
 if __name__ == '__main__':
@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     # Susceptible Memory Sub-circuit
     if read_arg(["--sm", "--susceptible-memory"]):
-        model = IncentiveBodyMotif(
+        model = IncentiveCircuit(
             learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=24,
             nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
             has_sm=True, has_rm=False, has_ltm=False, has_rrm=False, has_rfm=False, has_mam=False,
@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     # Restrained Memory Sub-circuit
     if read_arg(["--rm", "--restrained-memory"]):
-        model = IncentiveBodyMotif(
+        model = IncentiveCircuit(
             learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=24,
             nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=False, has_rrm=False, has_rfm=False, has_mam=False,
@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     # Long-Term Memory Sub-circuit
     if read_arg(["--ltm", "--long-term-memory"]):
-        model = IncentiveBodyMotif(
+        model = IncentiveCircuit(
             learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=24,
             nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=False, has_rfm=False, has_mam=False,
@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     # Reciprocal Restrained Memory Sub-circuit
     if read_arg(["--rrm", "--reciprocal-restrained-memory"]):
-        model = IncentiveBodyMotif(
+        model = IncentiveCircuit(
             learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=24,
             nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=False, has_mam=False,
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
     # Reciprocal Forgetting Memory Sub-circuit
     if read_arg(["--rfm", "--reciprocal-forgetting-memory"]):
-        model = IncentiveBodyMotif(
+        model = IncentiveCircuit(
             learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=24,
             nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True,
@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
     # Memory Assimilation Mechanism
     if read_arg(["--mam", "--memory-assimilation-mechanism"]):
-        model = IncentiveBodyMotif(
+        model = IncentiveCircuit(
             learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=24,
             nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True,

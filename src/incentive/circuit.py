@@ -9,11 +9,11 @@ from models_base import MBModel
 import numpy as np
 
 
-class IncentiveBody(MBModel):
+class IncentiveCircuit(MBModel):
     def __init__(self, has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True,
                  has_real_names=False, as_subcircuits=False, *args, **kwargs):
         """
-        The Incentive Body Motif (IBM) is a simplified version of the mushroom body from the Drosophila melanogaster
+        The Incentive Circuit (IC) is a simplified version of the mushroom body from the Drosophila melanogaster
         brain, which is a hypothetical sub-circuit in it. It contains the connections from the Kenyon cells (KCs) to the
         output neurons (MBONs), from the MBONs to the dopaminergic neurons (DANs) and from the DANs to the connections
         from the KCs to MBONs. It takes as input a routine and produces the responses and weights of the mushroom body
@@ -161,7 +161,7 @@ class IncentiveBody(MBModel):
         self.neuron_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
     def __repr__(self):
-        s = "IncentiveComplex("
+        s = "IncentiveCircuit("
         s += "lr='" + self._learning_rule + "'"
         if self.nb_apl > 0:
             s += ", apl=%d" % self.nb_apl
