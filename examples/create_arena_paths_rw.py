@@ -12,8 +12,10 @@ __data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "data", "arena"))
 if __name__ == '__main__':
     from arena import FruitFly
 
+    sv = 1.
+    rv = 1.
+    mv = 10.
     nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=100)
-    # nb_timesteps = 1000
     nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=100)
 
     if read_arg(["-p", "--punishment"]):
@@ -23,23 +25,23 @@ if __name__ == '__main__':
     else:
         punishment = [True, False]
     if read_arg(["-s", "--susceptible"]):
-        susceptible = [True]
+        susceptible = [sv]
     elif read_arg(["-ns", "--not-susceptible"]):
-        susceptible = [False]
+        susceptible = [0.]
     else:
-        susceptible = [True, False]
-    if read_arg(["-r", "--reciprocal"]):
-        reciprocal = [True]
-    elif read_arg(["-nr", "--not-reciprocal"]):
-        reciprocal = [False]
+        susceptible = [sv, 0.]
+    if read_arg(["-r", "--restrained"]):
+        reciprocal = [rv]
+    elif read_arg(["-nr", "--not-restrained"]):
+        reciprocal = [0.]
     else:
-        reciprocal = [True, False]
+        reciprocal = [rv, 0.]
     if read_arg(["-m", "--ltm", "--long-term-memory"]):
-        ltm = [True]
+        ltm = [mv]
     elif read_arg(["-nm", "--not-ltm", "--not-long-term-memory"]):
-        ltm = [False]
+        ltm = [0.]
     else:
-        ltm = [True, False]
+        ltm = [mv, 0.]
     if read_arg(["-a", "--only-a"]):
         only_a = [True]
     elif read_arg(["-na", "--not-a", "--not-only-a"]):
@@ -59,6 +61,13 @@ if __name__ == '__main__':
 
     for punishment, susceptible, reciprocal, ltm, only_a, only_b in zip(
             ps.reshape(-1), ss.reshape(-1), rs.reshape(-1), ms.reshape(-1), a_s.reshape(-1), bs.reshape(-1)):
+        if (((not susceptible) and reciprocal and ltm) or
+                (susceptible and (not reciprocal) and ltm) or
+                (susceptible and reciprocal and (not ltm)) or
+                ((not susceptible) and (not reciprocal) and (not ltm)) or
+                (only_a and only_b)):
+            continue
+
         name = "rw-arena-quinine-" if punishment else "rw-arena-sugar-"
         if susceptible:
             name += "s"

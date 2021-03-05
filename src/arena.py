@@ -1,4 +1,4 @@
-from incentivecomplex import IncentiveComplex
+from incentivebody import IncentiveBody
 
 import numpy as np
 import pandas as pd
@@ -18,8 +18,8 @@ class FruitFly(object):
     b_sigma = .3
 
     def __init__(self, nb_kcs=10, nb_kc_odour_a=5, nb_kc_odour_b=5, nb_steps=1000, nb_in_trial=1, learning_rule="dlr",
-                 rng=np.random.RandomState()):
-        self.mb = IncentiveComplex(
+                 gain=.04, rng=np.random.RandomState()):
+        self.mb = IncentiveBody(
             learning_rule=learning_rule, nb_apl=0, pn2kc_init="default", nb_timesteps=nb_in_trial, nb_trials=nb_steps,
             nb_kc=nb_kcs, nb_kc_odour_1=nb_kc_odour_a, nb_kc_odour_2=nb_kc_odour_b, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
@@ -28,6 +28,7 @@ class FruitFly(object):
         self.p_a = np.zeros(nb_steps, dtype=float)
         self.p_b = np.zeros(nb_steps, dtype=float)
         self.turn = np.zeros(nb_steps, dtype=float)
+        self.gain = gain
         self.rng = rng
 
     def __call__(self, *args, **kwargs):
@@ -36,9 +37,9 @@ class FruitFly(object):
         r_start = kwargs.get("r_start", .2)
         r_end = kwargs.get("r_end", .5)
         noise = kwargs.get("noise", .1)
-        s = kwargs.get("susceptible", True)
-        r = kwargs.get("reciprocal", True)
-        m = kwargs.get("ltm", True)
+        s = kwargs.get("susceptible", 1.)
+        r = kwargs.get("reciprocal", 1.)
+        m = kwargs.get("ltm", 1.)
         a = kwargs.get("only_a", False)
         b = kwargs.get("only_b", False)
         routine = arena_routine(
@@ -53,7 +54,7 @@ class FruitFly(object):
 
 
 def arena_routine(agent, noise=0.1, r_start=.2, r_end=.5, reward=False, punishment=True,
-                  susceptible=True, reciprocal=True, ltm=True, only_a=False, only_b=False):
+                  susceptible=1., reciprocal=1., ltm=1., only_a=False, only_b=False):
     mb_model = agent.mb
     mb_model._t = 0
     mb_model.routine_name = "arena"
@@ -101,6 +102,7 @@ def arena_routine(agent, noise=0.1, r_start=.2, r_end=.5, reward=False, punishme
         else:
             direction = b_odour_source - agent.xy[t-1]
         direction /= np.maximum(np.absolute(direction), np.finfo(float).eps)
+
         if t < 2:
             vel = 0+0j
         else:
@@ -109,7 +111,7 @@ def arena_routine(agent, noise=0.1, r_start=.2, r_end=.5, reward=False, punishme
 
         vel += rho + agent.rng.randn() * .1 + agent.rng.randn() * .1j
         z = np.maximum(np.absolute(vel), np.finfo(float).eps)
-        vel = 0.01 * vel / z
+        vel = agent.gain * vel / z
 
         agent.xy[t] = agent.xy[t-1] + vel
         agent.xy[t] = agent.xy[t] / np.maximum(np.absolute(agent.xy[t]), 1)
