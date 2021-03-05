@@ -1,45 +1,44 @@
+"""
+Examples:
+    $ ibm = IncentiveBody(learning_rule="dlr", nb_kc=10)
+    $ ibm(reversal=True)
+"""
+
 from models_base import MBModel
 
 import numpy as np
 
 
-class IncentiveComplex(MBModel):
-    def __init__(self, *args, **kwargs):
+class IncentiveBody(MBModel):
+    def __init__(self, has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True,
+                 has_real_names=False, as_subcircuits=False, *args, **kwargs):
         """
-        The Incentive Complex (IC) is a simplified version of the mushroom body from the Drosophila melanogaster brain,
-        which is a hypothetical sub-circuit in it. It contains the connections from the Kenyon cells (KCs) to the output
-        neurons (MBONs), from the MBONs to the dopaminergic neurons (DANs) and from the DANs to the connections from the
-        KCs to MBONs. It takes as input a routine and produces the responses and weights of the mushroom body for every
-        time-step. Its parameters are discussed in the manuscript.
+        The Incentive Body Motif (IBM) is a simplified version of the mushroom body from the Drosophila melanogaster
+        brain, which is a hypothetical sub-circuit in it. It contains the connections from the Kenyon cells (KCs) to the
+        output neurons (MBONs), from the MBONs to the dopaminergic neurons (DANs) and from the DANs to the connections
+        from the KCs to MBONs. It takes as input a routine and produces the responses and weights of the mushroom body
+        for every time-step. Its parameters are discussed in the manuscript.
 
-        :param has_sm: indicates if synapses of the SM sub-circuit are included
+        :param has_sm: indicates if synapses of the SM sub-circuit are included. Default is True.
         :type has_sm: bool
-        :param has_rm: indicates if synapses of the RM sub-circuit are included
+        :param has_rm: indicates if synapses of the RM sub-circuit are included. Default is True.
         :type has_rm: bool
-        :param has_rrm: indicates if synapses of the RRM sub-circuit are included
+        :param has_rrm: indicates if synapses of the RRM sub-circuit are included. Default is True.
         :type has_rrm: bool
-        :param has_rfm: indicates if synapses of the RFM sub-circuit are included
+        :param has_rfm: indicates if synapses of the RFM sub-circuit are included. Default is True.
         :type has_rfm: bool
-        :param has_ltm: indicates if synapses of the LTM sub-circuit are included
+        :param has_ltm: indicates if synapses of the LTM sub-circuit are included. Default is True.
         :type has_ltm: bool
-        :param has_mam: indicates if synapses of the MAM sub-circuit are included
+        :param has_mam: indicates if synapses of the MAM sub-circuit are included. Default is True.
         :type has_mam: bool
-        :param has_real_names: indicates if real neuron names are to be used instead of code names
+        :param has_real_names: indicates if real neuron names are to be used instead of code names. Default is False.
         :type has_real_names: bool
-        :param as_subcircuit: indicates whether the model is going to be used as a sub-circuit instead of as a whole
+        :param as_subcircuit: indicates whether the model is going to be used as a sub-circuit instead of as a whole. Default is False.
         :type as_subcircuit: bool
         """
         kwargs.setdefault("nb_dan", 6)
         kwargs.setdefault("nb_mbon", 6)
         kwargs.setdefault("leak", .0)
-        has_sm = kwargs.pop("has_sm", True)
-        has_rm = kwargs.pop("has_rm", True)
-        has_rrm = kwargs.pop("has_rrm", True)
-        has_rfm = kwargs.pop("has_rfm", True)
-        has_ltm = kwargs.pop("has_ltm", True)
-        has_mam = kwargs.pop("has_mam", True)
-        has_real_names = kwargs.pop("has_real_names", False)
-        as_subcircuits = kwargs.pop("as_subcircuits", False)
         super().__init__(*args, **kwargs)
 
         shock_magnitude = 2.

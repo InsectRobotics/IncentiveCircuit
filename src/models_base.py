@@ -251,15 +251,11 @@ class MBModel(object):
         D = np.maximum(v, 0).dot(self.w_d2k)
 
         if self._learning_rule in ["dopaminergic", "dlr", "dan-base", "default"]:
-            # When DAN > 0 and KC > W - W_rest increase the weight (if DAN < 0 it is reversed)
-            # When DAN > 0 and KC < W - W_rest decrease the weight (if DAN < 0 it is reversed)
-            # When DAN = 0 no learning happens
-            w_new = w_k2m + eta_w * D * (k + w_k2m - self.w_rest)
-        elif self._learning_rule in ["rescorla-wagner", "rw", "kc-based"]:
-            # When KC > 0 and DAN > W - W_rest increase the weight (if KC < 0 it is reversed)
-            # When KC > 0 and DAN < W - W_rest decrease the weight (if KC < 0 it is reversed)
-            # When KC = 0 no learning happens
-            w_new = w_k2m + eta_w * k * (D - v + self.w_rest)
+            w_new = dopaminergic(k, D, w_k2m, eta=eta_w, w_rest=self.w_rest)
+        elif self._learning_rule in ["rescorla-wagner", "rw", "kc-based", "pe", "prediction-error"]:
+            w_new = prediction_error(k, v, D, w_k2m, eta=eta_w, w_rest=self.w_rest)
+        elif callable(self._learning_rule):
+            w_new = self._learning_rule(k, v, D, w_k2m, eta_w, self.w_rest)
         else:
             # if the learning rule is not valid then do nothing
             w_new = w_k2m
@@ -340,3 +336,17 @@ def leaky_relu(v, alpha=.1, v_max=np.inf, v_min=-np.inf):
     :return:
     """
     return np.clip(v, np.maximum(alpha * v, v_min), v_max)
+
+
+def prediction_error(k, m, D, w, eta=1., w_rest=1.):
+    # When KC > 0 and DAN > W - W_rest increase the weight (if KC < 0 it is reversed)
+    # When KC > 0 and DAN < W - W_rest decrease the weight (if KC < 0 it is reversed)
+    # When KC = 0 no learning happens
+    return w + eta * k * (D - m + w_rest)
+
+
+def dopaminergic(k, D, w, eta=1., w_rest=1.):
+    # When DAN > 0 and KC > W - W_rest increase the weight (if DAN < 0 it is reversed)
+    # When DAN > 0 and KC < W - W_rest decrease the weight (if DAN < 0 it is reversed)
+    # When DAN = 0 no learning happens
+    return w + eta * D * (k + w - w_rest)

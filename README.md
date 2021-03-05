@@ -1,11 +1,18 @@
-# The Incentive Complex
+# The Incentive Circuit
 
 Python replication for the results from the eLife manuscript:
 
 Name and DOI/ref
 
-The "**incentive complex**" is a model of the mushroom body in the fruit fly brain that recieves sensory input and reinforcements and modulates the motivation state of the animal. In this model, the motivation states are limited into: *attraction* and *avoidance*. An extenstion of this is the "**wheel of incentives**",
-which creates a ranking of available tasks with respect to their importance given the current context.
+The "**incentive body motif**" (IBM) is a model of the mushroom body in the fruit fly brain
+that receives sensory input and reinforcements and modulates the motivation state of
+the animal. In this model, the motivation states are limited into: *attraction* and
+*avoidance*. An extension of this is the "**wheel of incentives**" (WOI),  which creates a
+ranking of available tasks with respect to their importance given the current context.
+Although IBM can explain complicated dynamics of behaviours regarding olfactory
+conditioning and involving the attraction and avoidance behaviours, WOI is able to
+produce more complicated dynamics by driving a bigger variety of behaviours, like
+feeding, sleeping, escaping or attacking.
 
 ## Environment
 
@@ -17,10 +24,12 @@ In order to be able to use this code, the required packages are listed below:
 
 ## Usage
 
-You can find the scripts that create the plots in the manuscript
+The directory [notebooks](notebooks) contains an
+[iPython notebook](notebooks/incentive_body.ipynb) which reproduces all the results
+and associates them to the manuscript. Alternatively, you can find the scripts that create the plots in the manuscript
 in the [examples](examples) directory and run them using: 
 ```commandline
-python any_file_you_want.py [--option value|--flag]
+python any_file_you_want.py --flag --option value
 ```
 It is necessary to add the [src](src) directory to the PATH variable or
 install the package.
