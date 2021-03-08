@@ -1,4 +1,4 @@
-from models_base import MBModel
+from incentive.models_base import MBModel
 
 from typing import List
 from scipy.stats import circmean, circstd

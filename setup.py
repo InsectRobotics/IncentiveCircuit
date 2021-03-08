@@ -22,10 +22,8 @@ setuptools.setup(
         "Licence :: OSI Approved :: MIT Licence",
         "Operating System :: OS Independent"
     ],
-    data_diles=[
-        "data"
-    ],
     packages=["incentive"],
-    packages_dir={"incentive": "src/incentive"},
+    package_dir={"incentive": "src/incentive"},
+    data_files=[('data/FruitflyMB', ['data/FruitflyMB/meta.yaml'])],
     python_requires=">-3.7",
 )

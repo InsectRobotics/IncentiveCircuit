@@ -17,6 +17,7 @@ if __name__ == '__main__':
 
     rw = read_arg(["-rw", "--rescorla-wagner"])
     file_names = [read_arg(["-f"], vtype=str, default=None)]
+    directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
 
     if file_names[0] is None:
         file_names = os.listdir(__data_dir__)

@@ -13,28 +13,19 @@ __dir__ = os.path.dirname(os.path.abspath(__file__))
 __data_dir__ = os.path.realpath(os.path.join(__dir__, "../..", "data", "FruitflyMB"))
 # sub-directories of each of the experiments
 __dirs = {
-    'B+': '',
-    'A+': 'SF traces imaging controls',
-    'B-': 'SF traces imaging controls',
-    'KC': 'neural traces KC sub-compartments'
+    'B+': ''
 }
 # pattern of the files for each of the experiments
 _patterns_ = {
     # pattern for the initial data
-    'B+': r'realSCREEN_([\d\w\W]+)\.xlsx_finaldata([\w\W]+)_timepoint(\d)\.csv',
-    # pattern for the control data
-    'A+': r'(realSCREEN_){0,1}([\d\w\W]+)_O\+S\.xlsx_finaldata([\w\W]+)_timepoint(\d)\.csv',
-    # pattern for the no-shock data
-    'B-': r'(realSCREEN_){0,1}([\d\w\W]+)_M\+NS\.xlsx_finaldata([\w\W]+)_timepoint(\d)\.csv',
-    # pattern for the KC data
-    'KC': r'realSCREEN_([\d\w\W]+)\.xlsx_finaldata([\w\W]+)_timepoint(\d)\.csv'
+    'B+': r'realSCREEN_([\d\w\W]+)\.xlsx_finaldata([\w\W]+)_timepoint(\d)\.csv'
 }
 # load the meta-data of the genotypes and neurons from the file
 with open(os.path.join(__data_dir__, 'meta.yaml'), 'rb') as f:
     _meta_ = yaml.load(f, Loader=yaml.BaseLoader)
 
 
-def load_data(experiments='B+'):
+def load_data(experiments='B+', directory=None):
     """
     Creates a DataFrame containing all the data from the specified experiments with keys in this order:
     1. {experiment}
@@ -46,21 +37,20 @@ def load_data(experiments='B+'):
     :return: a DataFrame with the data from the experiments requested
     """
 
+    if directory is None:
+        directory = __data_dir__
+
     # Convert the argument of the function to a list of names
     if isinstance(experiments, str):
         if experiments == 'all':
             experiments = _patterns_.keys()
-        elif experiments == 'draft':
-            # special case where we run a different function to load the data
-            from _imaging import load_draft_data
-            return load_draft_data()
         else:
             experiments = [experiments]
 
     data = {}
     # Load the data for every experiment requested
     for experiment in experiments:
-        experiment_dir = os.path.join(__data_dir__, __dirs[experiment])
+        experiment_dir = os.path.join(directory, __dirs[experiment])
         # for each file in the directory of the experiment
         for fname in os.listdir(experiment_dir):
             # get the details from the name of the file

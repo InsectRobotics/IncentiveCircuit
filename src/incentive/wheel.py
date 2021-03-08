@@ -1,4 +1,4 @@
-from models_base import MBModel
+from incentive.models_base import MBModel
 
 import numpy as np
 

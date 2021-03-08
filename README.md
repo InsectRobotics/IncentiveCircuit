@@ -4,14 +4,14 @@ Python replication for the results from the eLife manuscript:
 
 Name and DOI/ref
 
-The "**incentive body motif**" (IBM) is a model of the mushroom body in the fruit fly brain
+The "**incentive circuit**" (IC) is a model of the mushroom body in the fruit fly brain
 that receives sensory input and reinforcements and modulates the motivation state of
 the animal. In this model, the motivation states are limited into: *attraction* and
-*avoidance*. An extension of this is the "**wheel of incentives**" (WOI),  which creates a
+*avoidance*. An extension of this is the "**incentive wheel**" (IW),  which creates a
 ranking of available tasks with respect to their importance given the current context.
-Although IBM can explain complicated dynamics of behaviours regarding olfactory
-conditioning and involving the attraction and avoidance behaviours, WOI is able to
-produce more complicated dynamics by driving a bigger variety of behaviours, like
+Although IC can explain complicated dynamics of behaviours regarding olfactory
+conditioning and involving the attraction and avoidance behaviours, IW is able to
+trigger more complicated dynamics by driving a bigger variety of behaviours, like
 feeding, sleeping, escaping or attacking.
 
 ## Environment
@@ -36,15 +36,15 @@ install the package.
 
 You can reproduce the results by running:
 ```commandline
-python run_subcircuit.py --nb-kc 10 --sm --rm --ltm --rrm --rfm --mam
-python run_twinspokemodel.py --nb-kc 10 --only-nids --structure
-python run_twinspokemodel.py --nb-kc 10 --only-nids --values --weights
-python run_wheelmodel.py --nb-kc 10 --only-nids --structure
-python run_wheelmodel.py --nb-kc 10 --only-nids --values --weights
-python run_data_analysis.py --stats --only-nids --verbose
-python run_arena_paths.py
-python run_arena_stats.py
-python create_paths.py
+python3 run_subcircuit.py --nb-kc 10 --sm --rm --ltm --rrm --rfm --mam
+python3 run_twinspokemodel.py --nb-kc 10 --only-nids --structure
+python3 run_twinspokemodel.py --nb-kc 10 --only-nids --values --weights
+python3 run_wheelmodel.py --nb-kc 10 --only-nids --structure
+python3 run_wheelmodel.py --nb-kc 10 --only-nids --values --weights
+python3 run_data_analysis.py --stats --only-nids --verbose
+python3 create_paths.py --nb-flies 100 --nb-time-steps 100 
+python3 run_arena_paths.py
+python3 run_arena_stats.py
 ```
 where `--nb-kc` specifies the number of KCs (default is 10), `--odour1` specifies the
 number of KCs associated to odour A and `--odour2` specifies the number of KCs

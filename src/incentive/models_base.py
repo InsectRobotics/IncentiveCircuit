@@ -1,4 +1,4 @@
-from routines import no_shock_routine, unpaired_routine, reversal_routine
+from incentive.routines import no_shock_routine, unpaired_routine, reversal_routine
 
 import numpy as np
 

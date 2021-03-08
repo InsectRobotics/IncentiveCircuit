@@ -43,6 +43,7 @@ if __name__ == '__main__':
     mv = 10.
     nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=100)
     nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=100)  # seconds
+    directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
 
     if read_arg(["-p", "--punishment"]):
         punishment = [True]
@@ -115,4 +116,4 @@ if __name__ == '__main__':
                 only_a=only_a, only_b=only_b)
             data[i] = fly.xy
 
-        np.savez(os.path.join(__data_dir__, "%s.npz" % name), data=data)
+        np.savez(os.path.join(directory, "%s.npz" % name), data=data)

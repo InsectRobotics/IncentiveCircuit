@@ -7,9 +7,10 @@ if __name__ == '__main__':
     # read the parameters
     experiment = read_arg(["-e", "--experiment"], vtype=str, default="B+")
     verbose = read_arg(["-v", "--verbose"])
+    directory = read_arg(["-d", "--dir"], vtype=str, default=None)
 
     # load the data
-    df = load_data(experiment)
+    df = load_data(experiment, directory=directory)
 
     # generate statistics
     if read_arg(["-s", "--stats", "--statistics"]):

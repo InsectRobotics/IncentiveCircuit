@@ -1,4 +1,4 @@
-from circuit import IncentiveCircuit
+from incentive.circuit import IncentiveCircuit
 
 import numpy as np
 import pandas as pd
