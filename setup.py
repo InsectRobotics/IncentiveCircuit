@@ -25,5 +25,5 @@ setuptools.setup(
     packages=["incentive"],
     package_dir={"incentive": "src/incentive"},
     data_files=[('data/FruitflyMB', ['data/FruitflyMB/meta.yaml'])],
-    python_requires=">-3.7",
+    python_requires=">=3.7",
 )
