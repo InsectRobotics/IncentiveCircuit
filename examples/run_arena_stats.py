@@ -1,3 +1,19 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Reads and visualises all the arena-stats of the freely-moving flies created before.
+
+Examples:
+In order to visualise the von Mises KDE for 100 flies in each condition, run
+    $ python3 run_arena_stats.py --dir ../data/arena
+or
+    $ python3 run_arena_stats.py -d ../data/arena
+
+In order to visualise the respective KDEs using the prediction-error learning rule, run
+    $ python3 run_arena_stats.py -d ../data/arena -rw
+"""
+
 from incentive.tools import read_arg
 
 import os
@@ -13,11 +29,9 @@ if __name__ == '__main__':
     from incentive.arena import load_arena_stats
 
     rw = read_arg(["-rw", "--rescorla-wagner"])
-    file_names = [read_arg(["-f"], vtype=str, default=None)]
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
 
-    if file_names[0] is None:
-        file_names = os.listdir(directory)
+    file_names = os.listdir(directory)
 
     df = load_arena_stats(file_names, rw=rw)
 

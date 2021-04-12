@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from incentive.tools import read_arg
 
 import numpy as np
@@ -14,11 +17,9 @@ if __name__ == '__main__':
     from incentive.arena import load_arena_stats
 
     rw = read_arg(["-rw", "--rescorla-wagner"])
-    file_names = [read_arg(["-f"], vtype=str, default=None)]
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
 
-    if file_names[0] is None:
-        file_names = os.listdir(directory)
+    file_names = os.listdir(directory)
 
     df = load_arena_stats(file_names, rw=rw)
 

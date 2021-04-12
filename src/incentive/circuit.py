@@ -1,7 +1,7 @@
 """
 Examples:
-    $ ibm = IncentiveBody(learning_rule="dlr", nb_kc=10)
-    $ ibm(reversal=True)
+    $ ic = IncentiveCircuit(learning_rule="dlr", nb_kc=10)
+    $ ic(reversal=True)
 """
 
 from incentive.models_base import MBModel

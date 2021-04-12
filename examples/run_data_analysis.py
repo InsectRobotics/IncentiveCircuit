@@ -1,3 +1,19 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Visualises the responses of all the recorded neurons.
+
+Examples:
+In order to visualise the data for 100 flies in each condition, run
+    $ python3 run_arena_paths.py --dir ../data/arena
+or
+    $ python3 run_arena_paths.py -d ../data/arena
+
+In order to visualise the respective data using the prediction-error learning rule, run
+    $ python3 run_arena_paths.py -d ../data/arena -rw
+"""
+
 from incentive.imaging import load_data, plot_phase_overlap_mean_responses_from_data
 from incentive.tools import read_arg
 

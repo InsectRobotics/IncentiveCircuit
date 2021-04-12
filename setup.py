@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="incentive-circuit",
-    version="1.0.0",
+    version="v1.0.0-alpha",
     author="Evripidis Gkanias",
     maintainer="Evripidis Gkanias",
     author_email="ev.gkanias@ed.ac.uk",
@@ -18,12 +18,14 @@ setuptools.setup(
         "Bug Tracker": "https://github.com/evgkanias/IncentiveCircuit/issues"
     },
     classifiers=[
+        "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3",
-        "Licence :: OSI Approved :: MIT Licence",
+        "Intended Audience :: Science/Research",
+        "Licence :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Operating System :: OS Independent"
     ],
     packages=["incentive"],
-    package_dir={"incentive": "src/incentive"},
+    package_dir={"": "src"},
     data_files=[('data/FruitflyMB', ['data/FruitflyMB/meta.yaml'])],
-    python_requires=">-3.7",
+    python_requires=">=3.7",
 )

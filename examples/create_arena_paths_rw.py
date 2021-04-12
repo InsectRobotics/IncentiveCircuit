@@ -1,3 +1,21 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Creates the paths of the freely-moving flies using the incentive circuit and the prediction-error learning rule.
+
+Examples:
+In order to create all the possible combinations for 100 flies each and for 500 seconds, run
+    $ python3 create_arena_paths_rw.py --nb-flies 100 --nb-time-steps 500
+or
+    $ python3 create_arena_paths_rw.py -f 100 -t 500
+
+In order to generate the data for 100 flies and for 500 seconds, for the punishment delivery case where the motivation
+is being set by the restrained MBONs only, run
+    $ python3 create_arena_paths_rw.py -f 100 -t 500 -p -ns -r -nm
+
+"""
+
 from incentive.tools import read_arg
 
 import numpy as np

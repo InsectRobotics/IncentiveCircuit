@@ -1,3 +1,19 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Reads and visualises all the arena-paths of the freely-moving flies created before.
+
+Examples:
+In order to visualise the data for 100 flies in each condition, run
+    $ python3 run_arena_paths.py --dir ../data/arena
+or
+    $ python3 run_arena_paths.py -d ../data/arena
+
+In order to visualise the respective data using the prediction-error learning rule, run
+    $ python3 run_arena_paths.py -d ../data/arena -rw
+"""
+
 from incentive.tools import read_arg
 
 import re
@@ -16,11 +32,9 @@ if __name__ == '__main__':
     import numpy as np
 
     rw = read_arg(["-rw", "--rescorla-wagner"])
-    file_names = [read_arg(["-f"], vtype=str, default=None)]
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
 
-    if file_names[0] is None:
-        file_names = os.listdir(__data_dir__)
+    file_names = os.listdir(__data_dir__)
 
     cases = [
         ["s", "p", "a"],
