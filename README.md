@@ -26,8 +26,10 @@ In order to be able to use this code, the required packages are listed below:
 
 The [generate_manuscript](notebooks/generate_manuscript.ipynb) is an
 [iPython notebook](https://ipython.org/notebook.html) that reproduces the results for the figures
-and associates them to the manuscript. Alternatively, you can find the scripts that create the plots in the manuscript
-in the [examples](examples) directory and run them using: 
+and associates them to the manuscript. To view this file properly you have to use
+[this](https://nbviewer.jupyter.org/github/evgkanias/IncentiveCircuit/blob/main/notebooks/generate_manuscript.ipynb)
+link. Alternatively, you can find the scripts that create the plots in the manuscript in the [examples](examples)
+directory and run them using: 
 ```commandline
 python any_file_you_want.py --flag --option value
 ```
