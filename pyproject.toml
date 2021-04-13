@@ -1,9 +1,9 @@
 [build-system]
 requires = [
-    "setuptools>=42",
-    "wheel",
     "numpy>=1.18",
+    "scipy",
     "pandas",
-    "matplotlib"
+    "matplotlib",
+    "pyyaml"
 ]
 build-backed = "setuptools.build_meta"

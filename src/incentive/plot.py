@@ -230,13 +230,13 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
 
     nb_neurons = len(names)
     if only_nids:
-        nb_rows = 2
-        nb_cols = 12
+        nb_rows = 4
+        nb_cols = 6
         if figsize is None:
-            figsize = (8, 2)
+            figsize = (9, 5)
     else:
-        nb_rows = 8
-        nb_cols = 8
+        nb_rows = 16
+        nb_cols = 7
         if figsize is None:
             figsize = (5, 7)
     plt.figure(title, figsize=figsize)
@@ -253,92 +253,112 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
         if only_nids:
             va = va[:, nids]
 
+        x_ticks_ = xticks[1:(nb_trials // 2) // 2] * 2
+        n = len(x_ticks_)
+        _x_ticks = np.arange(n, dtype=float) + 2 - 1 / (nb_timesteps - 1)
+        _x_ticks[n//2:] += 1. - 1 / (nb_timesteps - 1)
+        # _x_ticks = _x_ticks[1:]
+
+        x_ = np.arange(0, nb_trials // 2, 1 / (nb_timesteps - 1)) - 1 / (nb_timesteps - 1)
+
         for j in range(nb_neurons):
 
             label = None
             s = (i + 1) / (nb_models + 1)
-            colour = np.array([s * 205, s * 222, 238]) / 255.
+            a_col = np.array([s * 205, s * 222, 238]) / 255.
             if j == nb_neurons - 1:
                 label = ms[i].routine_name
 
+            vaj = va[:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))
             if len(subs) <= j:
-                axa = plt.subplot(nb_rows, nb_cols, j+1)
+                axa = plt.subplot(nb_rows, nb_cols, 2 * (j // nb_cols) * nb_cols + j % nb_cols + 1)
                 # axa.plot([[15, 17, 19, 21, 23, 25]] * 2, [[0] * 6, [ylim] * 6], 'r-')
-                axa.set_xticks((nb_timesteps - 1) * np.arange(nb_trials // 4) + (nb_timesteps - 1) / 4)
-                axa.set_xticklabels(xticks[:(nb_trials // 4)])
+                # axa.set_xticks((nb_timesteps - 1) * np.arange(2 * (nb_trials // 4)) + (nb_timesteps - 1) / 4)
+                axa.set_xticks(_x_ticks)
+                axa.set_xticklabels(["" for _ in x_ticks_])
                 axa.set_yticks([0, 1, 2])
                 axa.set_ylim(ylim)
-                axa.set_xlim([1, 6 * (nb_timesteps - 1)])
+                axa.set_xlim([0, n + 1 + 1 / (nb_timesteps - 1)])
                 axa.tick_params(labelsize=8)
                 axa.set_title(r"$%s$" % names[j], fontsize=8)
                 if j % nb_cols == 0:
                     axa.set_ylabel("Odour A", fontsize=8)
-                    if only_nids:
-                        axa.text(-7, -.8, "Trial #", fontsize=8)
-                    # else:
-                    #     axa.text(-7, -.5, "Trial #", fontsize=8)
                 else:
                     axa.set_yticklabels([""] * 3)
+                    axa.spines['left'].set_visible(False)
+                    axa.set_yticks([])
+
                 # axa.yaxis.grid()
                 axa.spines['top'].set_visible(False)
                 axa.spines['right'].set_visible(False)
 
                 s = (i + 2) / (nb_models + 1)
-                acolour = np.array([s * 205, s * 222, 238]) / 255.
-                y_acq = va[:6*nb_timesteps, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))
-                axa.plot(y_acq, color=acolour, label="acquisition")
+                a_acol = np.array([s * 205, s * 222, 238]) / 255.
+                axa.plot(x_[:4], vaj[:4], color=(.8, .8, .8))
+                axa.plot(x_[3:13], vaj[3:13], color=a_acol, label="acquisition")
                 subs.append(axa)
-            y_for = va[6*nb_timesteps:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))
-            subs[j].plot(y_for, color=colour, label=label)
-            if "no shock" not in ms[i].routine_name and "unpaired" not in ms[i].routine_name:
-                y_shock = va[np.array([8, 9, 10, 11, 12]) * nb_timesteps - 1, j]
-                x_shock = np.array([2, 3, 4, 5, 6]) * (nb_timesteps - 1) - 1
-                subs[j].plot(x_shock, y_shock, 'r.')
+            # y_for = va[6*nb_timesteps:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))[2:-2]
+            subs[j].plot(x_[12:15], vaj[12:15], color=(.8, .8, .8))
+            subs[j].plot(x_[23:], vaj[23:], color=(.8, .8, .8))
+            subs[j].plot(x_[14:24], vaj[14:24], color=a_col, label=label)
+            if ("no shock" in ms[i].routine_name or "unpaired" in ms[i].routine_name or
+                    "d" not in names[j] and "c" not in names[j] or "av" not in names[j]):
+                continue
+            shock_i = [15, 17, 19, 21, 23]
+            subs[j].plot(x_[shock_i], vaj[shock_i], 'r.')
 
         # axb = plt.subplot(nb_models * 2, 2, 2 + i * 4)
         vb = v[1:].reshape((-1, nb_odours, nb_timesteps, v.shape[-1]))[:, 1].reshape((-1, v.shape[-1]))
         if only_nids:
             vb = vb[:, nids]
-
+        x_b = x_ + 1 - 1 / (nb_timesteps - 1)
         for j in range(nb_neurons):
             jn = j + nb_neurons
 
             label = None
             s = (i + 1) / (nb_models + 1)
-            colour = np.array([255, s * 197, s * 200]) / 255.
+            b_col = np.array([255, s * 197, s * 200]) / 255.
             if j == nb_neurons - 1:
                 label = ms[i].routine_name
 
+            vbj = vb[:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))
             if len(subs) <= jn:
-                axb = plt.subplot(nb_rows, nb_cols, j + (nb_rows * nb_cols) // 2 + 1)
-                axb.set_xticks((nb_timesteps - 1) * np.arange(nb_trials // 4) + (nb_timesteps - 1) / 4)
-                axb.set_xticklabels(xticks[:(nb_trials // 4)])
+                axb = plt.subplot(nb_rows, nb_cols, (2 * (j // nb_cols) + 1) * nb_cols + j % nb_cols + 1)
+                axb.set_xticks(_x_ticks)
+                axb.set_xticklabels(x_ticks_)
                 axb.set_yticks([0, 1, 2])
                 axb.set_ylim(ylim)
-                axb.set_xlim([1, 6 * (nb_timesteps - 1)])
+                axb.set_xlim([0, n + 1 + 1 / (nb_timesteps - 1)])
                 axb.tick_params(labelsize=8)
                 if j % nb_cols == 0:
                     axb.set_ylabel("Odour B", fontsize=8)
                     if only_nids:
-                        axb.text(-7, -.8, "Trial #", fontsize=8)
+                        axb.text(-3, -.8, "Trial #", fontsize=8)
                     # else:
                     #     axb.text(-7, -.5, "Trial #", fontsize=8)
                 else:
                     axb.set_yticklabels([""] * 3)
+                    axb.spines['left'].set_visible(False)
+                    axb.set_yticks([])
+
                 # axb.yaxis.grid()
                 axb.spines['top'].set_visible(False)
                 axb.spines['right'].set_visible(False)
 
                 s = (i + 2) / (nb_models + 1)
-                acolour = np.array([255, s * 197, s * 200]) / 255.
-                y_acq = vb[:6*nb_timesteps, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))
-                axb.plot(y_acq, color=acolour, label="acquisition")
-                y_shock = vb[np.array([2, 3, 4, 5, 6]) * nb_timesteps - 1, j]
-                x_shock = np.array([2, 3, 4, 5, 6]) * (nb_timesteps - 1) - 1
-                axb.plot(x_shock, y_shock, 'r.')
+                b_acol = np.array([255, s * 197, s * 200]) / 255.
+                axb.plot(x_b[:3], vbj[:3], color=(.8, .8, .8))
+                axb.plot(x_b[2:12], vbj[2:12], color=b_acol, label="acquisition")
                 subs.append(axb)
-            y_for = vb[6*nb_timesteps:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))
-            subs[jn].plot(y_for, color=colour, label=label)
+
+            subs[jn].plot(x_b[11:14], vbj[11:14], color=(.8, .8, .8))
+            subs[jn].plot(x_b[22:], vbj[22:], color=(.8, .8, .8))
+            subs[jn].plot(x_b[13:23], vbj[13:23], color=b_col, label=label)
+
+            if i > 0 or "d" not in names[j] and "c" not in names[j] or "av" not in names[j]:
+                continue
+            shock_i = [3, 5, 7, 9, 11]
+            subs[jn].plot(x_b[shock_i], vbj[shock_i], 'r.')
 
     if only_nids:
         subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left',
@@ -365,22 +385,35 @@ def plot_weights(ms, nids=None, only_nids=True, figsize=None):
     nb_odours = 2
     nb_models = len(ms)
     xticks = ["%d" % i for i in range(16)]
+    ylim = [-0.1, 2.1]
 
-    if figsize is None:
-        figsize = (8, 2)
+    if nids is None:
+        if ms[0].neuron_ids is None:
+            nids = np.arange(ms[0].nb_dan + ms[0].nb_mbon)[::8]
+        else:
+            nids = ms[0].neuron_ids
+    if only_nids:
+        names = np.array(ms[0].names)[nids]
+    else:
+        names = np.array(ms[0].names)
+
+    nb_neurons = len(names)
+    if only_nids:
+        nb_rows = 4
+        nb_cols = 6
+        if figsize is None:
+            figsize = (9, 5)
+    else:
+        nb_rows = 16
+        nb_cols = 7
+        if figsize is None:
+            figsize = (5, 7)
     plt.figure(title, figsize=figsize)
 
     subs = []
     for i in range(nb_models-1, -1, -1):
         nb_timesteps = ms[i].nb_timesteps
         nb_trials = ms[i].nb_trials
-
-        if nids is None:
-            if ms[i].neuron_ids is None:
-                nids = np.arange(ms[i].nb_dan + ms[i].nb_mbon)[::8]
-            else:
-                nids = ms[i].neuron_ids
-        ylim = [-0.1, 2.1]
 
         w = ms[i].w_k2m
 
@@ -389,89 +422,106 @@ def plot_weights(ms, nids=None, only_nids=True, figsize=None):
         if only_nids:
             wa = wa[:, nids]
 
-        names = np.array(ms[i].names)[nids]
-        nb_neurons = wa.shape[1]
-        nb_plots = 2 * nb_neurons
+        x_ticks_ = xticks[1:(nb_trials // 2) // 2] * 2
+        n = len(x_ticks_)
+        _x_ticks = np.arange(n, dtype=float) + 2 - 1 / (nb_timesteps - 1)
+        _x_ticks[n//2:] += 1. - 1 / (nb_timesteps - 1)
+
+        x_ = np.arange(0, nb_trials // 2, 1 / (nb_timesteps - 1)) - 1 / (nb_timesteps - 1)
+
         for j in range(nb_neurons):
 
             label = None
             s = (i + 1) / (nb_models + 1)
-            colour = np.array([s * 205, s * 222, 238]) / 255.
+            a_col = np.array([s * 205, s * 222, 238]) / 255.
             if j == nb_neurons - 1:
                 label = ms[i].routine_name
 
+            waj = wa[:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))
             if len(subs) <= j:
-                axa = plt.subplot(2, nb_plots // 2, j+1)
-                # axa.plot([[15, 17, 19, 21, 23, 25]] * 2, [[0] * 6, [ylim] * 6], 'r-')
-                axa.set_xticks((nb_timesteps - 1) * np.arange(nb_trials // 4) + (nb_timesteps - 1) / 4)
-                axa.set_xticklabels(xticks[:(nb_trials // 4)])
+                axa = plt.subplot(nb_rows, nb_cols, 2 * (j // nb_cols) * nb_cols + j % nb_cols + 1)
+
+                axa.set_xticks(_x_ticks)
+                axa.set_xticklabels(["" for _ in x_ticks_])
                 axa.set_yticks([0, 1, 2])
                 axa.set_ylim(ylim)
-                axa.set_xlim([1, 6 * (nb_timesteps - 1)])
+                axa.set_xlim([0, n + 1 + 1 / (nb_timesteps - 1)])
                 axa.tick_params(labelsize=8)
                 axa.set_title(r"$%s$" % names[j], fontsize=8)
                 if j == 0:
                     axa.set_ylabel("Odour A", fontsize=8)
-                    axa.text(-7, -.8, "Trial #", fontsize=8)
                 else:
                     axa.set_yticklabels([""] * 3)
-                # axa.yaxis.grid()
+                    axa.spines['left'].set_visible(False)
+                    axa.set_yticks([])
+
                 axa.spines['top'].set_visible(False)
                 axa.spines['right'].set_visible(False)
 
                 s = (i + 2) / (nb_models + 1)
-                acolour = np.array([s * 205, s * 222, 238]) / 255.
-                y_acq = wa[:6*nb_timesteps, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))
-                axa.plot(y_acq, color=acolour, label="acquisition")
+                a_acol = np.array([s * 205, s * 222, 238]) / 255.
+                axa.plot(x_[:4], waj[:4], color=(.8, .8, .8))
+                axa.plot(x_[3:13], waj[3:13], color=a_acol, label="acquisition")
                 subs.append(axa)
-            y_for = wa[6*nb_timesteps:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))
-            subs[j].plot(y_for, color=colour, label=label)
-            if "no shock" not in ms[i].routine_name and "unpaired" not in ms[i].routine_name:
-                y_shock = wa[np.array([8, 9, 10, 11, 12]) * nb_timesteps - 1, j]
-                x_shock = np.array([2, 3, 4, 5, 6]) * (nb_timesteps - 1) - 1
-                subs[j].plot(x_shock, y_shock, 'r.')
+            subs[j].plot(x_[12:15], waj[12:15], color=(.8, .8, .8))
+            subs[j].plot(x_[23:], waj[23:], color=(.8, .8, .8))
+            subs[j].plot(x_[14:24], waj[14:24], color=a_col, label=label)
+
+            if ("no shock" in ms[i].routine_name or "unpaired" in ms[i].routine_name or
+                    "d" not in names[j] and "c" not in names[j] or "av" not in names[j]):
+                continue
+            shock_i = [15, 17, 19, 21, 23]
+            subs[j].plot(x_[shock_i], waj[shock_i], 'r.')
 
         # axb = plt.subplot(nb_models * 2, 2, 2 + i * 4)
         wb = np.nanmean(w[1:, 5:], axis=1).reshape((-1, nb_odours, nb_timesteps, w.shape[-1]))[:, 1].reshape((-1, w.shape[-1]))
         if only_nids:
             wb = wb[:, nids]
-
+        x_b = x_ + 1 - 1 / (nb_timesteps - 1)
         for j in range(nb_neurons):
             jn = j + nb_neurons
 
             label = None
             s = (i + 1) / (nb_models + 1)
-            colour = np.array([255, s * 197, s * 200]) / 255.
+            b_col = np.array([255, s * 197, s * 200]) / 255.
             if j == nb_neurons - 1:
                 label = ms[i].routine_name
 
+            wbj = wb[:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))
             if len(subs) <= jn:
-                axb = plt.subplot(2, nb_plots // 2, jn+1)
-                axb.set_xticks((nb_timesteps - 1) * np.arange(nb_trials // 4) + (nb_timesteps - 1) / 4)
-                axb.set_xticklabels(xticks[:(nb_trials // 4)])
+                axb = plt.subplot(nb_rows, nb_cols, (2 * (j // nb_cols) + 1) * nb_cols + j % nb_cols + 1)
+                axb.set_xticks(_x_ticks)
+                axb.set_xticklabels(x_ticks_)
                 axb.set_yticks([0, 1, 2])
                 axb.set_ylim(ylim)
-                axb.set_xlim([1, 6 * (nb_timesteps - 1)])
+                axb.set_xlim([0, n + 1 + 1 / (nb_timesteps - 1)])
                 axb.tick_params(labelsize=8)
-                if j == 0:
+                if j % nb_cols == 0:
                     axb.set_ylabel("Odour B", fontsize=8)
-                    axb.text(-7, -.8, "Trial #", fontsize=8)
+                    if only_nids:
+                        axb.text(-3, -.8, "Trial #", fontsize=8)
                 else:
                     axb.set_yticklabels([""] * 3)
+                    axb.spines['left'].set_visible(False)
+                    axb.set_yticks([])
                 # axb.yaxis.grid()
                 axb.spines['top'].set_visible(False)
                 axb.spines['right'].set_visible(False)
 
                 s = (i + 2) / (nb_models + 1)
-                acolour = np.array([255, s * 197, s * 200]) / 255.
-                y_acq = wb[:6*nb_timesteps, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))
-                axb.plot(y_acq, color=acolour, label="acquisition")
-                y_shock = wb[np.array([2, 3, 4, 5, 6]) * nb_timesteps - 1, j]
-                x_shock = np.array([2, 3, 4, 5, 6]) * (nb_timesteps - 1) - 1
-                axb.plot(x_shock, y_shock, 'r.')
+                b_acol = np.array([255, s * 197, s * 200]) / 255.
+                axb.plot(x_b[:3], wbj[:3], color=(.8, .8, .8))
+                axb.plot(x_b[2:12], wbj[2:12], color=b_acol, label="acquisition")
                 subs.append(axb)
-            y_for = wb[6*nb_timesteps:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))
-            subs[jn].plot(y_for, color=colour, label=label)
+
+            subs[jn].plot(x_b[11:14], wbj[11:14], color=(.8, .8, .8))
+            subs[jn].plot(x_b[22:], wbj[22:], color=(.8, .8, .8))
+            subs[jn].plot(x_b[13:23], wbj[13:23], color=b_col, label=label)
+
+            if i > 0 or "d" not in names[j] and "c" not in names[j] or "av" not in names[j]:
+                continue
+            shock_i = [3, 5, 7, 9, 11]
+            subs[jn].plot(x_b[shock_i], wbj[shock_i], 'r.')
 
     subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left',
                                   framealpha=0., labelspacing=1.)

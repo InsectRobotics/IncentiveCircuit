@@ -24,8 +24,8 @@ In order to be able to use this code, the required packages are listed below:
 
 ## Usage
 
-The directory [notebooks](notebooks) contains an
-[iPython notebook](notebooks/incentive_body.ipynb) which reproduces all the results
+The [generate_manuscript](notebooks/generate_manuscript.ipynb) is an
+[iPython notebook](https://ipython.org/notebook.html) that reproduces the results for the figures
 and associates them to the manuscript. Alternatively, you can find the scripts that create the plots in the manuscript
 in the [examples](examples) directory and run them using: 
 ```commandline
