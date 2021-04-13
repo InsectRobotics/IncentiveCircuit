@@ -1,4 +1,4 @@
-from incentive.models_base import MBModel
+from .models_base import MBModel
 
 from typing import List
 from scipy.stats import circmean, circstd
@@ -1281,7 +1281,7 @@ def _get_bimodal_mean(data, bimodal_tol=np.pi, verbose=False):
 
 
 def draw_gradients(ax, radius=1., draw_sources=True, cmap="coolwarm", levels=20, vminmax=3):
-    from arena import FruitFly, gaussian_p
+    from .arena import FruitFly, gaussian_p
 
     a_mean, a_sigma = FruitFly.a_source, FruitFly.a_sigma
     b_mean, b_sigma = FruitFly.b_source, FruitFly.b_sigma

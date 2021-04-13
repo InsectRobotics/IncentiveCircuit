@@ -136,7 +136,8 @@ def load_data(experiments='B+', directory=None):
     return pd.DataFrame(data)
 
 
-def plot_phase_overlap_mean_responses_from_data(data, experiment="B+", nids=None, only_nids=True, figsize=None):
+def plot_phase_overlap_mean_responses_from_data(data, experiment="B+", nids=None, only_nids=True, figsize=None,
+                                                show_legend=True):
     """
     Plots the average responses of the neurons per phase/trial for a specific experiment with overlapping phases.
 
@@ -300,9 +301,10 @@ def plot_phase_overlap_mean_responses_from_data(data, experiment="B+", nids=None
         subs[-1].plot(xb[12:16], data_b_mean[12:], color=b_col, lw=2, label="reversal")
         subs[-1].plot(xb[[3, 5, 7, 9, 11]], data_b_mean[[3, 5, 7, 9, 11]], 'r.')
 
-    subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left',
-                                  framealpha=0., labelspacing=1.)
-    subs[-1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left', framealpha=0., labelspacing=1)
+    if show_legend:
+        subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left',
+                                      framealpha=0., labelspacing=1.)
+        subs[-1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left', framealpha=0., labelspacing=1)
 
     # subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.), loc='upper left',
     #                               framealpha=0., labelspacing=1.)

@@ -4,7 +4,7 @@ Examples:
     $ ic(reversal=True)
 """
 
-from incentive.models_base import MBModel
+from .models_base import MBModel
 
 import numpy as np
 

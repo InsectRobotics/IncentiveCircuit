@@ -1,5 +1,5 @@
-from incentive.plot import *
-from incentive.models_base import MBModel
+from .plot import *
+from .models_base import MBModel
 
 from typing import List
 

@@ -1,4 +1,4 @@
-from incentive.models_base import MBModel
+from .models_base import MBModel
 
 from typing import List
 
