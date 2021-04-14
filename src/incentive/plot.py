@@ -990,7 +990,38 @@ def _plot_subcircuit(m, nids, nnames, ncolours, uss=None, title="sub-circuit", s
         plt.show()
 
 
-def plot_arena_paths(data, name="arena", lw=1., alpha=.2, ax=None, save=False, show=True, figsize=None):
+def plot_arena_paths(data, cases, names, name="arena-paths", lw=1., alpha=.2, figsize=None):
+    """
+    Plots the paths in the arena for all the given cases andme names.
+
+    Parameters
+    ----------
+    data: list[np.ndarray]
+        list of the paths for every case
+    cases: list[list]
+        list of the required cases
+    names: list[str]
+        list of names of the cases
+    name: str, optional
+        the title of the figure. Default is 'arena-paths'
+    lw: float, optional
+        the line width of the paths. Default is 0.1
+    alpha: float, optional
+        the transparency of the path-lines. Default is 0.2
+    figsize: tuple, optional
+        the figure size. Default is (5, 4)
+    """
+    if figsize is None:
+        figsize = (5, 4)
+    plt.figure(name, figsize=figsize)
+    for d, c, n in zip(data, cases, names):
+        ax = plt.subplot(4, 6, cases.index(c) + 1, polar=True)
+        _plot_arena_paths(d, name=n, lw=lw, alpha=alpha, save=False, show=False, ax=ax)
+    plt.tight_layout()
+    plt.show()
+
+
+def _plot_arena_paths(data, name="arena", lw=1., alpha=.2, ax=None, save=False, show=True, figsize=None):
     """
     Plots the paths in the arena on the top of the gradients of the odours.
 

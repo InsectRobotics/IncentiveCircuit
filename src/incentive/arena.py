@@ -217,10 +217,10 @@ def load_arena_stats(file_names, prediction_error=False):
     
     Parameters
     ----------
-    file_names: str
+    file_names: list[str]
         the names of the files used to calculate the statistics.
-    prediction_error: bool
-        if the prediction error was used as the learning rule when creating the files.
+    prediction_error: bool, optional
+        if the prediction error was used as the learning rule when creating the files. Default is False.
 
     Returns
     -------
@@ -288,6 +288,89 @@ def load_arena_stats(file_names, prediction_error=False):
     df["long-term memory"] = np.array(df["long-term memory"] == "True", dtype=bool)
 
     return df
+
+
+def load_arena_paths(file_names, prediction_error=False):
+    """
+    Loads the raw paths from the given files and returns their trace, case and name in 3
+    separate lists.
+
+    Parameters
+    ----------
+    file_names: list[str]
+        list of filenames in the arena data directory.
+    prediction_error: bool, optional
+        if the prediction error was used as the learning rule when creating the files. Default is False.
+
+    Returns
+    -------
+    d_raw: list[np.ndarray]
+        the raw position for every case
+    cases: list[list]
+        the different cases associated with the data
+    d_names: list[str]
+        the name of each case
+    """
+
+    cases = [
+        ["s", "p", "a"],
+        ["s", "p", "b"],
+        ["s", "p", ""],
+        ["s", "r", "a"],
+        ["s", "r", "b"],
+        ["s", "r", ""],
+        ["r", "p", "a"],
+        ["r", "p", "b"],
+        ["r", "p", ""],
+        ["r", "r", "a"],
+        ["r", "r", "b"],
+        ["r", "r", ""],
+        ["m", "p", "a"],
+        ["m", "p", "b"],
+        ["m", "p", ""],
+        ["m", "r", "a"],
+        ["m", "r", "b"],
+        ["m", "r", ""],
+        ["srm", "p", "a"],
+        ["srm", "p", "b"],
+        ["srm", "p", ""],
+        ["srm", "r", "a"],
+        ["srm", "r", "b"],
+        ["srm", "r", ""],
+    ]
+
+    d_raw = [[]] * len(cases)
+    d_names = [[]] * len(cases)
+    # d_names = ["susceptible", "reciprocal", "long-term memory", "reinforcement",
+    #            "paired odour", "phase", "angle"]
+
+    for fname in file_names:
+        if prediction_error:
+            pattern = r'rw-arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})'
+        else:
+            pattern = r'arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})'
+        details = re.findall(pattern, fname)
+        if len(details) < 1:
+            continue
+        punishment = "p" if 'quinine' in details[0] else "r"
+        neurons = (
+            ("s" if 's' in details[0] else "") +
+            ("r" if "r" in details[0] else "") +
+            ("m" if "m" in details[0] else "")
+        )
+        odour = (
+            ("a" if "a" in details[0] else "") +
+            ("b" if "b" in details[0] else "")
+        )
+        case = [neurons, punishment, odour]
+
+        name = fname[:-4]
+
+        if case in cases:
+            d_raw[cases.index(case)] = np.load(os.path.join(__data_dir__, fname))["data"]
+            d_names[cases.index(case)] = name
+
+    return d_raw, cases, d_names
 
 
 def gaussian_p(pos, mean, sigma):
