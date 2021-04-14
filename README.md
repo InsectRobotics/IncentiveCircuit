@@ -1,5 +1,5 @@
 # The Incentive Circuit
-[![GitHub license](https://img.shields.io/github/license/evgkanias/IncentiveCircuit?logo=GPL)](https://github.com/evgkanias/IncentiveCircuit/blob/main/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/InsectRobotics/IncentiveCircuit?logo=GPL)](https://github.com/InsectRobotics/IncentiveCircuit/blob/main/LICENSE)
 
 Python replication for the results from the eLife manuscript:
 
