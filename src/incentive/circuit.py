@@ -1,8 +1,18 @@
 """
 Examples:
-    $ ic = IncentiveCircuit(learning_rule="dlr", nb_kc=10)
-    $ ic(reversal=True)
+---------
+>>> ic = IncentiveCircuit(learning_rule="dlr", nb_kc=10)
+>>> ic(reversal=True)
 """
+
+__author__ = "Evripidis Gkanias"
+__copyright__ = "Copyright (c) 2021, Insect Robotics Group," \
+                "Institude of Perception, Action and Behaviour," \
+                "School of Informatics, the University of Edinburgh"
+__credits__ = ["Evripidis Gkanias"]
+__license__ = "GPLv3+"
+__version__ = "v1.0.0-alpha"
+__maintainer__ = "Evripidis Gkanias"
 
 from .models_base import MBModel
 
@@ -19,22 +29,24 @@ class IncentiveCircuit(MBModel):
         from the KCs to MBONs. It takes as input a routine and produces the responses and weights of the mushroom body
         for every time-step. Its parameters are discussed in the manuscript.
 
-        :param has_sm: indicates if synapses of the SM sub-circuit are included. Default is True.
-        :type has_sm: bool
-        :param has_rm: indicates if synapses of the RM sub-circuit are included. Default is True.
-        :type has_rm: bool
-        :param has_rrm: indicates if synapses of the RRM sub-circuit are included. Default is True.
-        :type has_rrm: bool
-        :param has_rfm: indicates if synapses of the RFM sub-circuit are included. Default is True.
-        :type has_rfm: bool
-        :param has_ltm: indicates if synapses of the LTM sub-circuit are included. Default is True.
-        :type has_ltm: bool
-        :param has_mam: indicates if synapses of the MAM sub-circuit are included. Default is True.
-        :type has_mam: bool
-        :param has_real_names: indicates if real neuron names are to be used instead of code names. Default is False.
-        :type has_real_names: bool
-        :param as_subcircuit: indicates whether the model is going to be used as a sub-circuit instead of as a whole. Default is False.
-        :type as_subcircuit: bool
+        Parameters
+        ----------
+        has_sm: bool, optional
+            indicates if synapses of the SM sub-circuit are included. Default is True.
+        has_rm: bool, optional
+            indicates if synapses of the RM sub-circuit are included. Default is True.
+        has_rrm: bool, optional
+            indicates if synapses of the RRM sub-circuit are included. Default is True.
+        has_rfm: bool, optional
+            indicates if synapses of the RFM sub-circuit are included. Default is True.
+        has_ltm: bool, optional
+            indicates if synapses of the LTM sub-circuit are included. Default is True.
+        has_mam: bool, optional
+            indicates if synapses of the MAM sub-circuit are included. Default is True.
+        has_real_names: bool, optional
+            indicates if real neuron names are to be used instead of code names. Default is False.
+        as_subcircuit: bool, optional
+            indicates whether the model is going to be used as a sub-circuit instead of as a whole. Default is False.
         """
         kwargs.setdefault("nb_dan", 6)
         kwargs.setdefault("nb_mbon", 6)

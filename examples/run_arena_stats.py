@@ -33,6 +33,6 @@ if __name__ == '__main__':
 
     file_names = os.listdir(directory)
 
-    df = load_arena_stats(file_names, rw=rw)
+    df = load_arena_stats(file_names, prediction_error=rw)
 
     plot_arena_stats(df, "%sarena-stats" % ("rw-" if rw else ""))

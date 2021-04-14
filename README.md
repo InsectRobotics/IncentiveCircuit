@@ -2,7 +2,8 @@
 
 Python replication for the results from the eLife manuscript:
 
-Name and DOI/ref
+Gkanias, E., McCurdy, L. Y., Nitabach, M. N., & Webb, B. (2021). Incentive circuit: how flies acquire,
+forget and assimilate memories. Submitted to eLife.
 
 The "**incentive circuit**" (IC) is a model of the mushroom body in the fruit fly brain
 that receives sensory input and reinforcements and modulates the motivation state of
@@ -19,14 +20,31 @@ feeding, sleeping, escaping or attacking.
 In order to be able to use this code, the required packages are listed below:
 * [Python 3.7](https://www.python.org/downloads/release/python-370/)
 * [NumPy](https://numpy.org/)
+* [SciPy](https://www.scipy.org/)
 * [Matplotlib](https://matplotlib.org/)
 * [pandas](https://pandas.pydata.org/)
+* [PyYAML](https://pypi.org/project/PyYAML/)
+
+## Installation
+
+In order to install the package and reproduce the results of the manuscript you need to clone the code,
+navigate to the main directory of the project, install the dependencies and finally the package itself.
+Here is an example code that installs the package:
+```commandline
+mkdir ~/projects
+cd ~/projects
+git clone https://github.com/evgkanias/IncentiveCircuit.git
+cd IncentiveCircuit
+pip install -r requirements.txt
+pip install .
+```
+Note that the [pip](https://pypi.org/project/pip/) project is needed for the above installation.
 
 ## Usage
 
 The [generate_manuscript](notebooks/generate_manuscript.ipynb) is an
 [iPython notebook](https://ipython.org/notebook.html) that reproduces the results for the figures
-and associates them to the manuscript. To view this file properly you have to use
+and associates them to the manuscript. If the notebook is not rendering, you can try
 [this](https://nbviewer.jupyter.org/github/evgkanias/IncentiveCircuit/blob/main/notebooks/generate_manuscript.ipynb)
 link. Alternatively, you can find the scripts that create the plots in the manuscript in the [examples](examples)
 directory and run them using: 
@@ -38,15 +56,15 @@ install the package.
 
 You can reproduce the results by running:
 ```commandline
-python3 run_subcircuit.py --nb-kc 10 --sm --rm --ltm --rrm --rfm --mam
-python3 run_twinspokemodel.py --nb-kc 10 --only-nids --structure
-python3 run_twinspokemodel.py --nb-kc 10 --only-nids --values --weights
-python3 run_wheelmodel.py --nb-kc 10 --only-nids --structure
-python3 run_wheelmodel.py --nb-kc 10 --only-nids --values --weights
-python3 run_data_analysis.py --stats --only-nids --verbose
-python3 create_paths.py --nb-flies 100 --nb-time-steps 100 
-python3 run_arena_paths.py
-python3 run_arena_stats.py
+python run_subcircuit.py --nb-kc 10 --sm --rm --ltm --rrm --rfm --mam
+python run_twinspokemodel.py --nb-kc 10 --only-nids --structure
+python run_twinspokemodel.py --nb-kc 10 --only-nids --values --weights
+python run_wheelmodel.py --nb-kc 10 --only-nids --structure
+python run_wheelmodel.py --nb-kc 10 --only-nids --values --weights
+python run_data_analysis.py --stats --only-nids --verbose
+python create_paths.py --nb-flies 100 --nb-time-steps 100 
+python run_arena_paths.py
+python run_arena_stats.py
 ```
 where `--nb-kc` specifies the number of KCs (default is 10), `--odour1` specifies the
 number of KCs associated to odour A and `--odour2` specifies the number of KCs

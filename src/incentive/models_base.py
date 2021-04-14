@@ -1,3 +1,17 @@
+"""
+The basic mushroom body structure that contains the background attributes, properties and processing including the
+learning rules.
+"""
+
+__author__ = "Evripidis Gkanias"
+__copyright__ = "Copyright (c) 2021, Insect Robotics Group," \
+                "Institude of Perception, Action and Behaviour," \
+                "School of Informatics, the University of Edinburgh"
+__credits__ = ["Evripidis Gkanias"]
+__license__ = "GPLv3+"
+__version__ = "v1.0.0-alpha"
+__maintainer__ = "Evripidis Gkanias"
+
 from .routines import no_shock_routine, unpaired_routine, reversal_routine
 
 import numpy as np
@@ -14,32 +28,34 @@ class MBModel(object):
         the DANs to the connections from the KCs to MBONs. It takes as input a routine and produces the responses and
         weights of the mushroom body for every time-step.
 
-        :param nb_kc: The number of intrinsic neurons (KCs). Default is 10.
-        :type nb_kc: int
-        :param nb_mbon: The number of extrinsic output neurons (MBONs). Default is 6.
-        :type nb_mbon: int
-        :param nb_dan: The number of extrinsic reinforcement neurons (DANs). Default is 6.
-        :type nb_dan: int
-        :param nb_apl: The number of anterior paired lateral (APL) neurons. Default is 0.
-        :type nb_apl: int
-        :param learning_rule: The learning rule to use; one of "dlr" or "rw". Default is "dlr".
-        :type learning_rule: str
-        :param pn2kc_init: The type of the initialisation of the PN-to-KC weights; one of "default", "simple",
-        "sqrt_pn", or "sqrt_kc". Default is "default". Default is "default".
-        :type pn2kc_init: str
-        :param nb_trials: The number of trials that the experiments will run. Default is 24.
-        :type nb_trials: int
-        :param nb_timesteps: The number of time-steps that each of the trials will run. Default is 3.
-        :type nb_timesteps: int
-        :param nb_kc_odour_1: The number of KCs associated to the first odour. Default is 5.
-        :type nb_kc_odour_1: int
-        :param nb_kc_odour_2: The number of KCs associated to the second odour. Default is 5.
-        :type nb_kc_odour_2: int
-        :param leak: The leak parameter of the leaky-ReLU activation function denotes the scale of the negative part of
-        the function. Default is 0., which mean no negative part.
-        :type leak: float
-        :param sharp_changes: Allows sharp changes in the values
-        :type sharp_changes: bool
+        Parameters
+        ----------
+        nb_kc: int, optional
+            number of intrinsic neurons (KCs). Default is 10
+        nb_mbon: int, optional
+            number of extrinsic output neurons (MBONs). Default is 6
+        nb_dan: int, optional
+            number of extrinsic reinforcement neurons (DANs). Default is 6
+        nb_apl: int, optional
+            number of anterior paired lateral (APL) neurons. Default is 0
+        learning_rule: {"dlr", "rw", "default"}
+            the learning rule to use; one of "dlr" or "rw". Default is "dlr"
+        pn2kc_init: {"default", "simple", "sqrt_pn", "sqrt_kc"}
+            type of the initialisation of the PN-to-KC weights; one of "default", "simple", "sqrt_pn", or "sqrt_kc".
+            Default is "default"
+        nb_trials: int, optional
+            number of trials that the experiments will run. Default is 24
+        nb_timesteps: int, optional
+            number of time-steps that each of the trials will run. Default is 3
+        nb_kc_odour_1: int, optional
+            number of KCs associated to the first odour. Default is 5
+        nb_kc_odour_2: int, optional
+            number of KCs associated to the second odour. Default is 5
+        leak: float, optional
+            the leak parameter of the leaky-ReLU activation function denotes the scale of the negative part of the
+            function. Default is 0, which mean no negative part
+        sharp_changes: bool, optional
+            when true allows sharp changes in the values. Default is True
         """
         self.nb_trials = nb_trials
         self.nb_timesteps = nb_timesteps
@@ -126,21 +142,21 @@ class MBModel(object):
     @property
     def w_m2v(self):
         """
-        :return: The MBON-to-DAN and MBON-to-MBON synaptic weights
+        The MBON-to-DAN and MBON-to-MBON synaptic weights
         """
         return np.eye(*self._w_m2v.shape) + self._w_m2v
 
     @property
     def w_d2k(self):
         """
-        :return: The DAN-to-KCtoMBON synaptic weights that transform DAN activity to the dopaminergic factor
+        The DAN-to-KCtoMBON synaptic weights that transform DAN activity to the dopaminergic factor
         """
         return self._w_d2k
 
     @property
     def routine_name(self):
         """
-        :return: The name of the running routine
+        The name of the running routine
         """
         return self.__routine_name
 
@@ -152,13 +168,14 @@ class MBModel(object):
         """
         The activation function calls the leaky ReLU function and bounds the output in [v_min, v_max].
 
-        :param v: the raw responses of the neurons
-        :type v: numpy.ndarray | float
-        :param v_max: the maximum allowing output
-        :type v_max: numpy.ndarray | float
-        :param v_min: the minimum allowing output
-        :type v_min: numpy.ndarray | float
-        :return:
+        Parameters
+        ----------
+        v: np.ndarray | float
+            the raw responses of the neurons
+        v_max: np.ndarray | float
+            the maximum allowing output
+        v_min: np.ndarray | float
+            the minimum allowing output
         """
         if v_max is None:
             v_max = self.v_max
@@ -170,17 +187,18 @@ class MBModel(object):
         """
         Running the feed-forward process of the model for the given routine.
 
-        :param no_shock: Whether to run the 'no-shock' routine. Default is False.
-        :type no_shock: bool
-        :param unpaired: Whether to run the 'unpaired' routine. Default is False.
-        :type unpaired: bool
-        :param reversal: Whether to run the 'reversal' routine. Default is False.
-        :type reversal: bool
-        :param routine: a customised routine. Default is the 'reversal_routine'.
-        :type routine: Callable[MBModel, Generator[Tuple[int, int, float, None], Any, None]]
-        :param repeat: number of repeats of each time-step in order to smoothen the bias of order of the updates.
-        Default is 4
-        :type repeat: int
+        Parameters
+        ----------
+        no_shock: bool
+            whether to run the 'no-shock' routine. Default is False.
+        unpaired: bool
+            whether to run the 'unpaired' routine. Default is False.
+        reversal: bool
+            whether to run the 'reversal' routine. Default is False.
+        routine: Callable[MBModel, Generator[Tuple[int, int, float, None], Any, None]]
+            a customised routine. Default is the 'reversal_routine'.
+        repeat: int
+            number of repeats of each time-step in order to smoothen the bias of order of the updates. Default is 4
         """
         if kwargs.get('no_shock', False):
             routine = no_shock_routine(self)
@@ -225,13 +243,19 @@ class MBModel(object):
         """
         Updates the KC-to-MBON synaptic weights.
 
-        :param kc: the responses of the KCs -- k(t)
-        :type kc: np.ndarray
-        :param v: the responses of the DANs and MBONs (extrinsic neurons) -- d(t), m(t)
-        :type v: np.ndarray
-        :param w_k2m: the KC-to-MBON synaptic weights -- w_k2m(t)
-        :type w_k2m: np.ndarray
-        :return: the new weights -- w_k2m(t + 1)
+        Parameters
+        ----------
+        kc: np.ndarray
+            the responses of the KCs -- k(t)
+        v: np.ndarray
+            the responses of the DANs and MBONs (extrinsic neurons) -- d(t), m(t)
+        w_k2m: np.ndarray
+            the KC-to-MBON synaptic weights -- w_k2m(t)
+
+        Returns
+        -------
+        w_post: np.ndarray
+            the new weights -- w_k2m(t + 1)
         """
 
         # scale the learning based on the number of in-trial time-steps
@@ -267,13 +291,19 @@ class MBModel(object):
         """
         Updates the responses of the neurons using the feedback connections and the previous responses.
 
-        :param kc: the responses of the KCs -- k(t)
-        :type kc: np.ndarray
-        :param v_pre: the responses of the DANs and MBONs (extrinsic neurons) in the previous time-step -- d(t-1), m(t-1)
-        :type v_pre: np.ndarray
-        :param v_stim: the responses of teh DANs and MBONs in the new time-step based only on the sensory input
-        :type v_stim: np.ndarray
-        :return: the responses with contributions from feedback connections
+        Parameters
+        ----------
+        kc: np.ndarray
+            the responses of the KCs -- k(t)
+        v_pre: np.ndarray
+            the responses of the DANs and MBONs (extrinsic neurons) in the previous time-step -- d(t-1), m(t-1)
+        v_stim: np.ndarray
+            the responses of teh DANs and MBONs in the new time-step based only on the sensory input
+
+        Returns
+        -------
+        v_post: np.ndarray
+            the responses with contributions from feedback connections
         """
         if self._sharp_changes:
             reduce = 1. / float(self.nb_timesteps)
@@ -296,7 +326,10 @@ class MBModel(object):
         """
         Creates a clone of the instance.
 
-        :return: Another instance of exactly the same class and parameters.
+        Returns
+        -------
+        copy: MBModel
+            another instance of exactly the same class and parameters.
         """
         return copy(self)
 
@@ -325,28 +358,94 @@ def leaky_relu(v, alpha=.1, v_max=np.inf, v_min=-np.inf):
     """
     The leaky-ReLU activation function; if v >= 0, it returns v; if v < 0, it returns alpha * v.
 
-    :param v: the input value
-    :type v: np.ndarray | float
-    :param alpha: the discount parameter
-    :type alpha: float
-    :param v_max: the upper bound of the function
-    :type v_max: np.ndarray | float
-    :param v_min: the lower bound of the function
-    :type v_min: np.ndarray | float
-    :return:
+    Parameters
+    ----------
+    v: np.ndarray | float
+        the input value
+    alpha: float
+        the discount parameter
+    v_max: np.ndarray | float
+        the upper bound of the function
+    v_min: np.ndarray | float
+        the lower bound of the function
+
+    Returns
+    -------
+    a: np.ndarray | float
+        the transformed value
     """
     return np.clip(v, np.maximum(alpha * v, v_min), v_max)
 
 
-def prediction_error(k, m, D, w, eta=1., w_rest=1.):
-    # When KC > 0 and DAN > W - W_rest increase the weight (if KC < 0 it is reversed)
-    # When KC > 0 and DAN < W - W_rest decrease the weight (if KC < 0 it is reversed)
-    # When KC = 0 no learning happens
-    return w + eta * k * (D - m + w_rest)
+def prediction_error(r_pre, r_post, D, w, eta=1., w_rest=1.):
+    """
+    The prediction-error learning rule introduced in [1]_.
+
+        tau * dw / dt = r_pre * (rein - r_post - w_rest)
+
+        tau = 1 / learning_rate
+
+    When KC > 0 and DAN > W - W_rest increase the weight (if KC < 0 it is reversed).
+    When KC > 0 and DAN < W - W_rest decrease the weight (if KC < 0 it is reversed).
+    When KC = 0 no learning happens.
+
+    Parameters
+    ----------
+    w: np.ndarray
+        the current synaptic weights.
+    r_pre: np.ndarray
+        the pre-synaptic responses.
+    r_post: np.ndarray
+        the post-synaptic responses.
+    D: np.ndarray
+        the reinforcement signal.
+    eta: float, optional
+        the learning rate.
+    w_rest: np.ndarray | float
+        the resting value for the synaptic weights.
+
+    Returns
+    -------
+    w_post: np.ndarray
+        the updated synaptic weights
+
+    Notes
+    -----
+    .. [1] Rescorla, R. A. & Wagner, A. R. A theory of Pavlovian conditioning: Variations in the effectiveness of
+       reinforcement and nonreinforcement. in 64–99 (Appleton-Century-Crofts, 1972).
+    """
+    return w + eta * r_pre * (D - r_post + w_rest)
 
 
-def dopaminergic(k, D, w, eta=1., w_rest=1.):
-    # When DAN > 0 and KC > W - W_rest increase the weight (if DAN < 0 it is reversed)
-    # When DAN > 0 and KC < W - W_rest decrease the weight (if DAN < 0 it is reversed)
-    # When DAN = 0 no learning happens
-    return w + eta * D * (k + w - w_rest)
+def dopaminergic(r_pre, D, w, eta=1., w_rest=1.):
+    """
+    The dopaminergic learning rule introduced in Gkanias et al (2021). Reinforcement here is assumed to be the
+    dopaminergic factor.
+
+        tau * dw / dt = rein * [r_pre + w(t) - w_rest]
+
+        tau = 1 / learning_rate
+
+    When DAN > 0 and KC > W - W_rest increase the weight (if DAN < 0 it is reversed).
+    When DAN > 0 and KC < W - W_rest decrease the weight (if DAN < 0 it is reversed).
+    When DAN = 0 no learning happens.
+
+    Parameters
+    ----------
+    w: np.ndarray
+        the current synaptic weights.
+    r_pre: np.ndarray
+        the pre-synaptic responses.
+    D: np.ndarray
+        the dopaminergic factor.
+    eta: float, optional
+        the learning rate.
+    w_rest: np.ndarray | float
+        the resting value for the synaptic weights.
+
+    Returns
+    -------
+    w_post: np.ndarray
+        the updated synaptic weights
+    """
+    return w + eta * D * (r_pre + w - w_rest)

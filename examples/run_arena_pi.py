@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     file_names = os.listdir(directory)
 
-    df = load_arena_stats(file_names, rw=rw)
+    df = load_arena_stats(file_names, prediction_error=rw)
 
     df["avoid A"] = df["dist_A"] / 0.6 - 1
     df["avoid B"] = df["dist_B"] / 0.6 - 1

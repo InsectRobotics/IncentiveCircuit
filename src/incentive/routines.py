@@ -1,4 +1,15 @@
-from typing import List
+"""
+Package that contains the main routines that generate the results of the manuscript.
+"""
+
+__author__ = "Evripidis Gkanias"
+__copyright__ = "Copyright (c) 2021, Insect Robotics Group," \
+                "Institude of Perception, Action and Behaviour," \
+                "School of Informatics, the University of Edinburgh"
+__credits__ = ["Evripidis Gkanias"]
+__license__ = "GPLv3+"
+__version__ = "v1.0.0-alpha"
+__maintainer__ = "Evripidis Gkanias"
 
 import numpy as np
 
@@ -8,9 +19,16 @@ def reversal_routine(mb_model):
     The reversal experimental paradigm as a routine. It allows alternately CS (odour) delivery and paired US (shock)
     delivery during trials 3, 5, 7, 9, 11, 14, 16, 18, 20, 22 and 24.
 
-    :param mb_model: the mushroom body model to get and update the parameters.
-    :return: a generator of stimuli based on the reversal experimental paradigm that returns tuples of the form (#trial,
-    #in-trial-time-step, CS, US)
+    Parameters
+    ----------
+    mb_model: MBModel
+        the mushroom body model to get and update the parameters.
+
+    Returns
+    -------
+    routine
+        a generator of stimuli based on the reversal experimental paradigm that returns tuples of the form (#trial,
+        #in-trial-time-step, CS, US)
     """
     cs_on = np.arange(mb_model.nb_trials * 2)
     us_on = np.array([3, 5, 7, 9, 11, 14, 16, 18, 20, 22, 24])
@@ -23,9 +41,16 @@ def unpaired_routine(mb_model):
     The unpaired experimental paradigm as a routine. It allows alternately CS (odour) delivery and unpaired US (shock)
     delivery during trials 3, 5, 7, 9, 11, 14, 16, 18, 20, 22 and 24.
 
-    :param mb_model: the mushroom body model to get and update the parameters.
-    :return: a generator of stimuli based on the unpaired experimental paradigm that returns tuples of the form (#trial,
-    #in-trial-time-step, CS, US)
+    Parameters
+    ----------
+    mb_model
+        the mushroom body model to get and update the parameters.
+
+    Returns
+    -------
+    routine
+        a generator of stimuli based on the unpaired experimental paradigm that returns tuples of the form (#trial,
+        #in-trial-time-step, CS, US)
     """
     cs_on = np.arange(mb_model.nb_trials * 2)
     us_on = np.array([3, 5, 7, 9, 11, 14, 16, 18, 20, 22, 24])
@@ -38,9 +63,16 @@ def no_shock_routine(mb_model):
     The no-shock experimental paradigm as a routine. It allows alternately CS (odour) delivery and paired US (shock)
     delivery during trials 3, 5, 7, 9, 11.
 
-    :param mb_model: the mushroom body model to get and update the parameters.
-    :return: a generator of stimuli based on the no-shock experimental paradigm that returns tuples of the form (#trial,
-    #in-trial-time-step, CS, US)
+    Parameters
+    ----------
+    mb_model
+        the mushroom body model to get and update the parameters.
+
+    Returns
+    -------
+    routine
+        a generator of stimuli based on the no-shock experimental paradigm that returns tuples of the form (#trial,
+        #in-trial-time-step, CS, US)
     """
     cs_on = np.arange(mb_model.nb_trials * 2)
     us_on = np.array([3, 5, 7, 9, 11])
@@ -52,17 +84,26 @@ def shock_routine(mb_model, timesteps=100):
     """
     The example used to explain the behaviour of the sub-circuits as a routine. It is composed by a single trial with
     100 time-steps (default). It is split into 5 phases:
-    1. t =   0 - t_1 : no CS (odour) and no US (shock) is delivered,
-    2. t = t_1 - t_2 : only CS is delivered,
-    3. t = t_2 - t_3 : CS and US are delivered simultaneously,
-    4. t = t_3 - t_4 : only CS is delivered, and
-    5. t = t_4 - end : no CS and no US is delivered;
+
+    - t =   0 - t_1 : no CS (odour) and no US (shock) is delivered,
+    - t = t_1 - t_2 : only CS is delivered,
+    - t = t_2 - t_3 : CS and US are delivered simultaneously,
+    - t = t_3 - t_4 : only CS is delivered, and
+    - t = t_4 - end : no CS and no US is delivered;
     where t_1 = 10%, t_2 = 30%, t_3 = 60% and t_4 = 80% of the duration of the experiment.
 
-    :param mb_model: the mushroom body model to get and update the parameters.
-    :param timesteps: (optional) the number of time-steps that show the duration of the experiment. Default is 100.
-    :return: a generator of stimuli based on the punishing reinforcement example of the manuscript that returns tuples
-    of the form (#trial=1, #in-trial-time-step, CS, US)
+    Parameters
+    ----------
+    mb_model
+        the mushroom body model to get and update the parameters.
+    timesteps: int, optional
+        the number of time-steps that show the duration of the experiment. Default is 100.
+
+    Returns
+    -------
+    routine
+        a generator of stimuli based on the punishing reinforcement example of the manuscript that returns tuples of the
+        form (#trial=1, #in-trial-time-step, CS, US)
     """
     mb_model._t = 0
     mb_model.nb_trials = 1
@@ -103,17 +144,26 @@ def rewarding_routine(mb_model, timesteps=100):
     """
     The example used to explain the behaviour of the sub-circuits as a routine. It is composed by a single trial with
     100 time-steps (default). It is split into 5 phases:
-    1. t =   0 - t_1 : no CS (odour) and no US (reward) is delivered,
-    2. t = t_1 - t_2 : only CS is delivered,
-    3. t = t_2 - t_3 : CS and US are delivered simultaneously,
-    4. t = t_3 - t_4 : only CS is delivered, and
-    5. t = t_4 - end : no CS and no US is delivered;
+
+    - t =   0 - t_1 : no CS (odour) and no US (reward) is delivered,
+    - t = t_1 - t_2 : only CS is delivered,
+    - t = t_2 - t_3 : CS and US are delivered simultaneously,
+    - t = t_3 - t_4 : only CS is delivered, and
+    - t = t_4 - end : no CS and no US is delivered;
     where t_1 = 10%, t_2 = 30%, t_3 = 60% and t_4 = 80% of the duration of the experiment.
 
-    :param mb_model: the mushroom body model to get and update the parameters.
-    :param timesteps: (optional) the number of time-steps that show the duration of the experiment. Default is 100.
-    :return: a generator of stimuli based on the rewarding reinforcement example of the manuscript that returns tuples
-    of the form (#trial=1, #in-trial-time-step, CS, US)
+    Parameters
+    ----------
+    mb_model
+        the mushroom body model to get and update the parameters.
+    timesteps: int, optional
+        the number of time-steps that show the duration of the experiment. Default is 100.
+
+    Returns
+    -------
+    routine
+        a generator of stimuli based on the rewarding reinforcement example of the manuscript that returns tuples of the
+        form (#trial=1, #in-trial-time-step, CS, US)
     """
     mb_model._t = 0
     mb_model.nb_trials = 1
@@ -153,15 +203,21 @@ def _routine_base(mb_model, odour=None, shock=None, paired=None):
     Takes as input the model to be used and the trials where we want the odour and shock delivered, and generates the
     CS and US input to the model.
 
-    :param mb_model: the mushroom body model to get and update the parameters.
-    :param odour: (optional) a list of the trials to deliver the odours. Default is all.
-    :type odour: List[int] | np.ndarray[int]
-    :param shock: (optional) a list of the trials to deliver the shock. Default is all.
-    :type shock: List[int] | np.ndarray[int]
-    :param paired: (optional) a list of the trials to have the shock and odour delivery at the same time. Default is
-    all.
-    :type paired: List[int] | np.ndarra[int]
-    :return: a generator that returns tuples of (#trial, #in-trial-time-step, CS, US) until the experiment is over
+    Parameters
+    ----------
+    mb_model
+        the mushroom body model to get and update the parameters.
+    odour: list[int] | np.ndarray[int]
+        a list of the trials to deliver the odours. Default is all.
+    shock: list[int] | np.ndarray[int]
+        a list of the trials to deliver the shock. Default is all.
+    paired: list[int] | np.ndarray[int]
+        a list of the trials to have the shock and odour delivery at the same time. Default is all.
+
+    Returns
+    -------
+    routine
+        a generator that returns tuples of (#trial, #in-trial-time-step, CS, US) until the experiment is over
     """
     mb_model._t = 0
     if odour is None:

@@ -1,0 +1,7 @@
+setuptools>=40.8.0
+wheel
+numpy>=1.18
+scipy
+pandas
+matplotlib
+pyyaml

@@ -1,3 +1,16 @@
+"""
+Package that handles the data collected from the real neurons in the fruit fly mushroom body.
+"""
+
+__author__ = "Evripidis Gkanias"
+__copyright__ = "Copyright (c) 2021, Insect Robotics Group," \
+                "Institude of Perception, Action and Behaviour," \
+                "School of Informatics, the University of Edinburgh"
+__credits__ = ["Evripidis Gkanias"]
+__license__ = "GPLv3+"
+__version__ = "v1.0.0-alpha"
+__maintainer__ = "Evripidis Gkanias"
+
 from typing import List
 
 import yaml
@@ -7,34 +20,43 @@ import os
 import re
 import csv
 
-# the directory of the file
 __dir__ = os.path.dirname(os.path.abspath(__file__))
-# the directory of the data
-__data_dir__ = os.path.realpath(os.path.join(__dir__, "../..", "data", "FruitflyMB"))
-# sub-directories of each of the experiments
+"""the directory of the file"""
+__data_dir__ = os.path.realpath(os.path.join(__dir__, "data", "fruitfly"))
+"""the directory of the data"""
 __dirs = {
     'B+': ''
 }
-# pattern of the files for each of the experiments
+"""sub-directories of each of the experiments"""
 _patterns_ = {
     # pattern for the initial data
     'B+': r'realSCREEN_([\d\w\W]+)\.xlsx_finaldata([\w\W]+)_timepoint(\d)\.csv'
 }
-# load the meta-data of the genotypes and neurons from the file
+"""pattern of the files for each of the experiments"""
+
 with open(os.path.join(__data_dir__, 'meta.yaml'), 'rb') as f:
     _meta_ = yaml.load(f, Loader=yaml.BaseLoader)
+    """load the meta-data of the genotypes and neurons from the file"""
 
 
 def load_data(experiments='B+', directory=None):
     """
     Creates a DataFrame containing all the data from the specified experiments with keys in this order:
-    1. {experiment}
-    2. {name}_{genotype}
-    3. {#trial}
+    - {experiment}
+    - {name}_{genotype}
+    - {#trial}
 
-    :param experiments: (optional) list of names (or single name) of the experiments to load. Default is 'B+'.
-    :type experiments: List[str] | str
-    :return: a DataFrame with the data from the experiments requested
+    Parameters
+    ----------
+    experiments: str, list
+        list of names (or single name) of the experiments to load. Default is 'B+'.
+    directory: str
+        the directory where the experiments will be found. Default is the data directory.
+
+    Returns
+    -------
+    data: pd.DataFrame
+        a DataFrame with the data from the experiments requested
     """
 
     if directory is None:
@@ -141,14 +163,20 @@ def plot_phase_overlap_mean_responses_from_data(data, experiment="B+", nids=None
     """
     Plots the average responses of the neurons per phase/trial for a specific experiment with overlapping phases.
 
-    :param data: The DataFrame with the responses
-    :type data: pd.DataFrame
-    :param experiment: (optional) The experiment whose data we want to plot. Default is 'B+'.
-    :type experiment: str
-    :param nids: (optional) List of neuron IDs that we want to show their name. If None, it shows all the names.
-    :type nids: List[int]
-    :param only_nids: If to plot only the responses of the specified neurons. Default is True.
-    :type only_nids: bool
+    Parameters
+    ----------
+    data: pd.DataFrame
+        the DataFrame with the responses
+    experiment: str, optional
+        the experiment whose data we want to plot. Default is 'B+'
+    nids: list, optional
+        list of neuron IDs that we want to show their name. If None, it shows all the names
+    only_nids: bool, optional
+        whether to plot only the responses of the specified neurons. Default is True
+    figsize: tuple, optional
+        the size of the figure
+    show_legend: bool, optional
+        whether to also plot the legend
     """
     import matplotlib.pyplot as plt
 

@@ -1,3 +1,16 @@
+"""
+Package that contains all the plotting methods that create the figures of the manuscript.
+"""
+
+__author__ = "Evripidis Gkanias"
+__copyright__ = "Copyright (c) 2021, Insect Robotics Group," \
+                "Institude of Perception, Action and Behaviour," \
+                "School of Informatics, the University of Edinburgh"
+__credits__ = ["Evripidis Gkanias"]
+__license__ = "GPLv3+"
+__version__ = "v1.0.0-alpha"
+__maintainer__ = "Evripidis Gkanias"
+
 from .models_base import MBModel
 
 from typing import List
@@ -14,16 +27,20 @@ def plot_population(ms, nids=None, vmin=-2., vmax=2., only_nids=False, figsize=N
     Plots the responses as a matrix where the rows are different neurons and the columns are the time-steps. The colour
     reveals the actual responses of the neurons.
 
-    :param ms: the models where the values are taken from
-    :type ms: List[MBModel]
-    :param nids: the indices of the neurons that we want to show their names
-    :type nids: List[int]
-    :param vmin: the lower bound for the colour map. Default is -2.
-    :type vmin: float
-    :param vmax: the upper bound for the colour map. Default is 2.
-    :type vmin: float
-    :param only_nids: when True, only the specified neurons are plotted.
-    :type only_nids: bool
+    Parameters
+    ----------
+    ms: List[MBModel]
+        the models where the values are taken from
+    nids: List[int]
+        the indices of the neurons that we want to show their names
+    vmin: float
+        the lower bound for the colour map. Default is -2
+    vmax: float
+        the upper bound for the colour map. Default is 2
+    only_nids: bool
+        when True, only the specified neurons are plotted
+    figsize: list
+        the size of the figure
     """
     title = "motivation-" + '-'.join(str(ms[0]).split("'")[1:-1:2])
 
@@ -113,16 +130,20 @@ def plot_weights_matrices(ms, nids=None, vmin=-2., vmax=2., only_nids=False, fig
     time-steps. The colour reveals the actual strength of the synaptic weights from the KCs to MBONs. The data are split
     in two groups related to odour A and odour B, and the average synaptic strength for each group is plotted.
 
-    :param ms: the models where the values are taken from
-    :type ms: List[MBModel]
-    :param nids: the indices of the neurons that we want to show their names
-    :type nids: List[int]
-    :param vmin: the lower bound for the colour map. Default is -2
-    :type vmin: float
-    :param vmax: the upper bound for the colour map. Default is 2
-    :type vmin: float
-    :param only_nids: when True, only the specified neurons are plotted.
-    :type only_nids: bool
+    Parameters
+    ----------
+    ms: List[MBModel]
+        the models where the values are taken from
+    nids: List[int]
+        the indices of the neurons that we want to show their names
+    vmin: float
+        the lower bound for the colour map. Default is -2
+    vmin: float
+        the upper bound for the colour map. Default is 2
+    only_nids: bool
+        when True, only the specified neurons are plotted
+    figsize: list
+        the size of the figure
     """
     title = "weights-" + '-'.join(str(ms[0]).split("'")[1:-1:2])
 
@@ -203,13 +224,16 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
     """
     Plots the average responses of the neurons per phase/trial with overlapping lines.
 
-
-    :param ms:the models where the values are taken from
-    :type ms: List[MBModel]
-    :param nids: the indices of the neurons that we want to show their names
-    :type nids: List[int]
-    :param only_nids: when True, only the specified neurons are plotted.
-    :type only_nids: bool
+    Parameters
+    ----------
+    ms: List[MBModel]
+        the models where the values are taken from
+    nids: List[int]
+        the indices of the neurons that we want to show their names
+    only_nids: bool
+        when True, only the specified neurons are plotted.
+    figsize: list
+        the size of the figure
     """
     title = "individuals-" + '-'.join(str(ms[0]).split("'")[1:-1:2])
 
@@ -373,12 +397,16 @@ def plot_weights(ms, nids=None, only_nids=True, figsize=None):
     Plots the average synaptic weights of the post-synaptic neurons per phase/trial for a specific experiment with
     overlapping phases. The average weight is calculated per odour.
 
-    :param ms:the models where the values are taken from
-    :type ms: List[MBModel]
-    :param nids: the indices of the neurons that we want to show their names
-    :type nids: List[int]
-    :param only_nids: when True, only the specified neurons are plotted.
-    :type only_nids: bool
+    Parameters
+    ----------
+    ms: List[MBModel]
+        the models where the values are taken from
+    nids: List[int]
+        the indices of the neurons that we want to show their names
+    only_nids: bool
+        when True, only the specified neurons are plotted.
+    figsize: list
+        the size of the figure
     """
     title = "weights-" + '-'.join(str(ms[0]).split("'")[1:-1:2])
 
@@ -536,16 +564,20 @@ def plot_model_structure(m: MBModel, nids=None, vmin=-.5, vmax=.5, only_nids=Fal
     the bottom. The connections are drawn as bonds between the axon of each input neuron (horizontal line) and the
     dendrite of each output neuron (vertical line), where the colour and size of the bond illustrates its strength.
 
-    :param m: the model where the values are taken from
-    :type m: MBModel
-    :param nids: the indices of the neurons that we want to show their names
-    :type nids: List[int]
-    :param vmin: the lower bound of the colour map
-    :type vmin: float
-    :param vmax: the upper bound of the colour map
-    :type vmax: float
-    :param only_nids: when True, only the specified neurons are plotted.
-    :type only_nids: bool
+    Parameters
+    ----------
+    m: MBModel
+        the model where the values are taken from
+    nids: List[int]
+        the indices of the neurons that we want to show their names
+    vmin: float
+        the lower bound of the colour map
+    vmax: float
+        the upper bound of the colour map
+    only_nids: bool
+        when True, only the specified neurons are plotted.
+    figsize: list
+        the size of the figure
     """
     if figsize is None:
         figsize = (5, 4)
@@ -622,19 +654,24 @@ def plot_synapses(w, names_in, names_out, ax=None, cmap="coolwarm", vmin=-.5, vm
     drawn as bonds between the axon of each input neuron (horizontal line) and the dendrite of each output neuron
     (vertical line), where the colour and size of the bond illustrates its strength.
 
-    :param w: the weights matrix where the synaptic weights are drawn from
-    :type w: np.ndarray
-    :param names_in: the names of the pre-synaptic neurons
-    :type names_in: List[str]
-    :param names_out: the names of the post-synaptic neurons
-    :type names_out: List[str]
-    :param ax: (optional) a matplotlib axis to draw the plot in
-    :param cmap: the colour map name to use for  specifying the direction and amplitude of synaptic weight
-    :type cmap: str
-    :param vmin: the lower bound of the colour map
-    :type vmin: float
-    :param vmax: the upper bound of the colour map
-    :type vmax: float
+    Parameters
+    ----------
+    w: np.ndarray
+        the weights matrix where the synaptic weights are drawn from
+    names_in: List[str]
+        the names of the pre-synaptic neurons
+    names_out: List[str]
+        the names of the post-synaptic neurons
+    ax: optional
+        a matplotlib axis to draw the plot in
+    cmap: str
+        the colour map name to use for  specifying the direction and amplitude of synaptic weight
+    vmin: float
+        the lower bound of the colour map
+    vmax: float
+        the upper bound of the colour map
+    figsize: list
+        the size of the figure
     """
     x, y = np.meshgrid(np.arange(w.shape[0]), np.arange(w.shape[1]))
 
@@ -674,8 +711,24 @@ def plot_synapses(w, names_in, names_out, ax=None, cmap="coolwarm", vmin=-.5, vm
 
 def plot_learning_rule(wrt_k=True, wrt_w=True, wrt_d=True, colour_bar=False, fill=True, figsize=None):
     """
+
     Plots 21 contour sub-plots in a 3-by-7 grid where the relationship among the parameters of the dopaminergic learning
     rule is visualised. In each row contours are created for 7 values of one of the parameters: KC+W(t), D(t) or W(t+1).
+
+    Parameters
+    ----------
+    wrt_k: bool, optional
+        create row of plots with respect to the KC activity. Default is True.
+    wrt_w: bool, optional
+        create row of plots with respect to the W_k2m synaptic weight. Default is True.
+    wrt_d: bool, optional
+        create row of plots with respect to the dopaminergic factor (D). Default is True.
+    colour_bar: bool, optional
+        show colour bar. Default is False.
+    fill: bool, optional
+        fill the contours. Default is True.
+    figsize: list, optional
+        the size of the figure
     """
 
     contour = plt.contour
@@ -748,10 +801,14 @@ def plot_sm(m, nids=None, sub=None):
     """
     The responses of the susceptible memory (SM) sub-circuit.
 
-    :param m: the model to get the responses from
-    :type m: MBModel
-    :param nids: (optional) the 2 neuron indices which we want to plot their responses. Default is 1 and 6.
-    :type nids: List[int]
+    Parameters
+    ----------
+    m: MBModel
+        the model to get the responses from
+    nids: List[int], optional
+        the 2 neuron indices which we want to plot their responses. Default is 1 and 6.
+    sub: int, tuple
+        the subfigure code
     """
     if nids is None:
         nids = [1, 6]
@@ -763,10 +820,14 @@ def plot_rm(m, nids=None, sub=None):
     """
     The responses of the restrained memory (RM) sub-circuit.
 
-    :param m: the model to get the responses from
-    :type m: MBModel
-    :param nids: (optional) the 2 neuron indices which we want to plot their responses. Default is 6 and 9.
-    :type nids: List[int]
+    Parameters
+    ----------
+    m: MBModel
+        the model to get the responses from
+    nids: List[int]
+        the 2 neuron indices which we want to plot their responses. Default is 6 and 9.
+    sub: int, tuple
+        the subfigure code
     """
     if nids is None:
         nids = [6, 9]
@@ -778,10 +839,14 @@ def plot_ltm(m, nids=None, sub=None):
     """
     The responses of the long-term memory (LTM) sub-circuit.
 
-    :param m: the model to get the responses from
-    :type m: MBModel
-    :param nids: (optional) the 2 neuron indices which we want to plot their responses. Default is 2 and 10.
-    :type nids: List[int]
+    Parameters
+    ----------
+    m: MBModel
+        the model to get the responses from
+    nids: List[int]
+        the 2 neuron indices which we want to plot their responses. Default is 2 and 10.
+    sub: int, tuple
+        the subfigure code
     """
     if nids is None:
         nids = [2, 10]
@@ -793,10 +858,14 @@ def plot_rrm(m, nids=None, sub=None):
     """
     The responses of the reciprocal restrained memories (RRM) sub-circuit.
 
-    :param m: the model to get the responses from
-    :type m: MBModel
-    :param nids: (optional) the 4 neuron indices which we want to plot their responses. Default is 3, 8, 2 and 9.
-    :type nids: List[int]
+    Parameters
+    ----------
+    m: MBModel
+        the model to get the responses from
+    nids: List[int]
+        the 4 neuron indices which we want to plot their responses. Default is 3, 8, 2 and 9.
+    sub: int, tuple
+        the subfigure code
     """
     if nids is None:
         nids = [3, 8, 2, 9]
@@ -809,10 +878,14 @@ def plot_rfm(m, nids=None, sub=None):
     """
     The responses of the reciprocal forgetting memories (RFM) sub-circuit.
 
-    :param m: the model to get the responses from
-    :type m: MBModel
-    :param nids: (optional) the 4 neuron indices which we want to plot their responses. Default is 5, 10, 4 and 11.
-    :type nids: List[int]
+    Parameters
+    ----------
+    m: MBModel
+        the model to get the responses from
+    nids: List[int]
+        the 4 neuron indices which we want to plot their responses. Default is 5, 10, 4 and 11.
+    sub: int, tuple
+        the subfigure code
     """
     if nids is None:
         nids = [5, 10, 4, 11]
@@ -826,10 +899,14 @@ def plot_mam(m, nids=None, sub=None):
     """
     The responses of the memory assimilation mechanism (MAM).
 
-    :param m: the model to get the responses from
-    :type m: MBModel
-    :param nids: (optional) the 4 neuron indices which we want to plot their responses. Default is 4, 8, 2 and 10.
-    :type nids: List[int]
+    Parameters
+    ----------
+    m: MBModel
+        the model to get the responses from
+    nids: List[int]
+        the 4 neuron indices which we want to plot their responses. Default is 4, 8, 2 and 10.
+    sub: int, tuple
+        the subfigure code
     """
     if nids is None:
         nids = [4, 8, 2, 10]
@@ -844,21 +921,24 @@ def _plot_subcircuit(m, nids, nnames, ncolours, uss=None, title="sub-circuit", s
     are specified in a list of IDs (nids). Neurons are drawn in pairs from the list and are plotted the one on the top
     of the other in separate figures (if the specified neurons are more than 2).
 
-    :param m: the model where the values are taken from
-    :type m: MBModel
-    :param nids: the indices of the neurons that we want to plot
-    :type nids: List[int]
-    :param nnames: a list with the names of the neurons
-    :type nnames: List[str]
-    :param ncolours: colour for the line representing the neuron with the same index
-    :type ncolours: List[str]
-    :param uss: (optional) a list of colour-names for the US of the same size as the nids;'r' for red (punishment), or
-    'g' for green (reward), None for no reinforcement. Default is None.
-    :type uss: List[str]
-    :param title: (optional) the title of the figure. If more than 1 plots are to be generated, a number is added at the
-    end of the title. Default is 'sub-circuit'
-    :type title: str
-    :return:
+    Parameters
+    ----------
+    m: MBModel
+        the model where the values are taken from
+    nids: List[int]
+        the indices of the neurons that we want to plot
+    nnames: List[str]
+        a list with the names of the neurons
+    ncolours: List[str]
+        colour for the line representing the neuron with the same index
+    uss: List[str], optional
+        a list of colour-names for the US of the same size as the nids;'r' for red (punishment), or 'g' for green
+        (reward), None for no reinforcement. Default is None.
+    title: str, optional
+        the title of the figure. If more than 1 plots are to be generated, a number is added at the end of the title.
+        Default is 'sub-circuit'
+    sub: int, tuple
+        the subfigure code
     """
 
     if uss is None:
@@ -911,6 +991,29 @@ def _plot_subcircuit(m, nids, nnames, ncolours, uss=None, title="sub-circuit", s
 
 
 def plot_arena_paths(data, name="arena", lw=1., alpha=.2, ax=None, save=False, show=True, figsize=None):
+    """
+    Plots the paths in the arena on the top of the gradients of the odours.
+
+    Parameters
+    ----------
+    data: np.ndarray[complex]
+         N x T matrix of 2D position (complex number) where each row represents a different fly and each column
+        represents a different timentstep
+    name: str, optional
+        used as the title of the figure. Default is 'arena'
+    lw: float, optional
+        line width of the path. Default is 1
+    alpha: float, optional
+        the transparency parameter for the path line. Default is 0.2
+    ax: optional
+        the axis to draw the paths on
+    save: bool, optional
+        whether to save the figure. Default is False
+    show: bool, optional
+        whether to show the figure. Default is True
+    figsize: tuple
+        the size of the figure. Default is (2, 2)
+    """
     if ax is None:
         if figsize is None:
             figsize = (2, 2)
@@ -942,8 +1045,20 @@ def plot_arena_paths(data, name="arena", lw=1., alpha=.2, ax=None, save=False, s
 
 
 def plot_arena_stats(df, name="arena-stats", figsize=None):
+    """
+    Plots the statistics of the flies as the von-Mises densities on the top of the gradients of the odours in the arena.
 
-    mechanisms = ["susceptible", "reciprocal", "long-term memory", ["susceptible", "reciprocal", "long-term memory"]]
+    Parameters
+    ----------
+    df: pd.DataFrame
+        contains the stats extracted from the flies running in the arena
+    name: str, optional
+        used as the title of the figure. Default is 'arena-stats'
+    figsize: tuple
+        the size of the figure. Default is (2, 2)
+    """
+
+    mechanisms = ["susceptible", "restrained", "long-term memory", ["susceptible", "restrained", "long-term memory"]]
     reinforcements = ["punishment", "reward"]
     odours = ["A", "B", "AB"]
     ms, rs, os = np.meshgrid(mechanisms, reinforcements, odours)
@@ -966,6 +1081,28 @@ def plot_arena_stats(df, name="arena-stats", figsize=None):
 
 def _plot_arena_stats(data, mechanisms=None, reinforcements=None, odours=None, name="arena-stats",
                       bimodal_tol=np.pi/2, print_stats=False, ax=None):
+    """
+    Plots the von Mises in the arena on the top of the gradients of the odours.
+
+    Parameters
+    ----------
+    data: pd.DataFrame
+        contains the stats extracted from the flies
+    mechanisms: str, list
+        list of mechanisms that are used simultaneously
+    reinforcements: str, list
+        list of reinforcements that are used simultaneously
+    odours: str, list
+        list of odours that are observed simultaneously
+    name: optional
+        used as the title of the sub-plot. Default is 'arena-stats'
+    bimodal_tol: float, optional
+        tolerance to check whether the distribution is bimodal or not. Default is pi/2
+    print_stats: bool, optional
+        whether to print out the stats while creating the plot. Default is False
+    ax: optional
+        the axis to draw the paths on
+    """
 
     if ax is None:
         plt.figure(name, figsize=(2, 2))
@@ -973,7 +1110,7 @@ def _plot_arena_stats(data, mechanisms=None, reinforcements=None, odours=None, n
     else:
         ax.set_title(name, fontsize=8)
     if mechanisms is None:
-        mechanisms = ["susceptible", "reciprocal", "long-term memory"]
+        mechanisms = ["susceptible", "restrained", "long-term memory"]
     if not isinstance(mechanisms, list):
         mechanisms = [mechanisms]
     if reinforcements is None:
@@ -985,7 +1122,7 @@ def _plot_arena_stats(data, mechanisms=None, reinforcements=None, odours=None, n
     if not isinstance(odours, list):
         odours = [odours]
 
-    mechanisms_not = list({"susceptible", "reciprocal", "long-term memory"} - set(mechanisms))
+    mechanisms_not = list({"susceptible", "restrained", "long-term memory"} - set(mechanisms))
 
     df = data[np.all([data[m] for m in mechanisms] + [~data[m] for m in mechanisms_not], axis=0)]
     df = df[np.any([df["reinforcement"] == r for r in reinforcements], axis=0)]
@@ -1124,9 +1261,19 @@ def _plot_arena_stats(data, mechanisms=None, reinforcements=None, odours=None, n
 
 
 def plot_arena_box(df, name="arena-box"):
+    """
+    Plots box-plots based on the arena statistics.
 
-    mechanisms = [["susceptible"], ["reciprocal"], ["long-term memory"],
-                  ["susceptible", "reciprocal", "long-term memory"]]
+    Parameters
+    ----------
+    df: pd.DataFrame
+        contains the stats extracted from the flies running in the arena
+    name: str, optional
+        it will be used as the title of the figure. Default is 'arena-box'
+    """
+
+    mechanisms = [["susceptible"], ["restrained"], ["long-term memory"],
+                  ["susceptible", "restrained", "long-term memory"]]
     reinforcements = ["punishment", "reward"]
     odours = ["A", "B", "AB"]
     ms, rs, os = np.meshgrid(mechanisms, reinforcements, odours)
@@ -1134,7 +1281,7 @@ def plot_arena_box(df, name="arena-box"):
     labels, data = [""] * 24, [[]] * 24
     for mechanism, reinforcement, odour in zip(ms.flatten(), rs.flatten(), os.flatten()):
 
-        mechanisms_not = list({"susceptible", "reciprocal", "long-term memory"} - set(mechanism))
+        mechanisms_not = list({"susceptible", "restrained", "long-term memory"} - set(mechanism))
         dff = df[np.all([df[m] for m in mechanism] + [~df[m] for m in mechanisms_not], axis=0)]
         dff = dff[np.any([dff["reinforcement"] == reinforcement], axis=0)]
         dff = dff[np.any([dff["paired odour"] == odour], axis=0)]
@@ -1227,6 +1374,28 @@ def plot_arena_box(df, name="arena-box"):
 
 
 def _get_bimodal_mean(data, bimodal_tol=np.pi, verbose=False):
+    """
+    Gets the data and tries to identify bimodal distributions. It returns a list of means, standard deviations and
+    number of samples, containing one entry per identified model.
+
+    Parameters
+    ----------
+    data: np.ndarray
+        the data containing directions in rads
+    bimodal_tol: float, optional
+        the tolerance of bimodal distributions. Default is pi
+    verbose: bool, optional
+        whether to print out feedback while identifying the distributions or not. Default is False
+
+    Returns
+    -------
+    d_mean: list
+        list with the means
+    d_std: list
+        list with the standard deviations
+    n: list
+        list with the number of samples associated with the models
+    """
     n = [len(data)]
     d_mean = [circmean(data)]
     d_std = [circstd(data)]
@@ -1281,6 +1450,29 @@ def _get_bimodal_mean(data, bimodal_tol=np.pi, verbose=False):
 
 
 def draw_gradients(ax, radius=1., draw_sources=True, cmap="coolwarm", levels=20, vminmax=3):
+    """
+    Draws the odour distribution (gradients) on the given axis as contours.
+
+    Parameters
+    ----------
+    ax
+        the axis to draw the gradient to
+    radius: float, optional
+        the radius of the arena. Default is 1
+    draw_sources: bool, optional
+        whether to draw the sources or not. Default is True
+    cmap: str, optional
+        the colormap of the contours. Default is 'coolwarm'
+    levels: int, optional
+        the levels of the contours. Default is 20
+    vminmax: float
+        the absolute min/max value for the contours. Default is 3
+
+    Returns
+    -------
+    ax
+        the axis where the gradients are drawn
+    """
     from .arena import FruitFly, gaussian_p
 
     a_mean, a_sigma = FruitFly.a_source, FruitFly.a_sigma
@@ -1304,12 +1496,48 @@ def draw_gradients(ax, radius=1., draw_sources=True, cmap="coolwarm", levels=20,
 
 
 def vonmises_pdf(x, mu, kappa):
+    """
+    The von-Mises density function
+
+    Parameters
+    ----------
+    x: float, np.ndarray
+        samples
+    mu: float
+        mean value
+    kappa: float
+        the kappa parameter of the von-Mises distribution
+
+    Returns
+    -------
+    X: float, np.ndarray
+        the von-Mises PDF value
+    """
     from scipy.special import i0
 
     return np.exp(kappa * np.cos(x - mu)) / (2. * np.pi * i0(kappa))
 
 
 def vonmises_fft_kde(data, kappa, n_bins):
+    """
+    Calculates the bins for the von-Mises KDE using the data, the kappa parameter and the number of bins.
+
+    Parameters
+    ----------
+    data: np.ndarray
+        angles (in rads) of the directions of the flies
+    kappa: float
+        parameter for the von-Mises distribution
+    n_bins: int
+        number of bins
+
+    Returns
+    -------
+    bin_centre: np.ndarray
+        the centres of the bins created
+    kde: np.ndarray
+        the KDE values for these centres
+    """
     bins = np.linspace(-np.pi, np.pi, n_bins + 1, endpoint=True)
     hist_n, bin_edges = np.histogram(data, bins=bins)
     bin_centers = np.mean([bin_edges[1:], bin_edges[:-1]], axis=0)

@@ -1,10 +1,11 @@
 import setuptools
+import os
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="incentive-circuit",
+    name="incentive",
     version="v1.0.0-alpha",
     author="Evripidis Gkanias",
     maintainer="Evripidis Gkanias",
@@ -26,6 +27,7 @@ setuptools.setup(
     ],
     packages=["incentive"],
     package_dir={"": "src"},
-    data_files=[('data/FruitflyMB', ['data/FruitflyMB/meta.yaml'])],
+    package_data={'incentive': [os.path.join('data', 'fruitfly', '*'),
+                                os.path.join('data', 'arena', '*')]},
     python_requires=">=3.7",
 )
