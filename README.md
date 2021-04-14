@@ -1,9 +1,12 @@
 # The Incentive Circuit
+[![GitHub license](https://img.shields.io/github/license/evgkanias/IncentiveCircuit?logo=GPL)](https://github.com/evgkanias/IncentiveCircuit/blob/main/LICENSE)
 
 Python replication for the results from the eLife manuscript:
 
 Gkanias, E., McCurdy, L. Y., Nitabach, M. N., & Webb, B. (2021). Incentive circuit: how flies acquire,
 forget and assimilate memories. Submitted to eLife.
+
+![The incentive circuit of the insect mushroom body.](docs/incentive-circuit.png)
 
 The "**incentive circuit**" (IC) is a model of the mushroom body in the fruit fly brain
 that receives sensory input and reinforcements and modulates the motivation state of
@@ -75,6 +78,11 @@ twin-spoke model; `--structure`, `--values` and `--weights` enable plotting of t
 structure, responses and KC-MBON synaptic weights of the model over time respectively;
 `--stats` prints the logistics of flies in the data-set; and `--verbose` allows
 printing in the console during the processing of the files.
+
+## Report an issue
+
+If you have any issues installing or using the package, you can report it
+[here](https://github.com/evgkanias/IncentiveCircuit/issues).
 
 ## Author
 
