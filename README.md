@@ -36,7 +36,7 @@ Here is an example code that installs the package:
 ```commandline
 mkdir ~/projects
 cd ~/projects
-git clone https://github.com/evgkanias/IncentiveCircuit.git
+git clone https://github.com/InsectRobotics/IncentiveCircuit.git
 cd IncentiveCircuit
 pip install -r requirements.txt
 pip install .
@@ -48,7 +48,7 @@ Note that the [pip](https://pypi.org/project/pip/) project is needed for the abo
 The [generate_manuscript](notebooks/generate_manuscript.ipynb) is an
 [iPython notebook](https://ipython.org/notebook.html) that reproduces the results for the figures
 and associates them to the manuscript. If the notebook is not rendering, you can try
-[this](https://nbviewer.jupyter.org/github/evgkanias/IncentiveCircuit/blob/main/notebooks/generate_manuscript.ipynb)
+[this](https://nbviewer.jupyter.org/github/InsectRobotics/IncentiveCircuit/blob/main/notebooks/generate_manuscript.ipynb)
 link. Alternatively, you can find the scripts that create the plots in the manuscript in the [examples](examples)
 directory and run them using: 
 ```commandline
@@ -82,7 +82,7 @@ printing in the console during the processing of the files.
 ## Report an issue
 
 If you have any issues installing or using the package, you can report it
-[here](https://github.com/evgkanias/IncentiveCircuit/issues).
+[here](https://github.com/InsectRobotics/IncentiveCircuit/issues).
 
 ## Author
 

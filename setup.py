@@ -14,9 +14,9 @@ setuptools.setup(
     description="A package implementing the incentive circuit in the fruit fly brain",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/evgkanias/IncentiveCircuit",
+    url="https://github.com/InsectRobotics/IncentiveCircuit",
     project_urls={
-        "Bug Tracker": "https://github.com/evgkanias/IncentiveCircuit/issues"
+        "Bug Tracker": "https://github.com/InsectRobotics/IncentiveCircuit/issues"
     },
     classifiers=[
         "Development Status :: 3 - Alpha",
