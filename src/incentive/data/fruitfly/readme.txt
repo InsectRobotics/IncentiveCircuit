@@ -1,1 +1,1 @@
-This README.txt file exists in order to create this directory by default during the installation.
+The data and metadata of the responses in the fruit fly brain are stored in this directory.

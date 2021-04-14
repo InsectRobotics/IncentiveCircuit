@@ -1,1 +1,1 @@
-This README.txt file exists in order to create this directory by default during the installation.
+The data from the arena experiments are stored in this directory.
