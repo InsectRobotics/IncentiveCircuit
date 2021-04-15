@@ -86,7 +86,7 @@ If you have any issues installing or using the package, you can report it
 
 ## Author
 
-The code written by [Evripidis Gkanias](https://evgkanias.github.io/).
+The code is written by [Evripidis Gkanias](https://evgkanias.github.io/).
 
 ## Copyright
 
