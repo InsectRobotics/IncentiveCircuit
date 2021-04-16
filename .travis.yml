@@ -8,3 +8,7 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install .
+
+script:
+  - cd examples
+  - python run_twinspokemodel.py --nb-kc 10 --only-nids --structure
