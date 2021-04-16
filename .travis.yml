@@ -10,5 +10,5 @@ install:
   - pip install .
 
 script:
-  - cd examples
-  - python run_twinspokemodel.py --nb-kc 10 --only-nids --structure
+  - cd examples/
+  - python run_incentive_circuit.py -v --only-nids
