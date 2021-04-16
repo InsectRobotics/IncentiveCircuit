@@ -1,4 +1,4 @@
-# The Incentive Circuit ![GitHub top language](https://img.shields.io/github/languages/top/InsectRobotics/IncentiveCircuit) [![GitHub license](https://img.shields.io/github/license/InsectRobotics/IncentiveCircuit)](https://github.com/InsectRobotics/IncentiveCircuit/blob/main/LICENSE) [![Build Status](https://travis-ci.com/InsectRobotics/IncentiveCircuit.svg?token=tyo7V4GZ2Vq6iYPrXVLD&branch=main)](https://travis-ci.com/InsectRobotics/IncentiveCircuit)
+# The Incentive Circuit ![GitHub top language](https://img.shields.io/github/languages/top/InsectRobotics/IncentiveCircuit) [![GitHub license](https://img.shields.io/github/license/InsectRobotics/IncentiveCircuit)](https://github.com/InsectRobotics/IncentiveCircuit/blob/main/LICENSE) ![GitHub last-commit](https://img.shields.io/github/last-commit/InsectRobotics/IncentiveCircuit) [![Build Status](https://travis-ci.com/InsectRobotics/IncentiveCircuit.svg?token=tyo7V4GZ2Vq6iYPrXVLD&branch=main)](https://travis-ci.com/InsectRobotics/IncentiveCircuit)
 
 
 Python replication for the results from the eLife manuscript:
@@ -86,7 +86,7 @@ If you have any issues installing or using the package, you can report it
 
 ## Author
 
-The code written by [Evripidis Gkanias](https://evgkanias.github.io/).
+The code is written by [Evripidis Gkanias](https://evgkanias.github.io/).
 
 ## Copyright
 
