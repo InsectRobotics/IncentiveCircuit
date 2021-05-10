@@ -209,6 +209,7 @@ class MBModel(object):
         else:
             routine = kwargs.get('routine', reversal_routine(self))
         repeat = kwargs.get('repeat', 4)
+        rng = kwargs.get('rng', np.random.RandomState(seed=2021))
 
         for _, _, cs, us in routine:
 
@@ -217,7 +218,10 @@ class MBModel(object):
             v_pre, v_post = self._v[self._t].copy(), self._v[self._t].copy()
 
             # feed forward responses: PN(CS) -> KC
-            k = cs @ self.w_p2k
+            k = cs @ self.w_p2k + rng.rand(self.nb_kc) * .05
+            i = np.argsort(k)[:5]
+            k = np.zeros_like(k)
+            k[i] = .2
 
             eta = float(1) / float(repeat)
             for r in range(repeat):

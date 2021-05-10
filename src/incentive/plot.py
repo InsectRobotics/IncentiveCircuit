@@ -1056,14 +1056,15 @@ def _plot_arena_paths(data, name="arena", lw=1., alpha=.2, ax=None, save=False, 
 
     draw_gradients(ax, radius=1.)
 
-    nb_flies, nb_steps = data.shape
-    e_pre = int(.2 * nb_steps)
-    s_post = int(.5 * nb_steps)
-    for i in range(nb_flies):
-        ax.plot(np.angle(data[i, :e_pre]), np.absolute(data[i, :e_pre]), color='b', alpha=alpha, lw=lw)
-        ax.plot(np.angle(data[i, e_pre:s_post]), np.absolute(data[i, e_pre:s_post]),
-                color='r' if 'quinine' in name else 'g', alpha=alpha, lw=lw)
-        ax.plot(np.angle(data[i, s_post:]), np.absolute(data[i, s_post:]), color='k', alpha=alpha, lw=lw)
+    if len(data) > 1:
+        nb_flies, nb_steps = data.shape
+        e_pre = int(.2 * nb_steps)
+        s_post = int(.5 * nb_steps)
+        for i in range(nb_flies):
+            ax.plot(np.angle(data[i, :e_pre]), np.absolute(data[i, :e_pre]), color='b', alpha=alpha, lw=lw)
+            ax.plot(np.angle(data[i, e_pre:s_post]), np.absolute(data[i, e_pre:s_post]),
+                    color='r' if 'quinine' in name else 'g', alpha=alpha, lw=lw)
+            ax.plot(np.angle(data[i, s_post:]), np.absolute(data[i, s_post:]), color='k', alpha=alpha, lw=lw)
 
     ax.set_yticks([])
     ax.set_xticks([])

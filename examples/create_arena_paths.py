@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -33,17 +33,18 @@ __status__ = "Production"
 # the directory of the file
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 # the directory of the data
-__data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "data", "arena"))
+__data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "src", "incentive", "data", "arena"))
 
 if __name__ == '__main__':
     from incentive.arena import FruitFly
 
     sv = 1.
     rv = 1.
-    mv = 10.
+    mv = 1.
     nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=100)
     nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=100)  # seconds
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
+    repeats = read_arg(["-R", "--repeat"], vtype=int, default=1)
 
     if read_arg(["-p", "--punishment"]):
         punishment = [True]
@@ -107,13 +108,25 @@ if __name__ == '__main__':
         if only_b:
             name += "b"
 
-        print(name)
+        data = np.zeros((nb_flies, nb_timesteps), dtype=complex)
+        flies = []
 
-        data = np.zeros((nb_flies, nb_timesteps), dtype=np.complex)
-        for i in range(nb_flies):
-            fly = FruitFly(rng=rng, nb_steps=nb_timesteps)
-            fly(punishment=punishment, noise=.5, susceptible=susceptible, reciprocal=reciprocal, ltm=ltm,
-                only_a=only_a, only_b=only_b)
-            data[i] = fly.xy
+        for repeat in range(repeats):
+            print(name, end=' ')
+            for i in range(nb_flies):
+                if len(flies) <= i:
+                    fly = FruitFly(rng=rng, nb_steps=nb_timesteps)
+                    flies.append(fly)
+                else:
+                    fly = flies[i]
+                fly(punishment=punishment, noise=.5, susceptible=susceptible, reciprocal=reciprocal, ltm=ltm,
+                    only_a=only_a, only_b=only_b)
+                data[i] = fly.xy
 
-        np.savez(os.path.join(directory, "%s.npz" % name), data=data)
+            if repeats > 1:
+                print("R:", repeat + 1)
+                name_r = name + "-%02d" % (repeat+1)
+            else:
+                print()
+                name_r = name
+            np.savez(os.path.join(directory, "%s.npz" % name_r), data=data)

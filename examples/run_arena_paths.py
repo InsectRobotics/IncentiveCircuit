@@ -28,10 +28,12 @@ if __name__ == '__main__':
     from incentive.arena import load_arena_paths
     from incentive.plot import plot_arena_paths
 
-    rw = read_arg(["-rw", "--rescorla-wagner"])
+    rw = read_arg(["-rw", "--rescorla-wagner"], default=False)
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
+    repeat = read_arg(['-r', '--repeat'], vtype=int, default=5)
 
     file_names = os.listdir(__data_dir__)
-    d_raw, cases, d_names = load_arena_paths(file_names, prediction_error=rw)
-    plot_arena_paths(d_raw, cases, d_names, name="%sarena-paths" % ("rw-" if rw else ""), figsize=(5, 4))
+    d_raw, cases, d_names = load_arena_paths(file_names, repeat=repeat, prediction_error=rw)
+    plot_arena_paths(d_raw, cases, d_names, figsize=(5, 4),
+                     name="%sarena-paths%s" % ("rw-" if rw else "", "-%02d" % repeat if repeat is not None else ""))
 

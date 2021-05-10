@@ -32,7 +32,7 @@ class FruitFly(object):
     b_sigma = .3
 
     def __init__(self, nb_kcs=10, nb_kc_odour_a=5, nb_kc_odour_b=5, nb_steps=1000, nb_in_trial=1, learning_rule="dlr",
-                 gain=.04, rng=np.random.RandomState()):
+                 gain=.02, rng=np.random.RandomState()):
         """
         Simulation parameters and methods for the fly running in an arena with two odour distributions. The incentive
         circuit is used in order to find the most attractive or aversive direction and move towards or away from it.
@@ -50,9 +50,9 @@ class FruitFly(object):
         nb_in_trial: int, optional
             the number of in-trial time-steps for the incentive circuit processing. Default is 1.
         learning_rule: str, optional
-            the learning rule that the incentive circuit will use in order to update its weights. Defult is "dlr".
+            the learning rule that the incentive circuit will use in order to update its weights. Default is "dlr".
         gain: float, optional
-            controls the walking speed of the fly. Default is 0.04 m.
+            controls the walking speed of the fly. Default is 0.02 m.
         rng: optional
             the random generator
         """
@@ -82,6 +82,8 @@ class FruitFly(object):
         m = kwargs.get("ltm", 1.)
         a = kwargs.get("only_a", False)
         b = kwargs.get("only_b", False)
+
+        self.mb.w_k2m[0] = self.mb.w_k2m[-2].copy()
         routine = arena_routine(
             self, noise=noise, r_start=r_start, r_end=r_end, reward=reward, punishment=punishment,
             susceptible=s, restrained=r, ltm=m, only_a=a, only_b=b)
@@ -290,7 +292,7 @@ def load_arena_stats(file_names, prediction_error=False):
     return df
 
 
-def load_arena_paths(file_names, prediction_error=False):
+def load_arena_paths(file_names, repeat=None, prediction_error=False):
     """
     Loads the raw paths from the given files and returns their trace, case and name in 3
     separate lists.
@@ -299,6 +301,8 @@ def load_arena_paths(file_names, prediction_error=False):
     ----------
     file_names: list[str]
         list of filenames in the arena data directory.
+    repeat: int, optional
+        which repeat of the experiment to load. Default is the first.
     prediction_error: bool, optional
         if the prediction error was used as the learning rule when creating the files. Default is False.
 
@@ -346,12 +350,17 @@ def load_arena_paths(file_names, prediction_error=False):
 
     for fname in file_names:
         if prediction_error:
-            pattern = r'rw-arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})'
+            pattern = r'rw-arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
         else:
-            pattern = r'arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})'
+            pattern = r'arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
         details = re.findall(pattern, fname)
         if len(details) < 1:
             continue
+
+        if repeat != (None if details[0][6] == '' else int(details[0][6])):
+            continue
+
+        print(details[0])
         punishment = "p" if 'quinine' in details[0] else "r"
         neurons = (
             ("s" if 's' in details[0] else "") +
@@ -363,6 +372,7 @@ def load_arena_paths(file_names, prediction_error=False):
             ("b" if "b" in details[0] else "")
         )
         case = [neurons, punishment, odour]
+
 
         name = fname[:-4]
 
