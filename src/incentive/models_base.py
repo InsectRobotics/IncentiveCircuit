@@ -218,16 +218,15 @@ class MBModel(object):
             v_pre, v_post = self._v[self._t].copy(), self._v[self._t].copy()
 
             # feed forward responses: PN(CS) -> KC
-            k = cs @ self.w_p2k + rng.rand(self.nb_kc) * .05
-            i = np.argsort(k)[:5]
-            k = np.zeros_like(k)
-            k[i] = .2
+            k = cs @ self.w_p2k + rng.rand(self.nb_kc) * .001
+            k[~np.argsort(k)[:6]] = 0.
 
             eta = float(1) / float(repeat)
             for r in range(repeat):
 
                 # feed forward responses: KC -> MBON, US -> DAN
                 mb = k @ w_k2m_pre + us @ self.w_u2d + self.bias
+                mb = np.clip(mb, -100., 100.)
 
                 # Step 1: internal values update
                 v_post = self.update_values(k, v_pre, mb)
@@ -289,7 +288,7 @@ class MBModel(object):
             w_new = w_k2m
 
         # negative weights are not allowed
-        return np.maximum(w_new, 0)
+        return np.clip(w_new, 0, 50)
 
     def update_values(self, kc, v_pre, v_stim):
         """

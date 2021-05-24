@@ -25,15 +25,17 @@ __data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "src", "incentive", 
 
 
 if __name__ == '__main__':
-    from incentive.arena import load_arena_paths
-    from incentive.plot import plot_arena_paths
+    from incentive.arena import load_arena_traces
+    from incentive.plot import plot_arena_traces, plot_arena_weights
 
     rw = read_arg(["-rw", "--rescorla-wagner"])
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
-    repeat = read_arg(['-r', '--repeat'], vtype=int, default=1)
+    repeat = read_arg(['-r', '--repeat'], vtype=int, default=10)
 
     file_names = os.listdir(__data_dir__)
-    d_raw, cases, d_names = load_arena_paths(file_names, repeat=repeat, prediction_error=rw)
-    plot_arena_paths(d_raw, cases, d_names, figsize=(5, 4),
-                     name="%sarena-paths%s" % ("rw-" if rw else "", "-%02d" % repeat if repeat is not None else ""))
+    d_res, d_wei, d_nam, cases, d_names = load_arena_traces(file_names, repeat=repeat, prediction_error=rw)
 
+    # plot_arena_traces(d_res, d_nam, cases, d_names, figsize=(20, 5),
+    #                   name="%sarena-trace%s" % ("rw-" if rw else "", "-%02d" % repeat if repeat is not None else ""))
+    plot_arena_weights(d_wei, d_nam, cases, d_names, figsize=(20, 5),
+                       name="%sarena-weights%s" % ("rw-" if rw else "", "-%02d" % repeat if repeat is not None else ""))

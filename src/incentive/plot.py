@@ -1292,7 +1292,7 @@ def _plot_arena_stats(data, mechanisms=None, reinforcements=None, odours=None, n
     ax.set_ylim([0, 1])
 
 
-def plot_arena_box(df, name="arena-box"):
+def plot_arena_box(df, name="arena-box", show=True):
     """
     Plots box-plots based on the arena statistics.
 
@@ -1302,6 +1302,8 @@ def plot_arena_box(df, name="arena-box"):
         contains the stats extracted from the flies running in the arena
     name: str, optional
         it will be used as the title of the figure. Default is 'arena-box'
+    show: bool, optional
+        if True, it shows the plot. Default is True
     """
 
     mechanisms = [["susceptible"], ["restrained"], ["long-term memory"],
@@ -1318,36 +1320,9 @@ def plot_arena_box(df, name="arena-box"):
         dff = dff[np.any([dff["reinforcement"] == reinforcement], axis=0)]
         dff = dff[np.any([dff["paired odour"] == odour], axis=0)]
 
-        if reinforcement == "punishment":
-            if odour == "A":
-                d_pre = np.array(dff[dff["phase"] == "pre"]["avoid A"])
-                d_learn = np.array(dff[dff["phase"] == "learn"]["avoid A"])
-                d_post = np.array(dff[dff["phase"] == "post"]["avoid A"])
-            elif odour == "B":
-                d_pre = np.array(dff[dff["phase"] == "pre"]["avoid B"])
-                d_learn = np.array(dff[dff["phase"] == "learn"]["avoid B"])
-                d_post = np.array(dff[dff["phase"] == "post"]["avoid B"])
-            else:
-                d_pre = np.array(dff[dff["phase"] == "pre"]["avoid A/B"])
-                d_learn = np.array(dff[dff["phase"] == "learn"]["avoid A/B"])
-                d_post = np.array(dff[dff["phase"] == "post"]["avoid A/B"])
-        else:
-            if odour == "A":
-                d_pre = np.array(dff[dff["phase"] == "pre"]["attract A"])
-                d_learn = np.array(dff[dff["phase"] == "learn"]["attract A"])
-                d_post = np.array(dff[dff["phase"] == "post"]["attract A"])
-            elif odour == "B":
-                d_pre = np.array(dff[dff["phase"] == "pre"]["attract B"])
-                d_learn = np.array(dff[dff["phase"] == "learn"]["attract B"])
-                d_post = np.array(dff[dff["phase"] == "post"]["attract B"])
-            else:
-                d_pre = np.array(dff[dff["phase"] == "pre"]["attract A/B"])
-                d_learn = np.array(dff[dff["phase"] == "learn"]["attract A/B"])
-                d_post = np.array(dff[dff["phase"] == "post"]["attract A/B"])
-
-        # d_pre = np.array(dff[dff["phase"] == "pre"]["pref A"] - dff[dff["phase"] == "pre"]["pref B"])
-        # d_learn = np.array(dff[dff["phase"] == "learn"]["pref A"] - dff[dff["phase"] == "learn"]["pref B"])
-        # d_post = np.array(dff[dff["phase"] == "post"]["pref A"] - dff[dff["phase"] == "post"]["pref B"])
+        d_pre = np.array(dff[dff["phase"] == "pre"]["PI"])
+        d_learn = np.array(dff[dff["phase"] == "learn"]["PI"])
+        d_post = np.array(dff[dff["phase"] == "post"]["PI"])
 
         i_mecha = mechanisms.index(mechanism)
         i_reinf = reinforcements.index(reinforcement)
@@ -1360,22 +1335,28 @@ def plot_arena_box(df, name="arena-box"):
         labels[i] = label
         data[i] = [d_pre, d_learn, d_post]
 
-    plt.figure(name, figsize=(6, 4))
+    plt.figure(name, figsize=(4, 4))
+    ticks = []
     for i in range(len(labels)):
-        plt.subplot(4, 6, i + 1)
-        plt.boxplot(np.array(data[i][0]), positions=[1], notch=True, patch_artist=True,
+        plt.subplot(4, 1, i // 6 + 1)
+        plt.plot([0, 7], [0, 0], 'grey', lw=2)
+        data_0 = np.array(data[i][0])
+        plt.boxplot(data_0[~np.isnan(data_0)], positions=[i % 6 + 0.8], notch=True, patch_artist=True,
                     boxprops=dict(color="b", facecolor="b"),
                     whiskerprops=dict(color="b"),
                     flierprops=dict(color="b", markeredgecolor="b", marker="."),
                     capprops=dict(color="b"),
                     medianprops=dict(color="b"))
-        plt.boxplot(np.array(data[i][1]), positions=[2], notch=True, patch_artist=True,
-                    boxprops=dict(color="r", facecolor="r"),
-                    whiskerprops=dict(color="r"),
-                    flierprops=dict(color="r", markeredgecolor="r", marker="."),
-                    capprops=dict(color="r"),
-                    medianprops=dict(color="r"))
-        plt.boxplot(np.array(data[i][2]), positions=[3], notch=True, patch_artist=True,
+        data_1 = np.array(data[i][1])
+        r_colour = "red" if ("p" in labels[i]) else "green"
+        plt.boxplot(data_1[~np.isnan(data_1)], positions=[i % 6 + 1.0], notch=True, patch_artist=True,
+                    boxprops=dict(color=r_colour, facecolor=r_colour),
+                    whiskerprops=dict(color=r_colour),
+                    flierprops=dict(color=r_colour, markeredgecolor=r_colour, marker="."),
+                    capprops=dict(color=r_colour),
+                    medianprops=dict(color=r_colour))
+        data_2 = np.array(data[i][2])
+        plt.boxplot(data_2[~np.isnan(data_2)], positions=[i % 6 + 1.2], notch=True, patch_artist=True,
                     boxprops=dict(color="k", facecolor="k"),
                     whiskerprops=dict(color="k"),
                     flierprops=dict(color="k", markeredgecolor="k", marker="."),
@@ -1386,23 +1367,21 @@ def plot_arena_box(df, name="arena-box"):
             title = title.replace("p", "shock")
             title = title.replace("r", "sugar")
             title = title.replace("AB", "A/B")
-            plt.title(title)
+            ticks.append(title)
         if i >= 18:
-            plt.xticks([1, 2, 3], ["pre", "train", "post"])
+            plt.xticks([1, 2, 3, 4, 5, 6], ticks)
         else:
-            plt.xticks([1, 2, 3], [""] * 3)
+            plt.xticks([1, 2, 3, 4, 5, 6], [""] * 6)
 
         if i % 6 == 0:
-            label = labels[i][1:-2].replace("l", "m").upper()
-            if len(label) > 1:
-                label = label[0] + "+" + label[1] + "+" + label[2]
-            plt.ylabel(label)
-            plt.yticks([-1, 0, 1], ["av", "0", "at"])
-        else:
-            plt.yticks([-1, 0, 1], [""] * 3)
+            plt.ylabel(["s (PI)", "r (PI)", "m (PI)", "s/r/m (PI)"][i // 6])
+        plt.yticks([-1, 0, 1], ["A", "0", "B"])
         plt.ylim([-1.05, 1.05])
+        plt.xlim([.5, 6.5])
+
     plt.tight_layout()
-    plt.show()
+    if show:
+        plt.show()
 
 
 def _get_bimodal_mean(data, bimodal_tol=np.pi, verbose=False):
@@ -1525,6 +1504,197 @@ def draw_gradients(ax, radius=1., draw_sources=True, cmap="coolwarm", levels=20,
         ax.scatter(np.angle(b_mean), np.absolute(b_mean), s=20, color="C1", label="odour B")
 
     return ax
+
+
+def plot_arena_traces(data, d_names, cases, names, name="arena-paths", lw=1., alpha=.2, figsize=None):
+    """
+    Plots the neural traces in the arena for all the given cases and names.
+
+    Parameters
+    ----------
+    data: list[np.ndarray]
+        list of the paths for every case
+    cases: list[list]
+        list of the required cases
+    names: list[str]
+        list of names of the cases
+    name: str, optional
+        the title of the figure. Default is 'arena-paths'
+    lw: float, optional
+        the line width of the paths. Default is 0.1
+    alpha: float, optional
+        the transparency of the path-lines. Default is 0.2
+    figsize: tuple, optional
+        the figure size. Default is (5, 4)
+    """
+    if figsize is None:
+        figsize = (15, 10)
+    plt.figure(name, figsize=figsize)
+    for d, dn, c, n in zip(data, d_names, cases, names):
+        ax = plt.subplot(1, 6, cases.index(c) + 1)
+        _plot_arena_trace(d, dn, name=n, lw=lw, alpha=alpha, save=False, show=False, ax=ax)
+    plt.tight_layout()
+    plt.show()
+
+
+def _plot_arena_trace(data, d_names, name="arena", lw=1., alpha=.2, ax=None, save=False, show=True, figsize=None):
+    """
+    Plots the paths in the arena on the top of the gradients of the odours.
+
+    Parameters
+    ----------
+    data: np.ndarray[complex]
+         N x T matrix of 2D position (complex number) where each row represents a different fly and each column
+        represents a different timentstep
+    name: str, optional
+        used as the title of the figure. Default is 'arena'
+    lw: float, optional
+        line width of the path. Default is 1
+    alpha: float, optional
+        the transparency parameter for the path line. Default is 0.2
+    ax: optional
+        the axis to draw the paths on
+    save: bool, optional
+        whether to save the figure. Default is False
+    show: bool, optional
+        whether to show the figure. Default is True
+    figsize: tuple
+        the size of the figure. Default is (2, 2)
+    """
+    if ax is None:
+        if figsize is None:
+            figsize = (2, 2)
+        plt.figure(name, figsize=figsize)
+        ax = plt.subplot(111)
+
+    if len(data) > 1:
+        if data.ndim > 3:  # synaptic weights
+            nb_flies, nb_steps, _, nb_en = data.shape[:4]
+        else:  # responses
+            nb_flies, nb_steps, nb_en = data.shape[:3]
+            nb_kc = None
+        e_pre = int(.2 * nb_steps)
+        s_post = int(.5 * nb_steps)
+        x_pre = np.linspace(-30, 0, e_pre, endpoint=False)
+        x_train = np.linspace(0, 50, s_post - e_pre, endpoint=False)
+        x_post = np.linspace(50, 80, nb_steps - s_post, endpoint=False)
+        for i in range(nb_en):
+            ax.fill_between(x_pre,
+                            3 * i + np.nanquantile(data[:, :e_pre, ..., i], .25, axis=(0, 2) if data.ndim > 3 else 0),
+                            3 * i + np.nanquantile(data[:, :e_pre, ..., i], .75, axis=(0, 2) if data.ndim > 3 else 0),
+                            facecolor='b', alpha=.2)
+            ax.fill_between(x_train,
+                            3 * i + np.nanquantile(data[:, e_pre:s_post, ..., i], .25, axis=(0, 2) if data.ndim > 3 else 0),
+                            3 * i + np.nanquantile(data[:, e_pre:s_post, ..., i], .75, axis=(0, 2) if data.ndim > 3 else 0),
+                            facecolor='r' if 'quinine' in name else 'g', alpha=.2)
+            ax.fill_between(x_post,
+                            3 * i + np.nanquantile(data[:, s_post:, ..., i], .25, axis=(0, 2) if data.ndim > 3 else 0),
+                            3 * i + np.nanquantile(data[:, s_post:, ..., i], .75, axis=(0, 2) if data.ndim > 3 else 0),
+                            facecolor='k', alpha=.2)
+            # ax.plot([x_pre] * 100, 3 * i + np.median(data[:, :e_pre, ..., i], axis=2), color='b', lw=.05)
+            ax.plot(x_pre, 3 * i + np.nanmedian(data[:, :e_pre, ..., i], axis=(0, 2) if data.ndim > 3 else 0),
+                    color='b', lw=lw)
+            ax.plot(x_train, 3 * i + np.nanmedian(data[:, e_pre:s_post, ..., i], axis=(0, 2) if data.ndim > 3 else 0),
+                    color='r' if 'quinine' in name else 'g', lw=lw)
+            ax.plot(x_post, 3 * i + np.nanmedian(data[:, s_post:, ..., i], axis=(0, 2) if data.ndim > 3 else 0),
+                    color='k', lw=lw)
+
+        ax.set_yticks(np.arange(0, nb_en * 3, 3))
+        ax.set_yticklabels([r'$%s$' % nm for nm in d_names], fontsize=16)
+        ax.set_xticks([-30, 0, 50, 79])
+        ax.set_xticklabels([-30, 0, 50, 79], fontsize=16)
+        ax.set_ylim([-1., nb_en * 3])
+
+    if save:
+        plt.savefig(name + ".svg", dpi=600)
+    if show:
+        plt.show()
+
+
+def plot_arena_weights(data, d_names, cases, names, name="arena-paths", figsize=None):
+    """
+    Plots the KC-MBON synaptic weights during the arena experiment for all the given cases and names.
+
+    Parameters
+    ----------
+    data: list[np.ndarray]
+        list of the paths for every case
+    cases: list[list]
+        list of the required cases
+    names: list[str]
+        list of names of the cases
+    name: str, optional
+        the title of the figure. Default is 'arena-paths'
+    figsize: tuple, optional
+        the figure size. Default is (5, 4)
+    """
+    if figsize is None:
+        figsize = (15, 10)
+    plt.figure(name, figsize=figsize)
+    for d, dn, c, n in zip(data, d_names, cases, names):
+        ax = plt.subplot(1, 6, cases.index(c) + 1)
+        _plot_arena_weights(d, dn, name=n, save=False, show=False, ax=ax)
+    plt.tight_layout()
+    plt.show()
+
+
+def _plot_arena_weights(data, d_names, name="arena", ax=None, save=False, show=True, figsize=None):
+    """
+    Plots the KC-MBON synaptic weights during the arena experiment.
+
+    Parameters
+    ----------
+    data: np.ndarray[complex]
+         N x T matrix of 2D position (complex number) where each row represents a different fly and each column
+        represents a different timentstep
+    name: str, optional
+        used as the title of the figure. Default is 'arena'
+    ax: optional
+        the axis to draw the paths on
+    save: bool, optional
+        whether to save the figure. Default is False
+    show: bool, optional
+        whether to show the figure. Default is True
+    figsize: tuple
+        the size of the figure. Default is (2, 2)
+    """
+    if ax is None:
+        if figsize is None:
+            figsize = (2, 2)
+        plt.figure(name, figsize=figsize)
+        ax = plt.subplot(111)
+
+    if len(data) > 1:
+        if data.ndim > 3:  # synaptic weights
+            nb_flies, nb_steps, nb_kc, nb_en = data.shape[:4]
+        else:  # responses
+            nb_flies, nb_steps, nb_en = data.shape[:3]
+            nb_kc = 1
+        e_pre = int(.2 * nb_steps)
+        s_post = int(.5 * nb_steps)
+
+        learn = 0 if 'quinine' in name else 1
+        data_i = np.zeros((data.shape[1], (nb_en // 2) * (nb_kc + 1) - 1, 3), dtype=float)
+        for i in range(nb_en // 2):
+            data_t = np.nanmedian(data[..., i + nb_en // 2], axis=0)
+            i_start = i * (nb_kc + 1)
+            i_end = (i + 1) * (nb_kc + 1) - 1
+
+            data_i[:e_pre, i_start:i_end, 2] = data_t[:e_pre]
+            data_i[e_pre:s_post, i_start:i_end, learn] = data_t[e_pre:s_post]
+            data_i[s_post:, i_start:i_end] = data_t[s_post:][..., np.newaxis]
+
+        ax.imshow(np.clip(np.transpose(data_i, (1, 0, 2)) / 2., 0, 1), aspect="auto")
+
+        ax.set_yticks(np.arange((nb_kc + 1) / 2, (nb_en // 2) * (nb_kc + 1), nb_kc + 1) - 1)
+        ax.set_yticklabels([r'$%s$' % nm for nm in d_names[nb_en // 2:]], fontsize=16)
+        ax.set_xticks([0, .2 * nb_steps, .5 * nb_steps, nb_steps-1])
+        ax.set_xticklabels([-30, 0, 50, 80], fontsize=16)
+
+    if save:
+        plt.savefig(name + ".svg", dpi=600)
+    if show:
+        plt.show()
 
 
 def vonmises_pdf(x, mu, kappa):

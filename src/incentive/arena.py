@@ -60,7 +60,6 @@ class FruitFly(object):
             learning_rule=learning_rule, nb_apl=0, pn2kc_init="default", nb_timesteps=nb_in_trial, nb_trials=nb_steps,
             nb_kc=nb_kcs, nb_kc_odour_1=nb_kc_odour_a, nb_kc_odour_2=nb_kc_odour_b, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
-
         self.xy = np.zeros(nb_steps, dtype=complex)
         self.p_a = np.zeros(nb_steps, dtype=float)
         self.p_b = np.zeros(nb_steps, dtype=float)
@@ -181,11 +180,9 @@ def arena_routine(agent, noise=0.1, r_start=.2, r_end=.5, reward=False, punishme
 
         sw, rw, mw = float(susceptible), float(restrained), float(ltm)
         attraction = (sw * s + rw * r + mw * m) / (sw + rw + mw)
-        if p_a > p_b:
-            direction = a_odour_source - agent.xy[t-1]
-        else:
-            direction = b_odour_source - agent.xy[t-1]
-        direction /= np.maximum(np.absolute(direction), np.finfo(float).eps)
+        d_a = (a_odour_source - agent.xy[t-1]) / non_zero_distance(a_odour_source, agent.xy[t-1])
+        d_b = (b_odour_source - agent.xy[t-1]) / non_zero_distance(b_odour_source, agent.xy[t-1])
+        direction = p_a * d_a + p_b * d_b
 
         if t < 2:
             vel = 0+0j
@@ -231,14 +228,14 @@ def load_arena_stats(file_names, prediction_error=False):
     """
 
     d_names = ["susceptible", "restrained", "long-term memory", "reinforcement",
-               "paired odour", "phase", "angle", "dist_A", "dist_B", "ang_A", "ang_B"]
-    d_raw = [[], [], [], [], [], [], [], [], [], [], []]
+               "paired odour", "phase", "angle", "dist_A", "dist_B", "ang_A", "ang_B", "repeat"]
+    d_raw = [[], [], [], [], [], [], [], [], [], [], [], []]
 
     for fname in file_names:
         if prediction_error:
-            pattern = r'rw-arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})'
+            pattern = r'rw-arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
         else:
-            pattern = r'arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})'
+            pattern = r'arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
         details = re.findall(pattern, fname)
         if len(details) < 1:
             continue
@@ -248,6 +245,8 @@ def load_arena_stats(file_names, prediction_error=False):
         ltm = 'm' in details[0]
         only_a = 'a' in details[0]
         only_b = 'b' in details[0]
+
+        repeat = 0 if details[0][6] == '' else int(details[0][6])
 
         data = np.load(os.path.join(__data_dir__, fname))["data"]
 
@@ -278,6 +277,7 @@ def load_arena_stats(file_names, prediction_error=False):
         d_raw[10].extend(np.angle(data[:, e_pre-1] - FruitFly.b_source))
         d_raw[10].extend(np.angle(data[:, s_post-1] - FruitFly.b_source))
         d_raw[10].extend(np.angle(data[:, -1] - FruitFly.b_source))
+        d_raw[11].extend([repeat] * 3 * nb_flies)
     d_raw = np.array(d_raw)
     df = pd.DataFrame(d_raw, index=d_names).T
     df["angle"] = np.rad2deg(np.array(df["angle"], dtype=float))
@@ -288,6 +288,7 @@ def load_arena_stats(file_names, prediction_error=False):
     df["susceptible"] = np.array(df["susceptible"] == "True", dtype=bool)
     df["restrained"] = np.array(df["restrained"] == "True", dtype=bool)
     df["long-term memory"] = np.array(df["long-term memory"] == "True", dtype=bool)
+    df["repeat"] = np.array(df["repeat"], dtype=int)
 
     return df
 
@@ -350,9 +351,9 @@ def load_arena_paths(file_names, repeat=None, prediction_error=False):
 
     for fname in file_names:
         if prediction_error:
-            pattern = r'rw-arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
+            pattern = r'^rw-arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
         else:
-            pattern = r'arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
+            pattern = r'^arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
         details = re.findall(pattern, fname)
         if len(details) < 1:
             continue
@@ -360,7 +361,7 @@ def load_arena_paths(file_names, repeat=None, prediction_error=False):
         if repeat != (None if details[0][6] == '' else int(details[0][6])):
             continue
 
-        print(details[0])
+        print(fname, details[0])
         punishment = "p" if 'quinine' in details[0] else "r"
         neurons = (
             ("s" if 's' in details[0] else "") +
@@ -381,6 +382,103 @@ def load_arena_paths(file_names, repeat=None, prediction_error=False):
             d_names[cases.index(case)] = name
 
     return d_raw, cases, d_names
+
+
+def load_arena_traces(file_names, repeat=None, prediction_error=False):
+    """
+    Loads the neural responses from the given files and returns their trace, case and name in 3
+    separate lists.
+
+    Parameters
+    ----------
+    file_names: list[str]
+        list of filenames in the arena data directory.
+    repeat: int, optional
+        which repeat of the experiment to load. Default is the first.
+    prediction_error: bool, optional
+        if the prediction error was used as the learning rule when creating the files. Default is False.
+
+    Returns
+    -------
+    d_raw: list[np.ndarray]
+        the raw position for every case
+    cases: list[list]
+        the different cases associated with the data
+    d_names: list[str]
+        the name of each case
+    """
+
+    cases = [
+        # ["s", "p", "a"],
+        # ["s", "p", "b"],
+        # ["s", "p", ""],
+        # ["s", "r", "a"],
+        # ["s", "r", "b"],
+        # ["s", "r", ""],
+        # ["r", "p", "a"],
+        # ["r", "p", "b"],
+        # ["r", "p", ""],
+        # ["r", "r", "a"],
+        # ["r", "r", "b"],
+        # ["r", "r", ""],
+        # ["m", "p", "a"],
+        # ["m", "p", "b"],
+        # ["m", "p", ""],
+        # ["m", "r", "a"],
+        # ["m", "r", "b"],
+        # ["m", "r", ""],
+        ["srm", "p", "a"],
+        ["srm", "p", "b"],
+        ["srm", "p", ""],
+        ["srm", "r", "a"],
+        ["srm", "r", "b"],
+        ["srm", "r", ""],
+    ]
+
+    d_res = [[]] * len(cases)
+    d_wei = [[]] * len(cases)
+    d_nam = [[]] * len(cases)
+    d_names = [[]] * len(cases)
+    # d_names = ["susceptible", "reciprocal", "long-term memory", "reinforcement",
+    #            "paired odour", "phase", "angle"]
+
+    for fname in file_names:
+        if prediction_error:
+            pattern = r'^rw-arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
+        else:
+            pattern = r'^arena-([\w]+)-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
+        details = re.findall(pattern, fname)
+        if len(details) < 1:
+            continue
+
+        if repeat != (None if details[0][6] == '' else int(details[0][6])):
+            continue
+
+        print(fname, details[0])
+        punishment = "p" if 'quinine' in details[0] else "r"
+        neurons = (
+            ("s" if 's' in details[0] else "") +
+            ("r" if "r" in details[0] else "") +
+            ("m" if "m" in details[0] else "")
+        )
+        odour = (
+            ("a" if "a" in details[0] else "") +
+            ("b" if "b" in details[0] else "")
+        )
+        case = [neurons, punishment, odour]
+
+
+        name = fname[:-4]
+
+        if case in cases:
+            i = cases.index(case)
+            d = np.load(os.path.join(__data_dir__, fname))
+            d_res[i] = d["response"]
+            d_wei[i] = d["weights"]
+            d_nam[i] = d["names"]
+            d_names[i] = name
+
+    return d_res, d_wei, d_nam, cases, d_names
 
 
 def gaussian_p(pos, mean, sigma):
@@ -408,3 +506,7 @@ def gaussian_p(pos, mean, sigma):
     pos, mean = np.array(pos), np.array(mean)
 
     return 1. / (np.sqrt(2 * np.pi) * sigma) * np.exp(-np.sum(np.square(pos - mean), axis=-1) / (2 * np.square(sigma)))
+
+
+def non_zero_distance(a, b):
+    return np.maximum(np.linalg.norm(a - b), np.finfo(float).eps)

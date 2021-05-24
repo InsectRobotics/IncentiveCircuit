@@ -42,9 +42,9 @@ if __name__ == '__main__':
     rv = 1.
     mv = 1.
     nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=100)
-    nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=100)  # seconds
+    nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=500)  # seconds
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
-    repeats = read_arg(["-R", "--repeat"], vtype=int, default=1)
+    repeats = read_arg(["-R", "--repeat"], vtype=int, default=20)
 
     if read_arg(["-p", "--punishment"]):
         punishment = [True]
@@ -109,6 +109,9 @@ if __name__ == '__main__':
             name += "b"
 
         data = np.zeros((nb_flies, nb_timesteps), dtype=complex)
+        responses = np.zeros((nb_flies, nb_timesteps, 12), dtype=float)
+        weights = np.zeros((nb_flies, nb_timesteps, 10, 12), dtype=float)
+        names = None
         flies = []
 
         for repeat in range(repeats):
@@ -121,7 +124,11 @@ if __name__ == '__main__':
                     fly = flies[i]
                 fly(punishment=punishment, noise=.5, susceptible=susceptible, reciprocal=reciprocal, ltm=ltm,
                     only_a=only_a, only_b=only_b)
-                data[i] = fly.xy
+                data[i] = fly.xy.copy()
+                responses[i] = fly.mb._v[1:].copy()
+                weights[i] = fly.mb.w_k2m[1:].copy()
+                if names is None:
+                    names = fly.mb.names
 
             if repeats > 1:
                 print("R:", repeat + 1)
@@ -129,4 +136,5 @@ if __name__ == '__main__':
             else:
                 print()
                 name_r = name
-            np.savez(os.path.join(directory, "%s.npz" % name_r), data=data)
+            np.savez(os.path.join(directory, "%s.npz" % name_r),
+                     data=data, response=responses, weights=weights, names=names)
