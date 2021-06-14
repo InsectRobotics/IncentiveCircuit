@@ -218,8 +218,9 @@ class MBModel(object):
             v_pre, v_post = self._v[self._t].copy(), self._v[self._t].copy()
 
             # feed forward responses: PN(CS) -> KC
+            # k = cs @ self.w_p2k
             k = cs @ self.w_p2k + rng.rand(self.nb_kc) * .001
-            k[~np.argsort(k)[:6]] = 0.
+            k[np.argsort(k)[:4]] = 0.
 
             eta = float(1) / float(repeat)
             for r in range(repeat):

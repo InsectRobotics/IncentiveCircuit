@@ -53,7 +53,7 @@ class IncentiveCircuit(MBModel):
         kwargs.setdefault("leak", .0)
         super().__init__(*args, **kwargs)
 
-        shock_magnitude = 2.
+        shock_magnitude = 20.
         odour_magnitude = 2.
         ltm_speed = .5 if as_subcircuits else .05
 
@@ -67,12 +67,12 @@ class IncentiveCircuit(MBModel):
         self.us_dims = 2
         self.w_p2k *= odour_magnitude
 
-        self._v[:, pds:pde] = self.bias[pds:pde] = -0.5  # D-DANs
-        self._v[:, pcs:pce] = self.bias[pcs:pce] = -0.15  # C-DANs
-        self._v[:, pfs:pfe] = self.bias[pfs:pfe] = -0.15  # F-DANs
-        self._v[:, pss:pse] = self.bias[pss:pse] = -2.  # S-MBONs
-        self._v[:, prs:pre] = self.bias[prs:pre] = -.5  # R-MBONs
-        self._v[:, pms:pme] = self.bias[pms:pme] = -.5  # M-MBONs
+        self._v[:, pds:pde] = self.bias[pds:pde] = -0.  # D-DANs
+        self._v[:, pcs:pce] = self.bias[pcs:pce] = -0.  # C-DANs
+        self._v[:, pfs:pfe] = self.bias[pfs:pfe] = -0.  # F-DANs
+        self._v[:, pss:pse] = self.bias[pss:pse] = -0.  # S-MBONs
+        self._v[:, prs:pre] = self.bias[prs:pre] = -0.  # R-MBONs
+        self._v[:, pms:pme] = self.bias[pms:pme] = -0.  # M-MBONs
         if as_subcircuits:
             self._v[:, prs:pre] = self.bias[prs:pre] = -2.  # R-MBONs
             self._v[:, pms:pme] = self.bias[pms:pme] = -4.  # M-MBONs

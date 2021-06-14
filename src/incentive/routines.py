@@ -58,6 +58,13 @@ def unpaired_routine(mb_model):
     return _routine_base(mb_model, odour=cs_on, shock=us_on, paired=[3, 5, 7, 9, 11])
 
 
+def unpaired_a_routine(mb_model):
+    cs_on = np.array([1, 2, 4, 6, 8, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24])
+    us_on = np.array([3, 5, 7, 9, 11])
+    mb_model.routine_name = "unpaired (single)"
+    return _routine_base(mb_model, odour=cs_on, shock=us_on, paired=[])
+
+
 def no_shock_routine(mb_model):
     """
     The no-shock experimental paradigm as a routine. It allows alternately CS (odour) delivery and paired US (shock)
