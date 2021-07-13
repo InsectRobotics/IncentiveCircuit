@@ -31,7 +31,7 @@ class FruitFly(object):
     b_source = -.6+0j
     b_sigma = .3
 
-    def __init__(self, nb_kcs=10, nb_kc_odour_a=5, nb_kc_odour_b=5, nb_steps=1000, nb_in_trial=1, learning_rule="dlr",
+    def __init__(self, nb_kcs=10, nb_kc_odour=5, nb_steps=1000, nb_in_trial=1, learning_rule="dlr",
                  gain=.02, rng=np.random.RandomState()):
         """
         Simulation parameters and methods for the fly running in an arena with two odour distributions. The incentive
@@ -57,8 +57,8 @@ class FruitFly(object):
             the random generator
         """
         self.mb = IncentiveCircuit(
-            learning_rule=learning_rule, nb_apl=0, pn2kc_init="default", nb_timesteps=nb_in_trial, nb_trials=nb_steps,
-            nb_kc=nb_kcs, nb_kc_odour_1=nb_kc_odour_a, nb_kc_odour_2=nb_kc_odour_b, has_real_names=False,
+            learning_rule=learning_rule, nb_apl=0, nb_timesteps=nb_in_trial, nb_trials=nb_steps,
+            nb_kc=nb_kcs, nb_kc_odour=nb_kc_odour, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
         self.xy = np.zeros(nb_steps, dtype=complex)
         self.p_a = np.zeros(nb_steps, dtype=float)

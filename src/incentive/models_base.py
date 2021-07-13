@@ -20,8 +20,8 @@ from copy import copy
 
 
 class MBModel(object):
-    def __init__(self, nb_kc=10, nb_mbon=6, nb_dan=6, nb_apl=0, learning_rule="default", pn2kc_init="default",
-                 nb_trials=24, nb_timesteps=3, nb_kc_odour_1=5, nb_kc_odour_2=5, leak=0., sharp_changes=True):
+    def __init__(self, nb_pn=2, nb_kc=10, nb_mbon=6, nb_dan=6, nb_apl=0, learning_rule="default",
+                 nb_trials=24, nb_timesteps=3, nb_kc_odour=5, leak=0., sharp_changes=True):
         """
         The model of the mushroom body from the Drosophila melanogaster brain. It creates the connections from the
         Kenyon cells (KCs) to the output neurons (MBONs), from the MBONs to the dopaminergic neurons (DANs) and from
@@ -30,6 +30,8 @@ class MBModel(object):
 
         Parameters
         ----------
+        nb_pn: int, optional
+            number of projection neurons (PNs). Default is 2
         nb_kc: int, optional
             number of intrinsic neurons (KCs). Default is 10
         nb_mbon: int, optional
@@ -40,17 +42,12 @@ class MBModel(object):
             number of anterior paired lateral (APL) neurons. Default is 0
         learning_rule: {"dlr", "rw", "default"}
             the learning rule to use; one of "dlr" or "rw". Default is "dlr"
-        pn2kc_init: {"default", "simple", "sqrt_pn", "sqrt_kc"}
-            type of the initialisation of the PN-to-KC weights; one of "default", "simple", "sqrt_pn", or "sqrt_kc".
-            Default is "default"
         nb_trials: int, optional
             number of trials that the experiments will run. Default is 24
         nb_timesteps: int, optional
             number of time-steps that each of the trials will run. Default is 3
-        nb_kc_odour_1: int, optional
-            number of KCs associated to the first odour. Default is 5
-        nb_kc_odour_2: int, optional
-            number of KCs associated to the second odour. Default is 5
+        nb_kc_odour: int, optional
+            number of KCs associated to each odour. Default is 5
         leak: float, optional
             the leak parameter of the leaky-ReLU activation function denotes the scale of the negative part of the
             function. Default is 0, which mean no negative part
@@ -67,21 +64,15 @@ class MBModel(object):
         self._sharp_changes = sharp_changes
 
         # Set the PN-to-KC weights
-        self.w_p2k = np.array([
-            [1.] * nb_kc_odour_1 + [0.] * (nb_kc - nb_kc_odour_1),
-            [0.] * (nb_kc - nb_kc_odour_2) + [1.] * nb_kc_odour_2
-        ])
+        self.w_p2k = np.zeros((nb_pn, nb_kc), dtype=float)
+        for p in range(nb_pn):
+            s = int(p * nb_kc / nb_pn)
+            if s + nb_kc_odour > nb_kc:
+                s = nb_kc - nb_kc_odour
+            e = s + nb_kc_odour
+            self.w_p2k[p, s:e] = 1 / nb_kc_odour
         # Number of PNs is 2
         nb_pn, nb_kc = self.w_p2k.shape
-        # Scale the weights depending on the specified method
-        if pn2kc_init in ["default"]:
-            self.w_p2k *= nb_pn / np.array([[nb_kc_odour_1], [nb_kc_odour_2]], dtype=self.w_p2k.dtype)
-        elif pn2kc_init in ["simple"]:
-            self.w_p2k *= nb_pn / nb_kc
-        elif pn2kc_init in ["sqrt_pn", "pn_sqrt"]:
-            self.w_p2k *= np.square(nb_pn) / nb_kc
-        elif pn2kc_init in ["sqrt_kc", "kc_sqrt"]:
-            self.w_p2k *= nb_pn / np.sqrt(nb_kc)
 
         # create map from the US to the extrinsic neurons
         self.w_u2d = np.zeros((self.us_dims, nb_dan + nb_mbon), dtype=float)
