@@ -1,0 +1,78 @@
+-
+  train:
+    - "A+"
+    - "B"
+  test:
+    - "A vs B"
+  inhibit:
+    - "DAN_at"
+  excite:
+    -
+  intervention-schedule: 4
+-
+  train:
+    - "A-"
+    - "B"
+  test:
+    - "A vs B"
+  inhibit:
+    - "DAN_av"
+  excite:
+    -
+  intervention-schedule: 4
+-
+  train:
+    - "A-"
+    - "B"
+  test:
+    - "A vs B"
+  inhibit:
+    - "MBON_at"
+  excite:
+    -
+  intervention-schedule: 3
+-
+  train:
+    - "A+"
+    - "B"
+  test:
+    - "A vs B"
+  inhibit:
+    - "MBON_av"
+  excite:
+    -
+  intervention-schedule: 3
+-
+  train:
+    - "A0"
+    - "B"
+  test:
+    - "A vs B"
+  inhibit:
+    -
+  excite:
+    - "MBON_av"
+  intervention-schedule: 1
+-
+  train:
+    - "A0"
+    - "B"
+  test:
+    - "A vs B"
+  inhibit:
+    -
+  excite:
+    - "DAN_at"
+  intervention-schedule: 1
+
+-
+  train:
+    - "A+"
+    - "B"
+  test:
+    - "A vs B"
+  inhibit:
+    - "MBON_at"
+  excite:
+    -
+  intervention-schedule: 2

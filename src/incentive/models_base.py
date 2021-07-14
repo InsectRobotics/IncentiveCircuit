@@ -125,6 +125,9 @@ class MBModel(object):
         self.csa = np.array([1., 0.])
         self.csb = np.array([0., 1.])
 
+        # interventions to the neural activity
+        self.intervention = np.zeros_like(self._v)
+
         # names of the neurons for plotting
         self.names = ["DAN-%d" % (i+1) for i in range(nb_dan)] + ["MBON-%d" % (i+1) for i in range(nb_mbon)]
         # IDs of the neurons we want to plot
@@ -172,7 +175,23 @@ class MBModel(object):
             v_max = self.v_max
         if v_min is None:
             v_min = self.v_min
-        return leaky_relu(v, alpha=self.__leak, v_max=v_max, v_min=v_min)
+        return leaky_relu(v + self.intervention[self._t], alpha=self.__leak, v_max=v_max, v_min=v_min)
+
+    def add_intervention(self, neuron_name, inhibit=False, excite=False):
+        """
+        Adds interventions in the given neuron starting from the current time-step.
+
+        Parameters
+        ----------
+        neuron_name: str
+            the name of the neuron to add the intervention to
+        inhibit: bool
+            whether the intervention is inhibitory
+        excite: bool
+            whether the intervention is excitatory
+        """
+        i = self.names.index(neuron_name)
+        self.intervention[self._t:, i] = 5. * float(excite) - 5. * float(inhibit)
 
     def __call__(self, *args, **kwargs):
         """
