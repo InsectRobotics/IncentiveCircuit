@@ -70,8 +70,7 @@ class MBModel(object):
             if s + nb_kc_odour > nb_kc:
                 s = nb_kc - nb_kc_odour
             e = s + nb_kc_odour
-            self.w_p2k[p, s:e] = 1.
-
+            self.w_p2k[p, s:e] = 1 / nb_kc_odour
         # Number of PNs is 2
         nb_pn, nb_kc = self.w_p2k.shape
 
@@ -177,8 +176,8 @@ class MBModel(object):
             v_max = self.v_max
         if v_min is None:
             v_min = self.v_min
-        return leaky_relu(v + self.intervention[np.minimum(self._t, self.intervention.shape[0] - 1)]
-                          , alpha=self.__leak, v_max=v_max, v_min=v_min)
+        return leaky_relu(v + self.intervention[np.minimum(self._t, self.intervention.shape[0] - 1)],
+                          alpha=self.__leak, v_max=v_max, v_min=v_min)
 
     def add_intervention(self, neuron_name, inhibit=False, excite=False):
         """
