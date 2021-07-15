@@ -950,6 +950,7 @@ def _plot_subcircuit(m, nids, nnames, ncolours, uss=None, title="sub-circuit", s
     for i in range(nb_cols):
         if show_figure and nb_cols > 1:
             plt.figure("%s_%d" % (title, i+1), figsize=(1, 1))
+            sub = [111] * nb_cols
         elif show_figure:
             plt.figure(title, figsize=(1, 1))
             plt.clf()

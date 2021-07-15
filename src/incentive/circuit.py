@@ -74,7 +74,8 @@ class IncentiveCircuit(MBModel):
         self._v[:, prs:pre] = self.bias[prs:pre] = -.5  # R-MBONs
         self._v[:, pms:pme] = self.bias[pms:pme] = -.5  # M-MBONs
         if as_subcircuits:
-            self._v[:, prs:pre] = self.bias[prs:pre] = -2.  # R-MBONs
+            self._v[:, pss:pse] = self.bias[pss:pse] = -0.  # S-MBONs
+            self._v[:, prs:pre] = self.bias[prs:pre] = -0.  # R-MBONs
             self._v[:, pms:pme] = self.bias[pms:pme] = -4.  # M-MBONs
 
         self._w_m2v = np.zeros((self.nb_mbon + self.nb_dan, self.nb_mbon + self.nb_dan), dtype=float)

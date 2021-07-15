@@ -69,6 +69,7 @@ python run_data_analysis.py --stats --only-nids --verbose
 python create_paths.py --nb-flies 100 --nb-time-steps 100 
 python run_arena_paths.py
 python run_arena_stats.py
+python run_arena_pi.py
 python run_olfactory_conditioning.py
 python run_bennet_2021.py
 ```
