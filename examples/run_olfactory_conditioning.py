@@ -47,8 +47,8 @@ def main(*args):
         plt.ylim(-1, 1)
         plt.xlim(0, len(test) + 1)
     plt.tight_layout()
-    plt.savefig("olfactory-conditioning-%02d.png" % nb_train, dpi=300)
-    # plt.show()
+    # plt.savefig("olfactory-conditioning-%02d.png" % nb_train, dpi=300)
+    plt.show()
 
 
 if __name__ == '__main__':

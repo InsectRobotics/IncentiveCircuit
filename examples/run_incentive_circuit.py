@@ -8,12 +8,12 @@ if __name__ == '__main__':
     only_nids = read_arg(["--only-nids"])
     nb_kcs = read_arg(["-k", "--nb-kc", "--nb-kcs"], vtype=int, default=10)
     kc1 = read_arg(["-k1", "--nb-kc1", "--odour1"], vtype=int, default=nb_kcs // 2)
-    kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=nb_kcs // 2)
+    kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=kc1)
 
     # create the Incentive Complex
     model = IncentiveCircuit(
-        learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=26,
-        nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
+        learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=26,
+        nb_kc=nb_kcs, nb_kc_odour=kc2, has_real_names=False,
         has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
 
     # run all the experiments and get a copy of the model with the history of their responses and parameters for each
