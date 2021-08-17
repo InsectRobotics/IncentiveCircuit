@@ -59,7 +59,7 @@ class MBModel(object):
         self.__leak = np.absolute(leak)
         self._learning_rule = learning_rule
         self.__routine_name = ""
-        self.us_dims = 8  # dimensions of US signal
+        self.us_dims = 2  # dimensions of US signal
         self._t = 0  # internal time variable
         self._sharp_changes = sharp_changes
 
@@ -70,7 +70,7 @@ class MBModel(object):
             if s + nb_kc_odour > nb_kc:
                 s = nb_kc - nb_kc_odour
             e = s + nb_kc_odour
-            self.w_p2k[p, s:e] = 1 / nb_kc_odour
+            self.w_p2k[p, s:e] = nb_pn / nb_kc_odour
         # Number of PNs is 2
         nb_pn, nb_kc = self.w_p2k.shape
 
@@ -231,7 +231,7 @@ class MBModel(object):
 
             # feed forward responses: PN(CS) -> KC
             k = cs @ self.w_p2k + rng.rand(self.nb_kc) * .001
-            k[~np.argsort(k)[:6]] = 0.
+            k[np.argsort(k)[:6]] = 0.
 
             eta = float(1) / float(repeat)
             for r in range(repeat):

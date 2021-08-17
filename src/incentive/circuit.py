@@ -64,8 +64,8 @@ class IncentiveCircuit(MBModel):
         prs, pre = 8, 10
         pms, pme = 10, 12
 
-        self.us_dims = 2
         self.w_p2k *= odour_magnitude
+        self.us_dims = 2
 
         self._v[:, pds:pde] = self.bias[pds:pde] = -0.5  # D-DANs
         self._v[:, pcs:pce] = self.bias[pcs:pce] = -0.15  # C-DANs
