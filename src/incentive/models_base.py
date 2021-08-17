@@ -231,7 +231,7 @@ class MBModel(object):
 
             # feed forward responses: PN(CS) -> KC
             k = cs @ self.w_p2k + rng.rand(self.nb_kc) * .001
-            k[np.argsort(k)[:6]] = 0.
+            k[np.argsort(k)[:-4]] = 0.
 
             eta = float(1) / float(repeat)
             for r in range(repeat):
