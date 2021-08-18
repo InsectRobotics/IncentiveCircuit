@@ -15,7 +15,7 @@ __dir__ = os.path.dirname(os.path.abspath(__file__))
 __data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "src", "incentive", "data", "bennett2021"))
 
 with open(os.path.join(__data_dir__, "intervention-examples.yaml"), 'r') as f:
-    experiments = yaml.load(f)
+    experiments = yaml.load(f, Loader=yaml.Loader)
 
 
 def main(*args):

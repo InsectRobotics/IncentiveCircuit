@@ -17,8 +17,8 @@ __data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "src", "incentive", 
 
 def main(*args):
 
-    continuous = True
-    control = False
+    continuous = False
+    control = True
     nb_train, nb_test = 1, 1
     noise = .4
 

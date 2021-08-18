@@ -41,28 +41,29 @@ class TMaze(object):
 
         Parameters
         ----------
-        train : list[str]
+        train : list[str], optional
             a list of strings determining the order of the odour mixtures presented and whether they were paired with a
-            US (sugar = '+', electric shock = '-')
-        test : list[str]
-            a list of strings determining the conditions (e.g. 'A vs B') that are going to be tested
-        nb_train : int
-            the number of times that the training phase will be repeated before the test
-        nb_test : int
-            the number of times that the testing phase will be repeated
-        nb_in_trial : int
-            the number of time-steps determine the duration of each trial (training or test)
-        nb_samples : int
-            the number of samples determine the number of the individual flies tested
-        nb_pn : int
-            the number of the projection neurons (PNs) of the insect brain
-        nb_kcs : int
-            the number of the kenyon cells (KCs) of the mushroom body (MB)
-        nb_kc_odour : int
-            the number of KCs associated to each odour
-        learning_rule : str
-            the learning rule of the mushroom body (MB)
-        rng :
+            US (sugar = '+', electric shock = '-'). Default is the empty list
+        test : list[str], optional
+            a list of strings determining the conditions (e.g. 'A vs B') that are going to be tested. Default is the
+            empty list
+        nb_train : int, optional
+            the number of times that the training phase will be repeated before the test. Default is 5
+        nb_test : int, optional
+            the number of times that the testing phase will be repeated. Default is 2
+        nb_in_trial : int, optional
+            the number of time-steps determine the duration of each trial (training or test). Default is 100
+        nb_samples : int, optional
+            the number of samples determine the number of the individual flies tested. Default is 100
+        nb_pn : int, optional
+            the number of the projection neurons (PNs) of the insect brain. Default is 4
+        nb_kcs : int, optional
+            the number of the kenyon cells (KCs) of the mushroom body (MB). Default is 20
+        nb_kc_odour : int, optional
+            the number of KCs associated to each odour. Default is 5
+        learning_rule : str, optional
+            the learning rule of the mushroom body (MB). Default is 'dlr' (for dopaminergic learning rule)
+        rng : np.random.RandomState, optional
             the random number generator
         """
 
