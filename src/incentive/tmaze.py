@@ -1,17 +1,70 @@
+"""
+Examples:
+---------
+>>> maze = TMaze(train=['A-', 'B'], test=['A vs B'], nb_train=4, nb_test=2, nb_in_trial=100, nb_samples=100)
+>>> maze(noise=.5)
+"""
+
 from incentive.circuit import IncentiveCircuit
 
 import numpy as np
 
 import re
 
+__author__ = "Evripidis Gkanias"
+__copyright__ = "Copyright (c) 2021, Insect Robotics Group," \
+                "Institute of Perception, Action and Behaviour," \
+                "School of Informatics, the University of Edinburgh"
+__credits__ = ["Evripidis Gkanias"]
+__license__ = "GPLv3+"
+__version__ = "v1.1-dev"
+__maintainer__ = "Evripidis Gkanias"
+
 cs_ids = ["A", "B", "C", "D"]
+"""
+The allowed odour identities.
+"""
 us_ids = ["+", "-"]
+"""
+The allowed reinforcements.
+"""
 
 
 class TMaze(object):
-
     def __init__(self, train=None, test=None, nb_train=5, nb_test=2, nb_in_trial=100, nb_samples=100,
                  nb_pn=4, nb_kcs=20, nb_kc_odour=5, learning_rule="dlr", rng=np.random.RandomState()):
+        """
+        Simulated fly in the T-maze.
+
+        It sets up a T-maze experiment for a number of individual flies where CS and US are presented during the
+        training phases and then the flies are free to choose between the different CS during the test phase.
+
+        Parameters
+        ----------
+        train : list[str]
+            a list of strings determining the order of the odour mixtures presented and whether they were paired with a
+            US (sugar = '+', electric shock = '-')
+        test : list[str]
+            a list of strings determining the conditions (e.g. 'A vs B') that are going to be tested
+        nb_train : int
+            the number of times that the training phase will be repeated before the test
+        nb_test : int
+            the number of times that the testing phase will be repeated
+        nb_in_trial : int
+            the number of time-steps determine the duration of each trial (training or test)
+        nb_samples : int
+            the number of samples determine the number of the individual flies tested
+        nb_pn : int
+            the number of the projection neurons (PNs) of the insect brain
+        nb_kcs : int
+            the number of the kenyon cells (KCs) of the mushroom body (MB)
+        nb_kc_odour : int
+            the number of KCs associated to each odour
+        learning_rule : str
+            the learning rule of the mushroom body (MB)
+        rng :
+            the random number generator
+        """
 
         if train is None:
             train = []
@@ -36,21 +89,58 @@ class TMaze(object):
         self.rng = rng
 
     def __call__(self, *args, **kwargs):
+        """
+        Runs the T-Maze routine for all the flies.
+
+        Parameters
+        ----------
+        train : list[str]
+            a list of strings determining the order of the odour mixtures presented and whether they were paired with a
+            US (sugar = '+', electric shock = '-'). Default is the list of internal training trials.
+        test : list[str]
+            a list of strings determining the conditions (e.g. 'A vs B') that are going to be tested. Default is the
+            list of internal testing trials.
+        nb_train : int
+            the number of times that the training phase will be repeated before the test. Default is the internal number
+            of training trials.
+        nb_test : int
+            the number of times that the testing phase will be repeated. Default is the internal number of testing
+            trials.
+        """
         kwargs.setdefault("train", self._train)
         kwargs.setdefault("test", self._test)
         kwargs.setdefault("nb_trains", self._nb_train)
         kwargs.setdefault("nb_tests", self._nb_test)
 
-        r_out = []
-
         for mb in self.mb:
             mb.w_k2m[0] = mb.w_k2m[-1].copy()
             routine = tmaze_routine(self, mb, *args, **kwargs)
-            r_out.append(mb(routine=routine))
-
-        return r_out
+            mb(routine=routine)
 
     def get_values(self, odour_id, train=True, test=True):
+        """
+        Calculates the attraction/avoidance value associated with the given odour identity.
+
+        It calculates the attraction/avoidance value using the MBON responses and returns the values associated with the
+        timings when the given odour ID was present. Optionally, you can choose whether the training or testing trials
+        should be included.
+
+        Parameters
+        ----------
+        odour_id : str
+            the odour identity
+        train : bool, str
+            when True, it includes the responses from the training trials. When it is a string, it gets the values
+            associated to a specific training phase. Default is True.
+        test : bool, str
+            when True, it includes the responses from the testing trials. When it is a string, it gets the values
+            associated to a specific testing phase. Default is True.
+
+        Returns
+        -------
+        np.ndarray[float]
+            the attraction/avoidance value associated with the odour identity as a function of time
+        """
 
         vs_out = []
 
@@ -105,6 +195,25 @@ class TMaze(object):
         return np.mean(vs_out, axis=-1)
 
     def get_test_result(self, test, train=False):
+        """
+        Calculates the preference index (PI) for a specific test.
+
+        The PI is calculated by subtracting the attraction/avoidance value of the second odour from the one of the first
+        odour of the test and divide this by 2.
+
+        Parameters
+        ----------
+        test : str
+            the test to get the results from
+        train : bool, str
+            when True, it includes the responses from the training trials. When it is a string, it gets the values
+            associated to a specific training phase. Default is False.
+
+        Returns
+        -------
+        np.ndarray[float]
+            the preference index (PI) for the given test as a function of time.
+        """
         details = list(re.findall(r"([\w]+) vs ([\w]+)", test)[0])
         v_l = self.get_values(details[0], train=train, test=test)
         v_r = self.get_values(details[1], train=train, test=test)
@@ -112,10 +221,46 @@ class TMaze(object):
 
     @property
     def t(self):
+        """
+        The current time-step based on the internal clock of the first fly.
+        """
         return self.mb[0]._t
 
 
 def tmaze_routine(agent, mb_model, train, test, nb_trains=5, nb_tests=2, noise=0.1):
+    """
+    The T-Maze experiment generator.
+
+    Takes as input the agent, the mushroom body model and the experiment parameters and generates the CS and US of the
+    T-Maze experiment for each time-step that can be used as an input to the model.
+
+    Parameters
+    ----------
+    agent : TMaze
+        the agent to apply the experiment.
+    mb_model : IncentiveCircuit
+        the mushroom body model (associated with a fly) from the agent.
+    train : list[str]
+        a list of strings determining the order of the odour mixtures presented and whether they were paired with a
+        US (sugar = '+', electric shock = '-')
+    test : list[str]
+        a list of strings determining the conditions (e.g. 'A vs B') that are going to be tested
+    nb_trains : int, optional
+        the number of times that the training phase will be repeated before the test
+    nb_tests : int, optional
+        the number of times that the testing phase will be repeated
+    noise : float, optional
+        the magnitude of Gaussian noise to be applied on the CS signal
+
+    Yields
+    ------
+    tuple[int, int, np.ndarray[float], np.ndarray[float]]
+        a tuple of (trial, time-step, CS, US) which a sequence of the inputs and times for the model, generating the
+        experience of the agent.
+    """
+
+    assert mb_model in agent.mb, "The input 'mb_model' is not assigned in the experiment (agent)."
+
     train_cs = np.zeros((len(train), len(cs_ids)), dtype=float)
     train_us = np.zeros((len(train), len(us_ids)), dtype=float)
     test_l = np.zeros((len(test), len(cs_ids)), dtype=float)

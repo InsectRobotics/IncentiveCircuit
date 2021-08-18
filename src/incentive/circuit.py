@@ -7,7 +7,7 @@ Examples:
 
 __author__ = "Evripidis Gkanias"
 __copyright__ = "Copyright (c) 2021, Insect Robotics Group," \
-                "Institude of Perception, Action and Behaviour," \
+                "Institute of Perception, Action and Behaviour," \
                 "School of Informatics, the University of Edinburgh"
 __credits__ = ["Evripidis Gkanias"]
 __license__ = "GPLv3+"
@@ -23,6 +23,8 @@ class IncentiveCircuit(MBModel):
     def __init__(self, has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True,
                  has_real_names=False, as_subcircuits=False, *args, **kwargs):
         """
+        The Incentive Circuit (IC) of the mushroom body.
+
         The Incentive Circuit (IC) is a simplified version of the mushroom body from the Drosophila melanogaster
         brain, which is a hypothetical sub-circuit in it. It contains the connections from the Kenyon cells (KCs) to the
         output neurons (MBONs), from the MBONs to the dopaminergic neurons (DANs) and from the DANs to the connections

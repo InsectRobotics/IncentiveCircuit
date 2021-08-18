@@ -1,19 +1,19 @@
 elemental:
     train:
-      - "A-"
-      - "B"
+      - "B-"
+      - "A"
     test:
       - "A vs B"
     outcome:
-      - "avoid A"
+      - "avoid B"
     reference:
       - "Quinn et al (1974)"
       - "Young et al (2011)"
 
 multi-element:
     train:
-      - "A-"
       - "B-"
+      - "A-"
       - "C"
     test:
       - "A vs C"
@@ -27,12 +27,12 @@ multi-element:
 
 mixture:
     train:
-      - "AB-"
-      - "CD"
+      - "AC-"
+      - "BD"
     test:
       - "AB vs CD"
     outcome:
-      - "avoid AB"
+      - "avoid AC"
     reference:
       - "Borst et al (1983)"
       - "DasGupta and Waddell (2008)"
@@ -40,20 +40,20 @@ mixture:
 
 overlap:
     train:
-      - "AB-"
+      - "AC-"
       - "BC"
     test:
-      - "AB vs BC"
+      - "AC vs BC"
     outcome:
-      - "avoid AB"
+      - "avoid AC"
     reference:
       - "Young et al (2011)"
 
 positive-patterning:
     train:
       - "AB-"
-      - "A"
       - "B"
+      - "A"
     test:
       - "A vs AB"
       - "B vs AB"
@@ -65,8 +65,8 @@ positive-patterning:
 
 negative-patterning:
     train:
-      - "A-"
       - "B-"
+      - "A-"
       - "AB"
     test:
       - "A vs AB"
@@ -80,20 +80,20 @@ negative-patterning:
 
 biconditional-discrimination:
     train:
-      - "AB-"
-      - "CD-"
-      - "AC"
-      - "BD"
+      - "AC-"
+      - "BD-"
+      - "AB"
+      - "CD"
     test:
-#      - "AB vs AC"
-#      - "AB vs BD"
-      - "CD vs AC"
-      - "CD vs BD"
+      - "AB vs AC"
+      - "AB vs BD"
+#      - "CD vs AC"
+#      - "CD vs BD"
     outcome:
-#      - "avoid AB"
-#      - "avoid AB"
-      - "avoid CD"
-      - "avoid CD"
+      - "avoid AC"
+      - "avoid BD"
+#      - "avoid AC"
+#      - "avoid BD"
     reference:
       - "Brembs and Wiener (2006)"
       - "Yarali et al (2006) -- larva"
@@ -102,7 +102,7 @@ biconditional-discrimination:
 
 blocking:
     train:
-      - "A-"
+      - "A"
       - "AB-"
     test:
       - "B vs C"
