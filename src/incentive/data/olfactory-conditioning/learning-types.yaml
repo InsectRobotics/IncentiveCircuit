@@ -1,4 +1,6 @@
 elemental:
+  -
+    training-cycles: 1
     train:
       - "A-"
       - "B"
@@ -9,15 +11,70 @@ elemental:
     reference:
       - "Quinn et al (1974)"
       - "Young et al (2011)"
+  -
+    training-cycles: 1
+    train:
+      - "B-"
+      - "A"
+    test:
+      - "A vs B"
+    outcome:
+      - "avoid B"
+    reference:
+      - "Quinn et al (1974)"
+      - "Young et al (2011)"
 
 multi-element:
+  -
+    training-cycles: 2
     train:
       - "A-"
       - "B-"
       - "C"
     test:
       - "A vs C"
+    outcome:
+      - "avoid A"
+      - "avoid B"
+    reference:
+      - "Dudai et al (1977)"
+      - "Young et al (2011)"
+  -
+    training-cycles: 2
+    train:
+      - "A-"
+      - "B-"
+      - "C"
+    test:
       - "B vs C"
+    outcome:
+      - "avoid A"
+      - "avoid B"
+    reference:
+      - "Dudai et al (1977)"
+      - "Young et al (2011)"
+  -
+    training-cycles: 2
+    train:
+      - "B-"
+      - "A-"
+      - "C"
+    test:
+      - "B vs C"
+    outcome:
+      - "avoid A"
+      - "avoid B"
+    reference:
+      - "Dudai et al (1977)"
+      - "Young et al (2011)"
+  -
+    training-cycles: 2
+    train:
+      - "B-"
+      - "A-"
+      - "C"
+    test:
+      - "A vs C"
     outcome:
       - "avoid A"
       - "avoid B"
@@ -26,6 +83,8 @@ multi-element:
       - "Young et al (2011)"
 
 mixture:
+  -
+    training-cycles: 2
     train:
       - "AB-"
       - "CD"
@@ -37,8 +96,49 @@ mixture:
       - "Borst et al (1983)"
       - "DasGupta and Waddell (2008)"
       - "Young et al (2011)"
+  -
+    training-cycles: 2
+    train:
+      - "CD-"
+      - "AB"
+    test:
+      - "AB vs CD"
+    outcome:
+      - "avoid CD"
+    reference:
+      - "Borst et al (1983)"
+      - "DasGupta and Waddell (2008)"
+      - "Young et al (2011)"
+  -
+    training-cycles: 2
+    train:
+      - "AC-"
+      - "DB"
+    test:
+      - "AC vs DB"
+    outcome:
+      - "avoid AC"
+    reference:
+      - "Borst et al (1983)"
+      - "DasGupta and Waddell (2008)"
+      - "Young et al (2011)"
+  -
+    training-cycles: 2
+    train:
+      - "DB-"
+      - "AC"
+    test:
+      - "AC vs DB"
+    outcome:
+      - "avoid DB"
+    reference:
+      - "Borst et al (1983)"
+      - "DasGupta and Waddell (2008)"
+      - "Young et al (2011)"
 
 overlap:
+  -
+    training-cycles: 2
     train:
       - "AB-"
       - "BC"
@@ -48,14 +148,109 @@ overlap:
       - "avoid AB"
     reference:
       - "Young et al (2011)"
+  -
+    training-cycles: 2
+    train:
+      - "BC-"
+      - "AB"
+    test:
+      - "AB vs BC"
+    outcome:
+      - "avoid BC"
+    reference:
+      - "Young et al (2011)"
+  -
+    training-cycles: 2
+    train:
+      - "AC-"
+      - "BC"
+    test:
+      - "AC vs BC"
+    outcome:
+      - "avoid AC"
+    reference:
+      - "Young et al (2011)"
+  -
+    training-cycles: 2
+    train:
+      - "BC-"
+      - "AC"
+    test:
+      - "BC vs AC"
+    outcome:
+      - "avoid BC"
+    reference:
+      - "Young et al (2011)"
+  -
+    training-cycles: 2
+    train:
+      - "AB-"
+      - "AC"
+    test:
+      - "AB vs AC"
+    outcome:
+      - "avoid AB"
+    reference:
+      - "Young et al (2011)"
+  -
+    training-cycles: 2
+    train:
+      - "AC-"
+      - "AB"
+    test:
+      - "AB vs AC"
+    outcome:
+      - "avoid AC"
+    reference:
+      - "Young et al (2011)"
 
 positive-patterning:
+  -
+    training-cycles: 3
     train:
       - "AB-"
       - "A"
       - "B"
     test:
       - "A vs AB"
+    outcome:
+      - "avoid AB"
+    reference:
+      - "Borst et al (1983)"
+      - "Young et al (2011)"
+  -
+    training-cycles: 3
+    train:
+      - "AB-"
+      - "A"
+      - "B"
+    test:
+      - "B vs AB"
+    outcome:
+      - "avoid AB"
+    reference:
+      - "Borst et al (1983)"
+      - "Young et al (2011)"
+  -
+    training-cycles: 3
+    train:
+      - "AB-"
+      - "B"
+      - "A"
+    test:
+      - "A vs AB"
+    outcome:
+      - "avoid AB"
+    reference:
+      - "Borst et al (1983)"
+      - "Young et al (2011)"
+  -
+    training-cycles: 3
+    train:
+      - "AB-"
+      - "B"
+      - "A"
+    test:
       - "B vs AB"
     outcome:
       - "avoid AB"
@@ -64,12 +259,55 @@ positive-patterning:
       - "Young et al (2011)"
 
 negative-patterning:
+  -
+    training-cycles: 3
     train:
       - "A-"
       - "B-"
       - "AB"
     test:
       - "A vs AB"
+    outcome:
+      - "avoid A"
+      - "avoid B"
+      - "avoid AB"
+    reference:
+      - "Young et al (2011)"
+  -
+    training-cycles: 3
+    train:
+      - "A-"
+      - "B-"
+      - "AB"
+    test:
+      - "B vs AB"
+    outcome:
+      - "avoid A"
+      - "avoid B"
+      - "avoid AB"
+    reference:
+      - "Young et al (2011)"
+  -
+    training-cycles: 3
+    train:
+      - "B-"
+      - "A-"
+      - "AB"
+    test:
+      - "A vs AB"
+    outcome:
+      - "avoid A"
+      - "avoid B"
+      - "avoid AB"
+    reference:
+      - "Young et al (2011)"
+  -
+    training-cycles: 3
+    train:
+      - "B-"
+      - "A-"
+      - "AB"
+    test:
       - "B vs AB"
     outcome:
       - "avoid A"
@@ -79,21 +317,65 @@ negative-patterning:
       - "Young et al (2011)"
 
 biconditional-discrimination:
+  -
+    training-cycles: 3
     train:
       - "AB-"
       - "CD-"
       - "AC"
       - "BD"
     test:
-#      - "AB vs AC"
-#      - "AB vs BD"
       - "CD vs AC"
+    outcome:
+      - "avoid CD"
+    reference:
+      - "Brembs and Wiener (2006)"
+      - "Yarali et al (2006) -- larva"
+      - "Yarali et al (2008) -- adult"
+      - "Young et al (2011)"
+  -
+    training-cycles: 3
+    train:
+      - "AB-"
+      - "CD-"
+      - "AC"
+      - "BD"
+    test:
       - "CD vs BD"
     outcome:
-#      - "avoid AB"
-#      - "avoid AB"
       - "avoid CD"
-      - "avoid CD"
+    reference:
+      - "Brembs and Wiener (2006)"
+      - "Yarali et al (2006) -- larva"
+      - "Yarali et al (2008) -- adult"
+      - "Young et al (2011)"
+  -
+    training-cycles: 3
+    train:
+      - "AC-"
+      - "BD-"
+      - "AB"
+      - "CD"
+    test:
+      - "AB vs AC"
+    outcome:
+      - "avoid AC"
+    reference:
+      - "Brembs and Wiener (2006)"
+      - "Yarali et al (2006) -- larva"
+      - "Yarali et al (2008) -- adult"
+      - "Young et al (2011)"
+  -
+    training-cycles: 3
+    train:
+      - "AC-"
+      - "BD-"
+      - "AB"
+      - "CD"
+    test:
+      - "AB vs BD"
+    outcome:
+      - "avoid BD"
     reference:
       - "Brembs and Wiener (2006)"
       - "Yarali et al (2006) -- larva"
@@ -101,8 +383,34 @@ biconditional-discrimination:
       - "Young et al (2011)"
 
 blocking:
+  -
+    training-cycles: 1
     train:
       - "A-"
+      - "AB-"
+    test:
+      - "B vs C"
+    outcome:
+      - "attract B"
+    reference:
+      - "Young et al (2011)"
+  -
+    training-cycles: 1
+    train:
+      - "B-"
+      - "AB-"
+    test:
+      - "A vs C"
+    outcome:
+      - "attract A"
+    reference:
+      - "Young et al (2011)"
+
+blocking-control:
+  -
+    training-cycles: 1
+    train:
+      - "A"
       - "AB-"
     test:
       - "B vs C"
@@ -110,4 +418,14 @@ blocking:
       - "avoid B"
     reference:
       - "Young et al (2011)"
-
+  -
+    training-cycles: 1
+    train:
+      - "B"
+      - "AB-"
+    test:
+      - "A vs C"
+    outcome:
+      - "avoid A"
+    reference:
+      - "Young et al (2011)"

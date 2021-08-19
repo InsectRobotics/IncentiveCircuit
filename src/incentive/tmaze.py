@@ -85,7 +85,7 @@ class TMaze(object):
                 learning_rule=learning_rule, nb_timesteps=nb_in_trial, nb_trials=nb_trials, has_real_names=False,
                 has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True
             ))
-            self.mb[-1].bias[:] = 0.
+            # self.mb[-1].bias[:] = 0.
 
         self.rng = rng
 
@@ -199,8 +199,8 @@ class TMaze(object):
         """
         Calculates the preference index (PI) for a specific test.
 
-        The PI is calculated by subtracting the attraction/avoidance value of the second odour from the one of the first
-        odour of the test and divide this by 2.
+        The PI is calculated by subtracting the attraction/avoidance value of the reinforced odour from the
+        non-reinforced one and divide this by 2.
 
         Parameters
         ----------
@@ -216,8 +216,26 @@ class TMaze(object):
             the preference index (PI) for the given test as a function of time.
         """
         details = list(re.findall(r"([\w]+) vs ([\w]+)", test)[0])
-        v_l = self.get_values(details[0], train=train, test=test)
-        v_r = self.get_values(details[1], train=train, test=test)
+        v_0 = self.get_values(details[0], train=train, test=test)
+        v_1 = self.get_values(details[1], train=train, test=test)
+        v_l = v_0.copy()
+        v_r = v_1.copy()
+        for odour, v in zip(details[:2], [v_0, v_1]):
+            is_used = False
+            for tr in self._train:
+                if not is_used and odour in tr:
+                    if "-" in tr or "+" in tr:
+                        # keep value of the reinforced odour on the right side of the equation (i.e. subtraction)
+                        v_r = v
+                        is_used = True
+                    else:
+                        # keep value of the non-reinforced odour on the left side of the equation (i.e. addition)
+                        v_l = v
+                        is_used = True
+            if not is_used:
+                # account for odours that do not exist in the training phase (e.g. in blocking)
+                # these are non-reinforced odours and are kept on the left side of the equation (i.e. addition)
+                v_l = v
         return (v_l - v_r) / 2
 
     @property
