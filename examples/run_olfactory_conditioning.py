@@ -18,6 +18,8 @@ __data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "src", "incentive", 
 def main(*args):
 
     continuous = False
+    nb_samples = 100
+    in_trial_steps = 100
     noise = .4
 
     short_names = {
@@ -67,6 +69,7 @@ def main(*args):
             for i, experiment in enumerate(experiments[exp]):
                 # nb_train = experiment["training-cycles"]
                 nb_test = 1
+                nb_samples_i = int(np.ceil(nb_samples / len(experiments[exp])))
                 train = experiment["train"]
                 test = experiment["test"]
 
@@ -74,10 +77,10 @@ def main(*args):
 
                 if i <= len(maze[exp]):
                     maze[exp].append(TMaze(train=train, test=test, nb_train=repeat, nb_test=nb_test,
-                                           nb_in_trial=100, nb_samples=100))
+                                           nb_in_trial=in_trial_steps, nb_samples=nb_samples_i))
                 elif not continuous:
                     maze[exp][i] = TMaze(train=train, test=test, nb_train=repeat, nb_test=nb_test,
-                                         nb_in_trial=100, nb_samples=100)
+                                         nb_in_trial=in_trial_steps, nb_samples=nb_samples_i)
                 maze[exp][i](noise=noise)
 
                 label = ' '.join(train)
@@ -108,7 +111,7 @@ def main(*args):
         plt.plot([0, len(data.keys()) + 1], [0, 0], 'grey', lw=2)
         plt.boxplot(data.values())
         plt.yticks([-1, 0, 1], fontsize=8)
-        plt.xticks(np.arange(len(data.keys())) + 1, [short_names[k] for k in data.keys()], rotation=60, fontsize=8)
+        plt.xticks(np.arange(len(data.keys())) + 1, [short_names[k] for k in data.keys()], rotation=70, fontsize=8)
         plt.ylim(-1, 1)
         plt.xlim(0, len(data.keys()) + 1)
 
