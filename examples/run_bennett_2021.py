@@ -31,14 +31,14 @@ def main(*args):
     plt.figure("bennett-2021", figsize=(10, 10))
 
     targets = [
-        "Cell model",
-        ["s", "r", "m", "d", "c", "f"],
         ["s", "d"],
         ["r", "c"],
         ["m", "f"],
         ["s", "r", "d", "c"],
         ["s", "m", "d", "f"],
         ["r", "m", "c", "f"],
+        ["s", "r", "m", "d", "c", "f"],
+        "Plausible model",
         "Best model"
     ]
 
@@ -97,9 +97,9 @@ def main(*args):
             model_id = np.argmin(np.square(data_corr - models_corr), axis=0)
             delta_f_model = np.array(delta_f_models)[model_id, np.arange(len(model_id))]
 
-            data["Cell model"] = np.array(targets)[model_id]
+            data["Plausible model"] = np.array(targets)[model_id]
 
-            print(data[["Condition code", "Cell model"]])
+            print(data[["Condition code", "Plausible model", "Cell types"]])
 
         z_model = np.sqrt(np.nansum(np.square(delta_f_model)))
         delta_f_models.append(delta_f_model.copy())
@@ -133,7 +133,7 @@ def main(*args):
         plt.xlabel(r"$\Delta_f$ (model)")
 
     plt.tight_layout()
-    plt.savefig("bennett-2021.png", dpi=300)
+    plt.savefig(os.path.join(__data_dir__, "bennett-2021.png"), dpi=300)
     plt.show()
 
 

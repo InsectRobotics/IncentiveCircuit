@@ -90,6 +90,7 @@ class Bennett(object):
             learning_rule=learning_rule, nb_timesteps=nb_in_trial, nb_trials=nb_trials, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True
         )
+        self.mb.w_p2k *= self.mb.nb_pn
 
         self.rng = rng
 
