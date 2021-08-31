@@ -1,4 +1,5 @@
 from incentive.tmaze import TMaze
+from incentive.tools import read_arg
 
 from copy import copy
 
