@@ -20,5 +20,5 @@ script:
   - python run_data_analysis.py --stats --only-nids --verbose
   - python create_arena_paths.py --nb-flies 10 --nb-time-steps 100 -R 1 --dir data
   - python run_arena_pi.py -R 1 --dir data
-  - python run_olfactory_conditioning.py
+  - python run_olfactory_conditioning.py -R 1
   - python run_bennett_2021.py

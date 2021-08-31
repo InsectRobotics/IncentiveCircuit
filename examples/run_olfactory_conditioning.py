@@ -17,10 +17,12 @@ __data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "src", "incentive", 
 
 def main(*args):
 
+
     continuous = True
-    nb_samples = 100
-    in_trial_steps = 100
-    noise = .2
+    nb_samples = read_arg(["-f", "--nb-flies"], vtype=int, default=100)
+    in_trial_steps = read_arg(["-s", "--steps"], vtype=int, default=100)
+    noise = read_arg(["-n", "--noise"], vtype=float, default=.2)
+    repeats = read_arg(["-R", "--repeats"], vtype=int, default=10)
 
     short_names = {
         "elemental": "Ele",
@@ -44,7 +46,7 @@ def main(*args):
         print("Continuous")
     else:
         print("Discontinuous")
-    for repeat in range(1, 11):
+    for repeat in range(1, repeats + 1):
 
         exp_name = "olfactory-conditioning%s-%02d" % (
             "" if continuous else "-reset",
