@@ -44,7 +44,7 @@ if __name__ == '__main__':
     nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=100)
     nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=500)  # seconds
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
-    repeats = read_arg(["-R", "--repeat"], vtype=int, default=20)
+    repeats = read_arg(["-R", "--repeat"], vtype=int, default=10)
 
     if read_arg(["-p", "--punishment"]):
         punishment = [True]

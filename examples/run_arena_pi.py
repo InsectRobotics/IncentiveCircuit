@@ -18,6 +18,7 @@ if __name__ == '__main__':
 
     rw = read_arg(["-rw", "--rescorla-wagner"])
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
+    repeats = np.arange(read_arg(["-R", "--repeat"], vtype=int, default=10))
 
     file_names = os.listdir(directory)
 
@@ -33,7 +34,7 @@ if __name__ == '__main__':
     df["attract A/B"] = np.min([df["dist_A"], df["dist_B"]], axis=0) / 0.6 - 1
 
     # repeats = np.unique(df["repeat"])
-    repeats = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    # repeats = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     for repeat in repeats:
         plot_arena_box(df[df["repeat"] == repeat], "%sarena-box-%02d" % ("rw-" if rw else "", repeat),
                        show=repeat == repeats[-1])
