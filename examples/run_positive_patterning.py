@@ -101,7 +101,7 @@ def main(*args):
             # plt.xlim(0, len(labels) + 1)
             plt.hist(vs, bins=21, stacked=True, label=labels)
             plt.yticks(fontsize=8)
-            plt.xticks([-1, -.5, 0, .5, 1], [""] * 5, fontsize=8)
+            plt.xticks([-1, -.5,        0, .5, 1], [""] * 5, fontsize=8)
             plt.xlim(-1, 1)
 
             lg = plt.legend(fontsize=8, loc="lower left", bbox_to_anchor=(-0.15, -.4), ncol=2)

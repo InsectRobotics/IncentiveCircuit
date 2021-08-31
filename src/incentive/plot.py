@@ -612,37 +612,37 @@ def plot_model_structure(m: MBModel, nids=None, vmin=-.5, vmax=.5, only_nids=Fal
     neur_names = np.array([r"$%s$" % name for name in m.names])
 
     ax['a'].set_title(r"$W_{U2D}$", fontsize=8)
-    plot_synapses(w=m.w_u2d[4:5, neurs[nids < 16]].T, vmin=vmin, vmax=vmax,
+    plot_synapses(w=m.w_u2d[1:2, neurs[nids < 6]].T, vmin=vmin, vmax=vmax,
                   names_in=["shock"], names_out=neur_names[nids[nids < 16]], ax=ax['a'])
 
     ax['b'].set_title(r"$W_{D2KM}$", fontsize=8)
-    plot_synapses(w=m._w_d2k[neurs[nids < 16]][:, neurs[nids >= 16]], vmin=vmin, vmax=vmax,
-                  names_in=neur_names[nids[nids < 16]], names_out=neur_names[nids[nids >= 16]], ax=ax['b'])
+    plot_synapses(w=m._w_d2k[neurs[nids < 6]][:, neurs[nids >= 6]], vmin=vmin, vmax=vmax,
+                  names_in=neur_names[nids[nids < 6]], names_out=neur_names[nids[nids >= 6]], ax=ax['b'])
 
     ax['c'].set_title(r"$W_{P2K}$", fontsize=8)
     plot_synapses(w=m.w_p2k.T, names_in=["odour A", "odour B"], vmin=vmin, vmax=vmax,
                   names_out=[r"$k_{%d}$" % k for k in np.arange(m.w_p2k.shape[1])], ax=ax['c'])
 
     ax['d'].set_title(r"$W_{M2D}$", fontsize=8)
-    plot_synapses(w=m._w_m2v[neurs[nids >= 16]][:, neurs[nids < 16]], vmin=vmin, vmax=vmax,
-                  names_in=neur_names[nids[nids >= 16]], names_out=neur_names[nids[nids < 16]], ax=ax['d'])
+    plot_synapses(w=m._w_m2v[neurs[nids >= 6]][:, neurs[nids < 6]], vmin=vmin, vmax=vmax,
+                  names_in=neur_names[nids[nids >= 6]], names_out=neur_names[nids[nids < 6]], ax=ax['d'])
 
     ax['e'].set_title(r"$W_{M2M}$", fontsize=8)
-    plot_synapses(w=m._w_m2v[neurs[nids >= 16]][:, neurs[nids >= 16]], vmin=vmin, vmax=vmax,
-                  names_in=neur_names[nids[nids >= 16]], names_out=neur_names[nids[nids >= 16]], ax=ax['e'])
-    ax['e'].set_yticklabels([""] * len(nids[nids >= 16]))
+    plot_synapses(w=m._w_m2v[neurs[nids >= 6]][:, neurs[nids >= 6]], vmin=vmin, vmax=vmax,
+                  names_in=neur_names[nids[nids >= 6]], names_out=neur_names[nids[nids >= 6]], ax=ax['e'])
+    ax['e'].set_yticklabels([""] * len(nids[nids >= 6]))
 
     ax['f'].set_title(r"$W_{K2M}^T$", fontsize=8)
-    plot_synapses(w=m.w_k2m[0, :, neurs[nids >= 16]], names_in=[r"$k_{%d}$" % k for k in np.arange(m.w_p2k.shape[1])],
-                  names_out=neur_names[nids[nids >= 16]], vmin=vmin, vmax=vmax, ax=ax['f'])
+    plot_synapses(w=m.w_k2m[0, :, neurs[nids >= 6]], names_in=[r"$k_{%d}$" % k for k in np.arange(m.w_p2k.shape[1])],
+                  names_out=neur_names[nids[nids >= 6]], vmin=vmin, vmax=vmax, ax=ax['f'])
     # fig.colorbar(im, ax=ax['f'], ticks=[-.5, 0, .5])
     ax['g'].set_title(r"$w_{rest}$", fontsize=8)
-    plot_synapses(w=np.array([m.bias[neurs[nids < 16]]]).T, vmin=vmin, vmax=vmax,
-                  names_in=[r"$1$"], names_out=neur_names[nids[nids < 16]], ax=ax['g'])
+    plot_synapses(w=np.array([m.bias[neurs[nids < 6]]]).T, vmin=vmin, vmax=vmax,
+                  names_in=[r"$1$"], names_out=neur_names[nids[nids < 6]], ax=ax['g'])
 
     ax['h'].set_title(r"", fontsize=8)
-    plot_synapses(w=np.array([m.bias[neurs[nids >= 16]]]).T, vmin=vmin, vmax=vmax,
-                  names_in=[r"$1$"], names_out=neur_names[nids[nids >= 16]], ax=ax['h'])
+    plot_synapses(w=np.array([m.bias[neurs[nids >= 6]]]).T, vmin=vmin, vmax=vmax,
+                  names_in=[r"$1$"], names_out=neur_names[nids[nids >= 6]], ax=ax['h'])
 
     plt.tight_layout()
     plt.show()
