@@ -8,16 +8,15 @@ import os
 
 # the directory of the file
 __dir__ = os.path.dirname(os.path.abspath(__file__))
-# the directory of the data
-__data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "src", "incentive", "data", "arena"))
 
 
 if __name__ == '__main__':
     from incentive.plot import plot_arena_box
     from incentive.arena import load_arena_stats
+    from incentive import arena
 
     rw = read_arg(["-rw", "--rescorla-wagner"])
-    directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
+    arena.__data_dir__ = directory = os.path.abspath(read_arg(["-d", "--dir"], vtype=str, default=arena.__data_dir__))
     repeats = np.arange(read_arg(["-R", "--repeat"], vtype=int, default=10))
 
     file_names = os.listdir(directory)
