@@ -35,7 +35,7 @@ __dir__ = os.path.dirname(os.path.abspath(__file__))
 
 if __name__ == '__main__':
     from incentive.arena import FruitFly
-    from insentive import arena
+    from incentive import arena
 
     sv = 1.
     rv = 1.
