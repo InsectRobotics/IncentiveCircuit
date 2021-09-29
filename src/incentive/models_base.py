@@ -12,7 +12,7 @@ __license__ = "GPLv3+"
 __version__ = "v1.0.0-alpha"
 __maintainer__ = "Evripidis Gkanias"
 
-from .routines import no_shock_routine, unpaired_routine, reversal_routine
+from .routines import extinction_routine, unpaired_routine, reversal_routine
 
 import numpy as np
 
@@ -189,8 +189,8 @@ class MBModel(object):
 
         Parameters
         ----------
-        no_shock: bool
-            whether to run the 'no-shock' routine. Default is False.
+        extinction: bool
+            whether to run the 'extinction' routine. Default is False.
         unpaired: bool
             whether to run the 'unpaired' routine. Default is False.
         reversal: bool
@@ -200,8 +200,8 @@ class MBModel(object):
         repeat: int
             number of repeats of each time-step in order to smoothen the bias of order of the updates. Default is 4
         """
-        if kwargs.get('no_shock', False):
-            routine = no_shock_routine(self)
+        if kwargs.get('extinction', False):
+            routine = extinction_routine(self)
         elif kwargs.get('unpaired', False):
             routine = unpaired_routine(self)
         elif kwargs.get('reversal', False):

@@ -65,10 +65,10 @@ def unpaired_a_routine(mb_model):
     return _routine_base(mb_model, odour=cs_on, shock=us_on, paired=[])
 
 
-def no_shock_routine(mb_model):
+def extinction_routine(mb_model):
     """
-    The no-shock experimental paradigm as a routine. It allows alternately CS (odour) delivery and paired US (shock)
-    delivery during trials 3, 5, 7, 9, 11.
+    The extinction experimental paradigm as a routine. It allows alternately CS (odour) delivery and paired US
+    (extinction) delivery during trials 3, 5, 7, 9, 11.
 
     Parameters
     ----------
@@ -78,12 +78,12 @@ def no_shock_routine(mb_model):
     Returns
     -------
     routine
-        a generator of stimuli based on the no-shock experimental paradigm that returns tuples of the form (#trial,
+        a generator of stimuli based on the extinction experimental paradigm that returns tuples of the form (#trial,
         #in-trial-time-step, CS, US)
     """
     cs_on = np.arange(mb_model.nb_trials * 2)
     us_on = np.array([3, 5, 7, 9, 11])
-    mb_model.routine_name = "no shock"
+    mb_model.routine_name = "extinction"
     return _routine_base(mb_model, odour=cs_on, shock=us_on)
 
 

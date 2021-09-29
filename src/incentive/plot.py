@@ -325,7 +325,7 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
             subs[j].plot(x_[12:15], vaj[12:15], color=(.8, .8, .8))
             subs[j].plot(x_[23:], vaj[23:], color=(.8, .8, .8))
             subs[j].plot(x_[14:24], vaj[14:24], color=a_col, label=label)
-            if ("no shock" in ms[i].routine_name or "unpaired" in ms[i].routine_name or
+            if ("extinction" in ms[i].routine_name or "unpaired" in ms[i].routine_name or
                     "d" not in names[j] and "c" not in names[j] or "av" not in names[j]):
                 continue
             shock_i = [15, 17, 19, 21, 23]
@@ -495,7 +495,7 @@ def plot_weights(ms, nids=None, only_nids=True, figsize=None):
             subs[j].plot(x_[23:], waj[23:], color=(.8, .8, .8))
             subs[j].plot(x_[14:24], waj[14:24], color=a_col, label=label)
 
-            if ("no shock" in ms[i].routine_name or "unpaired" in ms[i].routine_name or
+            if ("extinction" in ms[i].routine_name or "unpaired" in ms[i].routine_name or
                     "d" not in names[j] and "c" not in names[j] or "av" not in names[j]):
                 continue
             shock_i = [15, 17, 19, 21, 23]

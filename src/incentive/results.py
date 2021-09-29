@@ -16,10 +16,10 @@ from .models_base import MBModel
 from typing import List
 
 
-def run_main_experiments(mb_model, reversal=True, unpaired=True, no_shock=True):
+def run_main_experiments(mb_model, reversal=True, unpaired=True, extinction=True):
     """
     Runs the main experiments of the manuscript, creating a new model with the responses of the neurons for each one of
-    them. The experiments are the 'no shock', 'unpaired' and 'reversal'; and it is possible to run a sub-set of them by
+    them. The experiments are the 'extinction', 'unpaired' and 'reversal'; and it is possible to run a sub-set of them by
     specifying it in the parameters.
 
     Parameters
@@ -30,8 +30,8 @@ def run_main_experiments(mb_model, reversal=True, unpaired=True, no_shock=True):
         whether to run the 'reversal' experiment. Default is True.
     unpaired: bool, optional
         whether to run the 'unpaired' experiment. Default is True.
-    no_shock: bool, optional
-        whether to run the 'no shock' experiment. Default is True.
+    extinction: bool, optional
+        whether to run the 'extinction' experiment. Default is True.
 
     Returns
     -------
@@ -53,11 +53,11 @@ def run_main_experiments(mb_model, reversal=True, unpaired=True, no_shock=True):
         models.append(unp_model)
         unp_model(unpaired=unpaired)
 
-    if no_shock:
-        # run acquisition and  no-shock phases
-        nsk_model = mb_model.copy()
-        models.append(nsk_model)
-        nsk_model(no_shock=no_shock)
+    if extinction:
+        # run acquisition and extinction phases
+        ext_model = mb_model.copy()
+        models.append(ext_model)
+        ext_model(extinction=extinction)
 
     return models
 

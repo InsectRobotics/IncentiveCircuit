@@ -14,11 +14,11 @@ if __name__ == '__main__':
     model = IncentiveCircuit(
         learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=26,
         nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
-        has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
+        has_sm=True, has_rm=True, has_rrm=True, has_ltm=True, has_rfm=True, has_mam=True)
 
     # run all the experiments and get a copy of the model with the history of their responses and parameters for each
     # one of them
-    models = run_main_experiments(model, reversal=True, unpaired=True, no_shock=True)
+    models = run_main_experiments(model, reversal=True, unpaired=True, extinction=True)
 
     # plot the results based on the input flags
     run_arg(model, models, only_nids)
