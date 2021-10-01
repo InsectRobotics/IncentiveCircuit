@@ -5,7 +5,7 @@ dependencies among them.
 
 __author__ = "Evripidis Gkanias"
 __copyright__ = "Copyright (c) 2021, Insect Robotics Group," \
-                "Institude of Perception, Action and Behaviour," \
+                "Institute of Perception, Action and Behaviour," \
                 "School of Informatics, the University of Edinburgh"
 __credits__ = ["Evripidis Gkanias"]
 __license__ = "GPLv3+"
@@ -47,7 +47,7 @@ class IncentiveWheel(MBModel):
         kwargs.setdefault("nb_mbon", 16)
         kwargs.setdefault("leak", .0)
         has_sm = kwargs.pop("has_sm", True)
-        has_r = kwargs.pop("has_r", True)
+        has_r = kwargs.pop("has_rm", True)
         has_rrm = kwargs.pop("has_rrm", True)
         has_ltm = kwargs.pop("has_ltm", True)
         has_mam = kwargs.pop("has_mam", True)

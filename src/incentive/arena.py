@@ -9,7 +9,7 @@ __copyright__ = "Copyright (c) 2021, Insect Robotics Group," \
                 "School of Informatics, the University of Edinburgh"
 __credits__ = ["Evripidis Gkanias"]
 __license__ = "GPLv3+"
-__version__ = "v1.0.0-alpha"
+__version__ = "v1.1-alpha"
 __maintainer__ = "Evripidis Gkanias"
 
 from .circuit import IncentiveCircuit
@@ -32,7 +32,7 @@ class FruitFly(object):
     b_sigma = .3
 
     def __init__(self, nb_kcs=10, nb_kc_odour_a=5, nb_kc_odour_b=5, nb_steps=1000, nb_in_trial=1, learning_rule="dlr",
-                 gain=.02, rng=np.random.RandomState()):
+                 gain=.02, rng=np.random.RandomState(2021)):
         """
         Simulation parameters and methods for the fly running in an arena with two odour distributions. The incentive
         circuit is used in order to find the most attractive or aversive direction and move towards or away from it.
@@ -60,6 +60,8 @@ class FruitFly(object):
             learning_rule=learning_rule, nb_apl=0, pn2kc_init="default", nb_timesteps=nb_in_trial, nb_trials=nb_steps,
             nb_kc=nb_kcs, nb_kc_odour_1=nb_kc_odour_a, nb_kc_odour_2=nb_kc_odour_b, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
+        self.mb.bias[:] = 0.  # D-DANs
+
         self.xy = np.zeros(nb_steps, dtype=complex)
         self.p_a = np.zeros(nb_steps, dtype=float)
         self.p_b = np.zeros(nb_steps, dtype=float)
@@ -163,7 +165,7 @@ def arena_routine(agent, noise=0.1, r_start=.2, r_end=.5, reward=False, punishme
         # create reinforcement
         us = np.zeros(mb_model.us_dims, dtype=float)
         if r_start * mb_model.nb_trials < trial_ <= r_end * mb_model.nb_trials:
-            w = float((only_b and (p_b >= p_a)) or (only_a and (p_a >= p_b)) or ((not only_a) and (not only_b)))
+            w = float((only_b and (p_b >= p_a)) or (only_a and (p_a >= p_b)) or (not only_a) and (not only_b))
             us[1] = float(punishment) * w
             us[0] = float(reward) * w
 

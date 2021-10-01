@@ -21,7 +21,8 @@ from copy import copy
 
 class MBModel(object):
     def __init__(self, nb_kc=10, nb_mbon=6, nb_dan=6, nb_apl=0, learning_rule="default", pn2kc_init="default",
-                 nb_trials=24, nb_timesteps=3, nb_kc_odour_1=5, nb_kc_odour_2=5, leak=0., sharp_changes=True):
+                 nb_trials=24, nb_timesteps=3, nb_kc_odour_1=5, nb_kc_odour_2=5, leak=0., sharp_changes=True,
+                 rng=np.random.RandomState(2021)):
         """
         The model of the mushroom body from the Drosophila melanogaster brain. It creates the connections from the
         Kenyon cells (KCs) to the output neurons (MBONs), from the MBONs to the dopaminergic neurons (DANs) and from
@@ -56,6 +57,8 @@ class MBModel(object):
             function. Default is 0, which mean no negative part
         sharp_changes: bool, optional
             when true allows sharp changes in the values. Default is True
+        rng : np.random.RandomState
+            the random pattern generator
         """
         self.nb_trials = nb_trials
         self.nb_timesteps = nb_timesteps
@@ -65,6 +68,7 @@ class MBModel(object):
         self.us_dims = 8  # dimensions of US signal
         self._t = 0  # internal time variable
         self._sharp_changes = sharp_changes
+        self.rng = rng
 
         # Set the PN-to-KC weights
         self.w_p2k = np.array([
@@ -209,7 +213,7 @@ class MBModel(object):
         else:
             routine = kwargs.get('routine', reversal_routine(self))
         repeat = kwargs.get('repeat', 4)
-        rng = kwargs.get('rng', np.random.RandomState(seed=2021))
+        rng = kwargs.get('rng', self.rng)
 
         for _, _, cs, us in routine:
 

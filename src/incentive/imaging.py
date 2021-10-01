@@ -8,10 +8,8 @@ __copyright__ = "Copyright (c) 2021, Insect Robotics Group," \
                 "School of Informatics, the University of Edinburgh"
 __credits__ = ["Evripidis Gkanias"]
 __license__ = "GPLv3+"
-__version__ = "v1.0.0-alpha"
+__version__ = "v1.1-alpha"
 __maintainer__ = "Evripidis Gkanias"
-
-from typing import List
 
 import yaml
 import pandas as pd
@@ -158,6 +156,57 @@ def load_data(experiments='B+', directory=None):
     return pd.DataFrame(data)
 
 
+def get_summarised_responses(data, experiment="B+", nids=None, only_nids=True):
+
+    data_exp = data[experiment]
+    genotypes = np.sort(data_exp.index)
+    odour_a_xs = np.array([np.arange(28, 43) + i * 200 for i in range(9)])
+    shock_a_xs = np.array([np.arange(44, 49) + i * 200 for i in range(9)])
+    odour_b_xs = np.array([np.arange(28, 43) + i * 200 + 100 for i in range(8)])
+    shock_b_xs = np.array([np.arange(44, 49) + i * 200 + 100 for i in range(8)])
+    xa = np.arange(18)
+    xb = xa + 1
+
+    if nids is None:
+        nids = np.arange(len(genotypes))
+    if only_nids:
+        genotypes = genotypes[nids]
+
+    xticks_b = 2 * np.arange(10) + 4
+    xticks_a = xticks_b.copy() - 1
+    xticks_a[5:] += 2
+
+    responses = {}
+
+    for genotype in genotypes:
+
+        qa, qb = {}, {}
+        for quantile in [.25, .50, .75]:
+            for q, xs in zip([qa, qb], [[odour_a_xs, shock_a_xs], [odour_b_xs, shock_b_xs]]):
+                q_odour = np.nanquantile(np.array(data_exp[genotype])[xs[0]], quantile, axis=(1, 2))
+                q_shock = np.nanquantile(np.array(data_exp[genotype])[xs[1]], quantile, axis=(1, 2))
+                q[quantile] = np.array([q_odour, q_shock]).T.reshape((-1,))
+
+        # normalise responses
+        z = np.maximum(np.max(qa[.75]), np.max(qb[.75])) / 2
+        for q in [qa, qb]:
+            for key in q:
+                q[key] /= z
+
+        responses[genotype] = {
+            "xa": xa,
+            "xb": xb,
+            "qa25": qa[.25],
+            "qa50": qa[.50],
+            "qa75": qa[.75],
+            "qb25": qb[.25],
+            "qb50": qb[.50],
+            "qb75": qb[.75]
+        }
+
+    return responses
+
+
 def plot_phase_overlap_mean_responses_from_data(data, experiment="B+", nids=None, only_nids=True, figsize=None,
                                                 show_legend=True):
     """
@@ -182,19 +231,8 @@ def plot_phase_overlap_mean_responses_from_data(data, experiment="B+", nids=None
 
     title = "individuals-from-data"
 
-    data_exp = data[experiment]
-    genotypes = np.sort(data_exp.index)
-    odour_a_xs = np.array([np.arange(28, 43) + i * 200 for i in range(9)])
-    shock_a_xs = np.array([np.arange(44, 49) + i * 200 for i in range(9)])
-    odour_b_xs = np.array([np.arange(28, 43) + i * 200 + 100 for i in range(8)])
-    shock_b_xs = np.array([np.arange(44, 49) + i * 200 + 100 for i in range(8)])
-    xa = np.arange(18)
-    xb = xa + 1
-
-    if nids is None:
-        nids = np.arange(len(genotypes))
-    if only_nids:
-        genotypes = genotypes[nids]
+    sum_res = get_summarised_responses(data, experiment=experiment, nids=nids, only_nids=only_nids)
+    genotypes = [key for key in sum_res.keys()]
 
     ymin, ymax = 0, 2
     y_lim = [ymin - .1, ymax + .1]
@@ -219,25 +257,11 @@ def plot_phase_overlap_mean_responses_from_data(data, experiment="B+", nids=None
 
     for j, genotype in enumerate(genotypes):
 
-        odour_a_mean = np.nanmean(np.array(data_exp[genotype])[odour_a_xs], axis=(1, 2))
-        odour_a_std = np.nanstd(np.array(data_exp[genotype])[odour_a_xs], axis=(1, 2)) / 2
-        shock_a_mean = np.nanmean(np.array(data_exp[genotype])[shock_a_xs], axis=(1, 2))
-        shock_a_std = np.nanstd(np.array(data_exp[genotype])[shock_a_xs], axis=(1, 2)) / 2
+        xa = sum_res[genotype]["xa"]
+        data_a_q25 = sum_res[genotype]["qa25"]
+        data_a_q50 = sum_res[genotype]["qa50"]
+        data_a_q75 = sum_res[genotype]["qa75"]
 
-        odour_b_mean = np.nanmean(np.array(data_exp[genotype])[odour_b_xs], axis=(1, 2))
-        odour_b_std = np.nanstd(np.array(data_exp[genotype])[odour_b_xs], axis=(1, 2)) / 2
-        shock_b_mean = np.nanmean(np.array(data_exp[genotype])[shock_b_xs], axis=(1, 2))
-        shock_b_std = np.nanstd(np.array(data_exp[genotype])[shock_b_xs], axis=(1, 2)) / 2
-
-        data_a_mean = np.array([odour_a_mean, shock_a_mean]).T.reshape((-1,))
-        data_a_std = np.array([odour_a_std, shock_a_std]).T.reshape((-1,))
-        data_b_mean = np.array([odour_b_mean, shock_b_mean]).T.reshape((-1,))
-        data_b_std = np.array([odour_b_std, shock_b_std]).T.reshape((-1,))
-
-        z = np.maximum(np.max(data_a_mean + data_a_std), np.max(data_b_mean + data_b_std)) / 2
-
-        data_a_mean /= z
-        data_a_std /= z
         a_col = np.array([.5 * 205, .5 * 222, 238]) / 255.
 
         if len(subs) <= j:
@@ -259,38 +283,22 @@ def plot_phase_overlap_mean_responses_from_data(data, experiment="B+", nids=None
             axa.spines['right'].set_visible(False)
 
             a_acol = np.array([205, 222, 238]) / 255.
-            axa.fill_between(xa[2:12], data_a_mean[2:12] - data_a_std[2:12], data_a_mean[2:12] + data_a_std[2:12],
-                             color=a_acol, alpha=0.2)
-            axa.plot(xa[:3], data_a_mean[:3], color=(.8, .8, .8), lw=2)
-            axa.plot(xa[2:12], data_a_mean[2:12], color=a_acol, lw=2, label="acquisition")
+            axa.fill_between(xa[2:12], data_a_q25[2:12], data_a_q75[2:12], color=a_acol, alpha=0.2)
+            axa.plot(xa[:3], data_a_q50[:3], color=(.8, .8, .8), lw=2)
+            axa.plot(xa[2:12], data_a_q50[2:12], color=a_acol, lw=2, label="acquisition")
             subs.append(axa)
-        subs[-1].fill_between(xa[14:], data_a_mean[14:] - data_a_std[14:], data_a_mean[14:] + data_a_std[14:],
-                              color=a_col, alpha=0.2)
-        subs[-1].plot(xa[11:15], data_a_mean[11:15], color=(.8, .8, .8), lw=2)
-        subs[-1].plot(xa[14:], data_a_mean[14:], color=a_col, lw=2, label="reversal")
-        subs[-1].plot([15, 17], data_a_mean[[15, 17]], 'r.')
+        subs[-1].fill_between(xa[14:], data_a_q25[14:], data_a_q75[14:], color=a_col, alpha=0.2)
+        subs[-1].plot(xa[11:15], data_a_q50[11:15], color=(.8, .8, .8), lw=2)
+        subs[-1].plot(xa[14:], data_a_q50[14:], color=a_col, lw=2, label="reversal")
+        subs[-1].plot([15, 17], data_a_q50[[15, 17]], 'r.')
 
     for j, genotype in enumerate(genotypes):
 
-        odour_a_mean = np.nanmean(np.array(data_exp[genotype])[odour_a_xs], axis=(1, 2))
-        odour_a_std = np.nanstd(np.array(data_exp[genotype])[odour_a_xs], axis=(1, 2)) / 2
-        shock_a_mean = np.nanmean(np.array(data_exp[genotype])[shock_a_xs], axis=(1, 2))
-        shock_a_std = np.nanstd(np.array(data_exp[genotype])[shock_a_xs], axis=(1, 2)) / 2
+        xb = sum_res[genotype]["xb"]
+        data_b_q25 = sum_res[genotype]["qb25"]
+        data_b_q50 = sum_res[genotype]["qb50"]
+        data_b_q75 = sum_res[genotype]["qb75"]
 
-        odour_b_mean = np.nanmean(np.array(data_exp[genotype])[odour_b_xs], axis=(1, 2))
-        odour_b_std = np.nanstd(np.array(data_exp[genotype])[odour_b_xs], axis=(1, 2)) / 2
-        shock_b_mean = np.nanmean(np.array(data_exp[genotype])[shock_b_xs], axis=(1, 2))
-        shock_b_std = np.nanstd(np.array(data_exp[genotype])[shock_b_xs], axis=(1, 2)) / 2
-
-        data_a_mean = np.array([odour_a_mean, shock_a_mean]).T.reshape((-1,))
-        data_a_std = np.array([odour_a_std, shock_a_std]).T.reshape((-1,))
-        data_b_mean = np.array([odour_b_mean, shock_b_mean]).T.reshape((-1,))
-        data_b_std = np.array([odour_b_std, shock_b_std]).T.reshape((-1,))
-
-        z = np.maximum(np.max(data_a_mean + data_a_std), np.max(data_b_mean + data_b_std)) / 2
-
-        data_b_mean /= z
-        data_b_std /= z
         b_col = np.array([255, .5 * 197, .5 * 200]) / 255.
 
         jn = j + (nb_rows * nb_cols) // 2
@@ -316,18 +324,16 @@ def plot_phase_overlap_mean_responses_from_data(data, experiment="B+", nids=None
 
             b_acol = np.array([255, 197, 200]) / 255.
 
-            axb.fill_between(xb[2:12], data_b_mean[2:12] - data_b_std[2:12], data_b_mean[2:12] + data_b_std[2:12],
-                             color=b_acol, alpha=0.2)
-            axb.plot(xb[:3], data_b_mean[:3], color=(.8, .8, .8), lw=2)
-            axb.plot(xb[2:12], data_b_mean[2:12], color=b_acol, lw=2, label="acquisition")
+            axb.fill_between(xb[2:12], data_b_q25[2:12], data_b_q75[2:12], color=b_acol, alpha=0.2)
+            axb.plot(xb[:3], data_b_q50[:3], color=(.8, .8, .8), lw=2)
+            axb.plot(xb[2:12], data_b_q50[2:12], color=b_acol, lw=2, label="acquisition")
 
             subs.append(axb)
 
-        subs[-1].fill_between(xb[12:16], data_b_mean[12:] - data_b_std[12:], data_b_mean[12:] + data_b_std[12:],
-                              color=b_col, alpha=0.2)
-        subs[-1].plot(xb[11:13], data_b_mean[11:13], color=(.8, .8, .8), lw=2)
-        subs[-1].plot(xb[12:16], data_b_mean[12:], color=b_col, lw=2, label="reversal")
-        subs[-1].plot(xb[[3, 5, 7, 9, 11]], data_b_mean[[3, 5, 7, 9, 11]], 'r.')
+        subs[-1].fill_between(xb[12:16], data_b_q25[12:], data_b_q75[12:], color=b_col, alpha=0.2)
+        subs[-1].plot(xb[11:13], data_b_q50[11:13], color=(.8, .8, .8), lw=2)
+        subs[-1].plot(xb[12:16], data_b_q50[12:], color=b_col, lw=2, label="reversal")
+        subs[-1].plot(xb[[3, 5, 7, 9, 11]], data_b_q50[[3, 5, 7, 9, 11]], 'r.')
 
     if show_legend:
         subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left',
