@@ -4,11 +4,11 @@ Package that contains all the plotting methods that create the figures of the ma
 
 __author__ = "Evripidis Gkanias"
 __copyright__ = "Copyright (c) 2021, Insect Robotics Group," \
-                "Institude of Perception, Action and Behaviour," \
+                "Institute of Perception, Action and Behaviour," \
                 "School of Informatics, the University of Edinburgh"
 __credits__ = ["Evripidis Gkanias"]
 __license__ = "GPLv3+"
-__version__ = "v1.0.0-alpha"
+__version__ = "v1.1-alpha"
 __maintainer__ = "Evripidis Gkanias"
 
 from .models_base import MBModel

@@ -1,3 +1,13 @@
+
+__author__ = "Evripidis Gkanias"
+__copyright__ = "Copyright 2021, School of Informatics, the University of Edinburgh"
+__licence__ = "MIT"
+__version__ = "1.1-alpha"
+__maintainer__ = "Evripidis Gkanias"
+__email__ = "ev.gkanias@ed.ac.uk"
+__status__ = "Production"
+
+
 from incentive.imaging import load_data, get_summarised_responses
 from incentive.circuit import IncentiveCircuit
 from incentive.results import run_main_experiments
@@ -20,8 +30,9 @@ def main(*args):
 
     # create the Incentive Complex
     model = IncentiveCircuit(
-        learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=26,
-        nb_kc=nb_kcs, nb_kc_odour_1=nb_kc_odour, nb_kc_odour_2=nb_kc_odour, has_real_names=False,
+        learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=26, nb_kc=nb_kcs, has_real_names=False,
+        nb_kc_odour=nb_kc_odour,
+        # nb_kc_odour_1=nb_kc_odour + 1, nb_kc_odour_2=nb_kc_odour + 2,
         has_sm=True, has_rm=True, has_rrm=True, has_ltm=True, has_rfm=True, has_mam=True)
 
     # run the reversal experiment and get a copy of the model with the history of their responses and parameters
@@ -32,16 +43,20 @@ def main(*args):
     data_feats, model_feats = [], []
     for neuron in data_res:
         data_names.append(neuron)
-        data_feats.append(np.r_[data_res[neuron]["qa50"][2:12] - data_res[neuron]["qa50"][0:10],
+        data_feats.append(np.r_[  # data_res[neuron]["qa50"][2:12] - data_res[neuron]["qa50"][0:10],
+                                data_res[neuron]["qa50"][8:12] - data_res[neuron]["qa50"][0:4],
                                 data_res[neuron]["qa50"][14:18] - data_res[neuron]["qa50"][12:16],
-                                data_res[neuron]["qb50"][2:12] - data_res[neuron]["qb50"][0:10],
+                                # data_res[neuron]["qb50"][2:12] - data_res[neuron]["qb50"][0:10],
+                                data_res[neuron]["qb50"][8:12] - data_res[neuron]["qb50"][0:4],
                                 data_res[neuron]["qb50"][12:16] - data_res[neuron]["qb50"][10:14]])
 
     for neuron in model_res:
         model_names.append(neuron)
-        model_feats.append(np.r_[model_res[neuron]["va"][3:13] - model_res[neuron]["va"][1:11],
+        model_feats.append(np.r_[  # model_res[neuron]["va"][3:13] - model_res[neuron]["va"][1:11],
+                                 model_res[neuron]["va"][9:13] - model_res[neuron]["va"][1:5],
                                  model_res[neuron]["va"][14:18] - model_res[neuron]["va"][12:16],
-                                 model_res[neuron]["vb"][2:12] - model_res[neuron]["vb"][0:10],
+                                 # model_res[neuron]["vb"][2:12] - model_res[neuron]["vb"][0:10],
+                                 model_res[neuron]["vb"][8:12] - model_res[neuron]["vb"][0:4],
                                  model_res[neuron]["vb"][13:17] - model_res[neuron]["vb"][11:15]])
 
     data_feats = np.array(data_feats)[:, ::2] / 2
@@ -55,6 +70,9 @@ def main(*args):
             d[i, j] = np.correlate(-data_feats[j], model_feats[i])
 
     c = c - d
+    # c = np.maximum(c, 0) - np.maximum(d, 0)
+    # c = np.sqrt(np.maximum(c, 0)) - np.sqrt(np.maximum(d, 0))
+
     plt.figure("cross-correlation", figsize=(8, 8))
 
     nb_data = len(data_names)

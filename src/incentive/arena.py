@@ -5,7 +5,7 @@ while experiencing the odours and reinforcement, learning to approach or avoid t
 
 __author__ = "Evripidis Gkanias"
 __copyright__ = "Copyright (c) 2021, Insect Robotics Group," \
-                "Institude of Perception, Action and Behaviour," \
+                "Institute of Perception, Action and Behaviour," \
                 "School of Informatics, the University of Edinburgh"
 __credits__ = ["Evripidis Gkanias"]
 __license__ = "GPLv3+"
@@ -57,11 +57,9 @@ class FruitFly(object):
             the random generator
         """
         self.mb = IncentiveCircuit(
-            learning_rule=learning_rule, nb_apl=0, pn2kc_init="default", nb_timesteps=nb_in_trial, nb_trials=nb_steps,
+            learning_rule=learning_rule, nb_apl=0, nb_timesteps=nb_in_trial, nb_trials=nb_steps,
             nb_kc=nb_kcs, nb_kc_odour_1=nb_kc_odour_a, nb_kc_odour_2=nb_kc_odour_b, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
-        self.mb.bias[:] = 0.  # D-DANs
-
         self.xy = np.zeros(nb_steps, dtype=complex)
         self.p_a = np.zeros(nb_steps, dtype=float)
         self.p_b = np.zeros(nb_steps, dtype=float)
@@ -375,7 +373,6 @@ def load_arena_paths(file_names, repeat=None, prediction_error=False):
             ("b" if "b" in details[0] else "")
         )
         case = [neurons, punishment, odour]
-
 
         name = fname[:-4]
 

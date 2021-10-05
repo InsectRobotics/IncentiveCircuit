@@ -14,6 +14,14 @@ In order to visualise the respective data using the prediction-error learning ru
     $ python3 run_arena_paths.py -d ../data/arena -rw
 """
 
+__author__ = "Evripidis Gkanias"
+__copyright__ = "Copyright 2021, School of Informatics, the University of Edinburgh"
+__licence__ = "MIT"
+__version__ = "1.1-alpha"
+__maintainer__ = "Evripidis Gkanias"
+__email__ = "ev.gkanias@ed.ac.uk"
+__status__ = "Production"
+
 from incentive.imaging import load_data, plot_phase_overlap_mean_responses_from_data
 from incentive.tools import read_arg
 

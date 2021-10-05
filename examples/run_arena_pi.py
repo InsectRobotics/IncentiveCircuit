@@ -1,6 +1,14 @@
 # #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = "Evripidis Gkanias"
+__copyright__ = "Copyright 2021, School of Informatics, the University of Edinburgh"
+__licence__ = "MIT"
+__version__ = "1.1-alpha"
+__maintainer__ = "Evripidis Gkanias"
+__email__ = "ev.gkanias@ed.ac.uk"
+__status__ = "Production"
+
 from incentive.tools import read_arg
 
 import numpy as np

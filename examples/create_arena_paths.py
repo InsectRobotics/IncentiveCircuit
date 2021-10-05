@@ -24,7 +24,7 @@ import os
 __author__ = "Evripidis Gkanias"
 __copyright__ = "Copyright 2021, School of Informatics, the University of Edinburgh"
 __licence__ = "MIT"
-__version__ = "1.0.0"
+__version__ = "1.1-alpha"
 __maintainer__ = "Evripidis Gkanias"
 __email__ = "ev.gkanias@ed.ac.uk"
 __status__ = "Production"
@@ -32,18 +32,17 @@ __status__ = "Production"
 
 # the directory of the file
 __dir__ = os.path.dirname(os.path.abspath(__file__))
-# the directory of the data
-__data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "src", "incentive", "data", "arena"))
 
 if __name__ == '__main__':
     from incentive.arena import FruitFly
+    from incentive import arena
 
     sv = 1.
     rv = 1.
     mv = 1.
     nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=100)
     nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=500)  # seconds
-    directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
+    arena.__data_dir__ = directory = os.path.abspath(read_arg(["-d", "--dir"], vtype=str, default=arena.__data_dir__))
     repeats = read_arg(["-R", "--repeat"], vtype=int, default=10)
 
     if read_arg(["-p", "--punishment"]):
@@ -87,26 +86,28 @@ if __name__ == '__main__':
         punishment, susceptible, reciprocal, ltm, only_a, only_b
     )
 
+    conditions = ["srm", "s", "r", "m"]
+
     for punishment, susceptible, reciprocal, ltm, only_a, only_b in zip(
             ps.reshape(-1), ss.reshape(-1), rs.reshape(-1), ms.reshape(-1), a_s.reshape(-1), bs.reshape(-1)):
-        if (((not susceptible) and reciprocal and ltm) or
-                (susceptible and (not reciprocal) and ltm) or
-                (susceptible and reciprocal and (not ltm)) or
-                ((not susceptible) and (not reciprocal) and (not ltm)) or
-                (only_a and only_b)):
-            continue
 
         name = "arena-quinine-" if punishment else "arena-sugar-"
+        name_ext = ""
         if susceptible:
-            name += "s"
+            name_ext += "s"
         if reciprocal:
-            name += "r"
+            name_ext += "r"
         if ltm:
-            name += "m"
+            name_ext += "m"
+
+        if name_ext not in conditions:
+            continue
+
         if only_a:
-            name += "a"
+            name_ext += "a"
         if only_b:
-            name += "b"
+            name_ext += "b"
+        name += name_ext
 
         data = np.zeros((nb_flies, nb_timesteps), dtype=complex)
         responses = np.zeros((nb_flies, nb_timesteps, 12), dtype=float)

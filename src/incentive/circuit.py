@@ -7,7 +7,7 @@ Examples:
 
 __author__ = "Evripidis Gkanias"
 __copyright__ = "Copyright (c) 2021, Insect Robotics Group," \
-                "Institude of Perception, Action and Behaviour," \
+                "Institute of Perception, Action and Behaviour," \
                 "School of Informatics, the University of Edinburgh"
 __credits__ = ["Evripidis Gkanias"]
 __license__ = "GPLv3+"
@@ -21,7 +21,7 @@ import numpy as np
 
 class IncentiveCircuit(MBModel):
     def __init__(self, has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True,
-                 has_real_names=False, as_subcircuits=False, *args, **kwargs):
+                 has_real_names=False, as_microcircuits=False, *args, **kwargs):
         """
         The Incentive Circuit (IC) is a simplified version of the mushroom body from the Drosophila melanogaster
         brain, which is a hypothetical sub-circuit in it. It contains the connections from the Kenyon cells (KCs) to the
@@ -45,7 +45,7 @@ class IncentiveCircuit(MBModel):
             indicates if synapses of the MAM sub-circuit are included. Default is True.
         has_real_names: bool, optional
             indicates if real neuron names are to be used instead of code names. Default is False.
-        as_subcircuit: bool, optional
+        as_microcircuits: bool, optional
             indicates whether the model is going to be used as a sub-circuit instead of as a whole. Default is False.
         """
         kwargs.setdefault("nb_dan", 6)
@@ -55,7 +55,7 @@ class IncentiveCircuit(MBModel):
 
         shock_magnitude = 2.
         odour_magnitude = 2.
-        ltm_speed = .5 if as_subcircuits else .05
+        ltm_speed = .5 if as_microcircuits else .05
 
         pds, pde = 0, 2
         pcs, pce = 2, 4
@@ -73,7 +73,7 @@ class IncentiveCircuit(MBModel):
         self._v[:, pss:pse] = self.bias[pss:pse] = -2.  # S-MBONs
         self._v[:, prs:pre] = self.bias[prs:pre] = -.5  # R-MBONs
         self._v[:, pms:pme] = self.bias[pms:pme] = -.5  # M-MBONs
-        if as_subcircuits:
+        if as_microcircuits:
             self._v[:, prs:pre] = self.bias[prs:pre] = -2.  # R-MBONs
             self._v[:, pms:pme] = self.bias[pms:pme] = -4.  # M-MBONs
 
@@ -156,6 +156,7 @@ class IncentiveCircuit(MBModel):
         u = np.zeros((2, self.nb_dan + self.nb_mbon), dtype=float)
         u[:, pds:pde] = np.eye(pde-pds) * shock_magnitude
         u[:, pcs:pce] = np.eye(pce-pcs) * shock_magnitude
+        # u[:, pfs:pfe] = np.eye(pfe-pfs) * shock_magnitude
         self.w_u2d = np.array(u)
 
         self.us_names = ["sugar", "shock"]

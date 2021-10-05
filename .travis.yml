@@ -13,7 +13,7 @@ script:
   - cd examples/
   - mkdir data
   - python test_learning_rule.py
-  - python run_subcircuits.py --nb-kc 10 --sm --rm --ltm --rrm --rfm --mam
+  - python run_microcircuits.py --nb-kc 10 --sm --rm --ltm --rrm --rfm --mam
 #  - python run_incentive_circuit.py --nb-kc 10 --only-nids --structure
   - python run_incentive_circuit.py --nb-kc 10 --only-nids --values --weights
   - python run_incentive_wheel.py --nb-kc 10 --only-nids --values --weights

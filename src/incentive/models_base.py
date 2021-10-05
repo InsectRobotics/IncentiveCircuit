@@ -5,11 +5,11 @@ learning rules.
 
 __author__ = "Evripidis Gkanias"
 __copyright__ = "Copyright (c) 2021, Insect Robotics Group," \
-                "Institude of Perception, Action and Behaviour," \
+                "Institute of Perception, Action and Behaviour," \
                 "School of Informatics, the University of Edinburgh"
 __credits__ = ["Evripidis Gkanias"]
 __license__ = "GPLv3+"
-__version__ = "v1.0.0-alpha"
+__version__ = "v1.1-alpha"
 __maintainer__ = "Evripidis Gkanias"
 
 from .routines import extinction_routine, unpaired_routine, reversal_routine
@@ -20,8 +20,8 @@ from copy import copy
 
 
 class MBModel(object):
-    def __init__(self, nb_kc=10, nb_mbon=6, nb_dan=6, nb_apl=0, learning_rule="default", pn2kc_init="default",
-                 nb_trials=24, nb_timesteps=3, nb_kc_odour_1=5, nb_kc_odour_2=5, leak=0., sharp_changes=True,
+    def __init__(self, nb_pn=2, nb_kc=10, nb_mbon=6, nb_dan=6, nb_apl=0, learning_rule="default", nb_trials=24,
+                 nb_timesteps=3, nb_kc_odour=5, nb_kc_odour_1=None, nb_kc_odour_2=None, leak=0., sharp_changes=True,
                  rng=np.random.RandomState(2021)):
         """
         The model of the mushroom body from the Drosophila melanogaster brain. It creates the connections from the
@@ -31,6 +31,8 @@ class MBModel(object):
 
         Parameters
         ----------
+        nb_pn: int, optional
+            number of projection neurons (PNs). Default is 2
         nb_kc: int, optional
             number of intrinsic neurons (KCs). Default is 10
         nb_mbon: int, optional
@@ -48,10 +50,12 @@ class MBModel(object):
             number of trials that the experiments will run. Default is 24
         nb_timesteps: int, optional
             number of time-steps that each of the trials will run. Default is 3
+        nb_kc_odour: int, optional
+            number of KCs associated to each odour. Default is 5
         nb_kc_odour_1: int, optional
-            number of KCs associated to the first odour. Default is 5
+            number of KCs associated to the first odour. Default is nb_kc_odour
         nb_kc_odour_2: int, optional
-            number of KCs associated to the second odour. Default is 5
+            number of KCs associated to the second odour. Default is nb_kc_odour
         leak: float, optional
             the leak parameter of the leaky-ReLU activation function denotes the scale of the negative part of the
             function. Default is 0, which mean no negative part
@@ -65,27 +69,32 @@ class MBModel(object):
         self.__leak = np.absolute(leak)
         self._learning_rule = learning_rule
         self.__routine_name = ""
-        self.us_dims = 8  # dimensions of US signal
+        self.us_dims = 2  # dimensions of US signal
         self._t = 0  # internal time variable
         self._sharp_changes = sharp_changes
         self.rng = rng
 
         # Set the PN-to-KC weights
-        self.w_p2k = np.array([
-            [1.] * nb_kc_odour_1 + [0.] * (nb_kc - nb_kc_odour_1),
-            [0.] * (nb_kc - nb_kc_odour_2) + [1.] * nb_kc_odour_2
-        ])
-        # Number of PNs is 2
-        nb_pn, nb_kc = self.w_p2k.shape
-        # Scale the weights depending on the specified method
-        if pn2kc_init in ["default"]:
-            self.w_p2k *= nb_pn / np.array([[nb_kc_odour_1], [nb_kc_odour_2]], dtype=self.w_p2k.dtype)
-        elif pn2kc_init in ["simple"]:
-            self.w_p2k *= nb_pn / nb_kc
-        elif pn2kc_init in ["sqrt_pn", "pn_sqrt"]:
-            self.w_p2k *= np.square(nb_pn) / nb_kc
-        elif pn2kc_init in ["sqrt_kc", "kc_sqrt"]:
-            self.w_p2k *= nb_pn / np.sqrt(nb_kc)
+        self.w_p2k = np.zeros((nb_pn, nb_kc), dtype=float)
+        if nb_kc_odour_1 is None:
+            nb_kc_odour_1 = nb_kc_odour
+        if nb_kc_odour_2 is None:
+            nb_kc_odour_2 = nb_kc_odour
+        kc_p_pn = []
+        for p in range(nb_pn):
+            if p == 0:
+                kc_p_pn.append(nb_kc_odour_1)
+            elif p == 1:
+                kc_p_pn.append(nb_kc_odour_2)
+            else:
+                kc_p_pn.append(nb_kc_odour)
+        for p, nb_odour in enumerate(kc_p_pn):
+            s = int(p * nb_kc / nb_pn)
+            if s + nb_odour > nb_kc:
+                s = nb_kc - nb_odour
+            e = s + nb_odour
+            # self.w_p2k[p, s:e] = 1
+            self.w_p2k[p, s:e] = nb_pn / nb_odour
 
         # create map from the US to the extrinsic neurons
         self.w_u2d = np.zeros((self.us_dims, nb_dan + nb_mbon), dtype=float)
@@ -222,9 +231,9 @@ class MBModel(object):
             v_pre, v_post = self._v[self._t].copy(), self._v[self._t].copy()
 
             # feed forward responses: PN(CS) -> KC
-            # k = cs @ self.w_p2k
             k = cs @ self.w_p2k + rng.rand(self.nb_kc) * .001
-            k[np.argsort(k)[:4]] = 0.
+            k[np.argsort(k)[:self.nb_kc//2]] = 0.
+            # k[np.argsort(k)[:-2]] = 0.
 
             eta = float(1) / float(repeat)
             for r in range(repeat):

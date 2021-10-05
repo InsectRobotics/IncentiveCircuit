@@ -1,3 +1,11 @@
+__author__ = "Evripidis Gkanias"
+__copyright__ = "Copyright 2021, School of Informatics, the University of Edinburgh"
+__licence__ = "MIT"
+__version__ = "1.1-alpha"
+__maintainer__ = "Evripidis Gkanias"
+__email__ = "ev.gkanias@ed.ac.uk"
+__status__ = "Production"
+
 import numpy as np
 
 from incentive.circuit import IncentiveCircuit
@@ -18,7 +26,7 @@ if __name__ == '__main__':
 
     # create the Incentive Complex
     model = IncentiveCircuit(
-        learning_rule="dlr", nb_apl=0, pn2kc_init="default", nb_timesteps=3, nb_trials=26,
+        learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=26,
         nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
         has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
 
