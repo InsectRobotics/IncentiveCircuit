@@ -27,9 +27,10 @@ __data_dir__ = os.path.realpath(os.path.join(__dir__, "data", "arena"))
 
 class FruitFly(object):
     a_source = .6+0j
-    a_sigma = .2
+    a_sigma = .4
     b_source = -.6+0j
-    b_sigma = .3
+    b_sigma = .6
+    r_radius = .3
 
     def __init__(self, nb_kcs=10, nb_kc_odour_a=5, nb_kc_odour_b=5, nb_steps=1000, nb_in_trial=1, learning_rule="dlr",
                  gain=.02, rng=np.random.RandomState(2021)):
@@ -58,8 +59,8 @@ class FruitFly(object):
         """
         self.mb = IncentiveCircuit(
             learning_rule=learning_rule, nb_apl=0, nb_timesteps=nb_in_trial, nb_trials=nb_steps,
-            nb_kc=nb_kcs, nb_kc_odour_1=nb_kc_odour_a, nb_kc_odour_2=nb_kc_odour_b, has_real_names=False,
-            has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
+            nb_active_kcs=2, nb_kc=nb_kcs, nb_kc_odour_1=nb_kc_odour_a, nb_kc_odour_2=nb_kc_odour_b,
+            has_real_names=False, has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
         self.xy = np.zeros(nb_steps, dtype=complex)
         self.p_a = np.zeros(nb_steps, dtype=float)
         self.p_b = np.zeros(nb_steps, dtype=float)
@@ -85,7 +86,7 @@ class FruitFly(object):
         self.mb.w_k2m[0] = self.mb.w_k2m[-2].copy()
         routine = arena_routine(
             self, noise=noise, r_start=r_start, r_end=r_end, reward=reward, punishment=punishment,
-            susceptible=s, restrained=r, ltm=m, only_a=a, only_b=b)
+            susceptible=s, restrained=r, ltm=m, only_a=a, only_b=b, reset_position=False)
         return self.mb(routine=routine)
 
     @property
@@ -97,7 +98,8 @@ class FruitFly(object):
 
 
 def arena_routine(agent, noise=0.1, r_start=.2, r_end=.5, reward=False, punishment=True,
-                  susceptible=1., restrained=1., ltm=1., only_a=False, only_b=False):
+                  susceptible=1., restrained=1., ltm=1., only_a=False, only_b=False,
+                  reset_position=False):
     """
     The arena routine creates a routine for the FruitFly simulation for a fixed number of time-steps. Returns a
     generator that computes the trial, time-step, CS and US that will be used as input to the MB.
@@ -126,6 +128,8 @@ def arena_routine(agent, noise=0.1, r_start=.2, r_end=.5, reward=False, punishme
         if the reinforcement is applied only when odour A is more intense.
     only_b: bool, optional
         if the reinforcement is applied only when odour B is more intense.
+    reset_position : bool, optional
+        replaces the agent to the centre of teh arena at the beginning of each phase. Default is False
 
     Yields
     -------
@@ -145,25 +149,34 @@ def arena_routine(agent, noise=0.1, r_start=.2, r_end=.5, reward=False, punishme
     b_odour_source = agent.b_source
     a_sigma = agent.a_sigma
     b_sigma = agent.b_sigma
+    rein_rad = agent.r_radius
 
     for trial in range(1, mb_model.nb_trials):
         if mb_model._t >= mb_model.nb_trials * mb_model.nb_timesteps:
             break
-        p_a = gaussian_p(agent.xy[mb_model._t], a_odour_source, a_sigma)
-        p_b = gaussian_p(agent.xy[mb_model._t], b_odour_source, b_sigma)
-        p_a = np.clip(p_a / (p_a + p_b) + noise * agent.rng.randn(), 0, 1)
-        p_b = 1 - p_a
+        i_a = gaussian_p(agent.xy[mb_model._t], a_odour_source, a_sigma)  # the odour A intensity
+        i_b = gaussian_p(agent.xy[mb_model._t], b_odour_source, b_sigma)  # the odour B intensity
+        p_a = np.clip(i_a / (i_a + i_b), 0, 1)  # the probability of detecting odour A
+        p_b = 1 - p_a  # the probability of detecting odour B
         agent.p_a[agent.t] = p_a
         agent.p_b[agent.t] = p_b
 
-        trial_ = mb_model._t // mb_model.nb_timesteps
+        trial_ = mb_model._t // mb_model.nb_timesteps  # the trial number
 
-        # create mixture of odours
-        cs = p_a * mb_model.csa + p_b * mb_model.csb
+        # create odour identity
+        csa = float(agent.rng.rand() <= p_a) * mb_model.csa  # detect odour A
+        csb = float(agent.rng.rand() <= p_b) * mb_model.csb  # detect odour B
+        cs = csa + csb
+
         # create reinforcement
         us = np.zeros(mb_model.us_dims, dtype=float)
         if r_start * mb_model.nb_trials < trial_ <= r_end * mb_model.nb_trials:
-            w = float((only_b and (p_b >= p_a)) or (only_a and (p_a >= p_b)) or (not only_a) and (not only_b))
+            # w = float((only_b and (p_b >= p_a)) or (only_a and (p_a >= p_b)) or (not only_a) and (not only_b))
+            d_a = np.absolute(a_odour_source - agent.xy[mb_model._t])
+            d_b = np.absolute(b_odour_source - agent.xy[mb_model._t])
+            w = float((only_a and (d_a < rein_rad)) or  # reinforcement is close to odour A
+                      (only_b and (d_b < rein_rad)) or  # reinforcement is close to odour B
+                      (not only_a) and (not only_b) and (d_a < rein_rad or d_b < rein_rad))  # close to both odours
             us[1] = float(punishment) * w
             us[0] = float(reward) * w
 
@@ -174,28 +187,44 @@ def arena_routine(agent, noise=0.1, r_start=.2, r_end=.5, reward=False, punishme
         t = mb_model._t
         s_at, s_av, r_at, r_av, m_at, m_av = mb_model._v[t, 6:]
 
+        # attraction force = attraction - avoidance
         s = s_at - s_av
         r = r_at - r_av
         m = m_at - m_av
 
+        # choose which MBONs to follow
         sw, rw, mw = float(susceptible), float(restrained), float(ltm)
-        attraction = (sw * s + rw * r + mw * m) / (sw + rw + mw)
-        d_a = (a_odour_source - agent.xy[t-1]) / non_zero_distance(a_odour_source, agent.xy[t-1])
-        d_b = (b_odour_source - agent.xy[t-1]) / non_zero_distance(b_odour_source, agent.xy[t-1])
-        direction = p_a * d_a + p_b * d_b
 
-        if t < 2:
-            vel = 0+0j
-        else:
-            vel = agent.xy[t-1] - agent.xy[t-2]
+        attraction = (sw * s + rw * r + mw * m) / (sw + rw + mw)  # magnitude of the overall attraction force
+        d_a = (a_odour_source - agent.xy[t-1]) / non_zero_distance(a_odour_source, agent.xy[t-1])  # vector to odour A
+        d_b = (b_odour_source - agent.xy[t-1]) / non_zero_distance(b_odour_source, agent.xy[t-1])  # vector to odour B
+        direction = p_a * d_a + p_b * d_b  # direction of the overall attraction force (based on the intensity)
+        direction /= np.maximum(np.absolute(direction), np.finfo(float).eps)  # normalise
+
+        # calculate the attraction vector
         rho = attraction * direction
 
-        vel += rho + agent.rng.randn() * .1 + agent.rng.randn() * .1j
-        z = np.maximum(np.absolute(vel), np.finfo(float).eps)
-        vel = agent.gain * vel / z
+        # create a random vector
+        epsilon = noise * (2 * agent.rng.rand() - 1 + (2 * agent.rng.rand() - 1) * 1j)
 
-        agent.xy[t] = agent.xy[t-1] + vel
-        agent.xy[t] = agent.xy[t] / np.maximum(np.absolute(agent.xy[t]), 1)
+        # calculate the fly momentum
+        if t < 2:
+            momentum = 0+0j
+        else:
+            momentum = agent.xy[t-1] - agent.xy[t-2]
+        if reset_position and (np.absolute(momentum) > 2 * agent.gain):
+            momentum *= 0
+
+        # calculate velocity based on the attraction force, the momentum and the random vector
+        vel = rho + momentum + epsilon
+        z = np.maximum(np.absolute(vel), np.finfo(float).eps)  # normalisation factor
+        vel = agent.gain * vel / z  # ensure that the velocity has a standard magnitude
+
+        new_xy = agent.xy[t-1] + vel  # update position
+        agent.xy[t] = new_xy / np.maximum(np.absolute(new_xy), 1)  # make sure that we are still in the arena
+
+        if reset_position and (trial_ == r_start * mb_model.nb_trials or trial_ == r_end * mb_model.nb_trials):
+            agent.xy[t] *= 0.
 
 
 def load_arena_stats(file_names, prediction_error=False):
@@ -205,6 +234,7 @@ def load_arena_stats(file_names, prediction_error=False):
     - susceptible: bool
     - restrained: bool
     - long-term memory: bool
+    - repeat: int
     - reinforcement: {"punishment", "reward"}
     - paired odour: {"A", "B", "A+B", "AB"}
     - phase: {"pre", "learn", "post"}
@@ -293,7 +323,7 @@ def load_arena_stats(file_names, prediction_error=False):
     return df
 
 
-def load_arena_paths(file_names, repeat=None, prediction_error=False):
+def load_arena_paths(file_names, max_repeat=None, prediction_error=False):
     """
     Loads the raw paths from the given files and returns their trace, case and name in 3
     separate lists.
@@ -302,7 +332,7 @@ def load_arena_paths(file_names, repeat=None, prediction_error=False):
     ----------
     file_names: list[str]
         list of filenames in the arena data directory.
-    repeat: int, optional
+    max_repeat: int, optional
         which repeat of the experiment to load. Default is the first.
     prediction_error: bool, optional
         if the prediction error was used as the learning rule when creating the files. Default is False.
@@ -344,8 +374,9 @@ def load_arena_paths(file_names, repeat=None, prediction_error=False):
         ["srm", "r", ""],
     ]
 
-    d_raw = [[]] * len(cases)
-    d_names = [[]] * len(cases)
+    d_raw = [[]] * len(cases) * max_repeat
+    d_names = [[]] * len(cases) * max_repeat
+    d_repeats = [[]] * len(cases) * max_repeat
     # d_names = ["susceptible", "reciprocal", "long-term memory", "reinforcement",
     #            "paired odour", "phase", "angle"]
 
@@ -358,7 +389,7 @@ def load_arena_paths(file_names, repeat=None, prediction_error=False):
         if len(details) < 1:
             continue
 
-        if repeat != (None if details[0][6] == '' else int(details[0][6])):
+        if max_repeat < (0 if details[0][6] == '' else int(details[0][6])):
             continue
 
         print(fname, details[0])
@@ -377,10 +408,12 @@ def load_arena_paths(file_names, repeat=None, prediction_error=False):
         name = fname[:-4]
 
         if case in cases:
-            d_raw[cases.index(case)] = np.load(os.path.join(__data_dir__, fname))["data"]
-            d_names[cases.index(case)] = name
+            i = cases.index(case) + len(cases) * (int(details[0][6]) - 1)
+            d_raw[i] = np.load(os.path.join(__data_dir__, fname))["data"]
+            d_names[i] = name
+            d_repeats[i] = int(details[0][6])
 
-    return d_raw, cases, d_names
+    return d_raw, cases * max_repeat, d_names, d_repeats
 
 
 def load_arena_traces(file_names, repeat=None, prediction_error=False):

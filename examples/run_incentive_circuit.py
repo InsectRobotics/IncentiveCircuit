@@ -2,6 +2,8 @@ from incentive.circuit import IncentiveCircuit
 from incentive.results import run_main_experiments
 from incentive.tools import read_arg, run_arg
 
+import numpy as np
+
 __author__ = "Evripidis Gkanias"
 __copyright__ = "Copyright 2021, School of Informatics, the University of Edinburgh"
 __licence__ = "MIT"
@@ -22,13 +24,16 @@ if __name__ == '__main__':
 
     # create the Incentive Circuit
     model = IncentiveCircuit(
-        learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=26,
+        learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=26, nb_active_kcs=2,
         nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
         has_sm=True, has_rm=True, has_rrm=True, has_ltm=True, has_rfm=True, has_mam=True)
 
-    # run all the experiments and get a copy of the model with the history of their responses and parameters for each
-    # one of them
-    models = run_main_experiments(model, reversal=True, unpaired=True, extinction=True)
+    models = []
+    for repeat in range(10):
+        # run all the experiments and get a copy of the model with the history of their responses and parameters for each
+        # one of them
+        model.rng = np.random.RandomState(2021 + repeat)
+        models.append(run_main_experiments(model, reversal=True, unpaired=True, extinction=True))
 
     # plot the results based on the input flags
     run_arg(model, models, only_nids)

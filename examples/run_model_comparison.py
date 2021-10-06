@@ -31,7 +31,7 @@ def main(*args):
     # create the Incentive Complex
     model = IncentiveCircuit(
         learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=26, nb_kc=nb_kcs, has_real_names=False,
-        nb_kc_odour=nb_kc_odour,
+        nb_kc_odour=nb_kc_odour, nb_active_kcs=3,
         # nb_kc_odour_1=nb_kc_odour + 1, nb_kc_odour_2=nb_kc_odour + 2,
         has_sm=True, has_rm=True, has_rrm=True, has_ltm=True, has_rfm=True, has_mam=True)
 

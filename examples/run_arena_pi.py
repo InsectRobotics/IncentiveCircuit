@@ -40,8 +40,18 @@ if __name__ == '__main__':
     df["attract B"] = df["dist_B"] - 1
     df["attract A/B"] = np.min([df["dist_A"], df["dist_B"]], axis=0) / 0.6 - 1
 
+    codes = ["srm"]
+    # codes = ["srm", "s", "r", "m"]
+    for code in codes:
+        plot_arena_box(df[np.all([df["susceptible"] == ("s" in code),
+                                  df["restrained"] == ("r" in code),
+                                  df["long-term memory"] == ("m" in code)], axis=0)],
+                       max_repeat=10,
+                       name="%sarena-box-%s" % ("rw-" if rw else "", code),
+                       show=code == codes[-1])
+
     # repeats = np.unique(df["repeat"])
-    repeats = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    for repeat in repeats:
-        plot_arena_box(df[df["repeat"] == repeat], "%sarena-box-%02d" % ("rw-" if rw else "", repeat),
-                       show=repeat == repeats[-1])
+    # repeats = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    # for repeat in repeats:
+    #     plot_arena_box(df[df["repeat"] == repeat], "%sarena-box-%02d" % ("rw-" if rw else "", repeat),
+    #                    show=repeat == repeats[-1])

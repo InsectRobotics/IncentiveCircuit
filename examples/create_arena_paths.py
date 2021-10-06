@@ -82,11 +82,12 @@ if __name__ == '__main__':
     else:
         only_b = [True, False]
     rng = np.random.RandomState(read_arg(["--rng", "--random-state"], vtype=int, default=2021))
-    ps, ss, rs, ms, a_s, bs = np.meshgrid(
-        punishment, susceptible, reciprocal, ltm, only_a, only_b
+    ss, rs, ms, a_s, bs, ps = np.meshgrid(
+        susceptible, reciprocal, ltm, only_a, only_b, punishment
     )
 
     conditions = ["srm", "s", "r", "m"]
+    regions = ["", "a", "b"]
 
     for punishment, susceptible, reciprocal, ltm, only_a, only_b in zip(
             ps.reshape(-1), ss.reshape(-1), rs.reshape(-1), ms.reshape(-1), a_s.reshape(-1), bs.reshape(-1)):
@@ -100,14 +101,16 @@ if __name__ == '__main__':
         if ltm:
             name_ext += "m"
 
-        if name_ext not in conditions:
+        name_reg = ""
+        if only_a:
+            name_reg += "a"
+        if only_b:
+            name_reg += "b"
+
+        if name_ext not in conditions or name_reg not in regions:
             continue
 
-        if only_a:
-            name_ext += "a"
-        if only_b:
-            name_ext += "b"
-        name += name_ext
+        name += name_ext + name_reg
 
         data = np.zeros((nb_flies, nb_timesteps), dtype=complex)
         responses = np.zeros((nb_flies, nb_timesteps, 12), dtype=float)
@@ -124,7 +127,7 @@ if __name__ == '__main__':
                 else:
                     fly = flies[i]
                 fly(punishment=punishment, noise=.5, susceptible=susceptible, reciprocal=reciprocal, ltm=ltm,
-                    only_a=only_a, only_b=only_b)
+                    only_a=only_a, only_b=only_b, gain=0.05)
                 data[i] = fly.xy.copy()
                 responses[i] = fly.mb._v[1:].copy()
                 weights[i] = fly.mb.w_k2m[1:].copy()

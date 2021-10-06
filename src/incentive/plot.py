@@ -16,6 +16,7 @@ from .models_base import MBModel
 from typing import List
 from scipy.stats import circmean, circstd
 from matplotlib import cm
+from matplotlib import patches
 from matplotlib.colors import Normalize
 
 import matplotlib.pyplot as plt
@@ -226,7 +227,7 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
 
     Parameters
     ----------
-    ms: List[MBModel]
+    ms: list[list[MBModel]]
         the models where the values are taken from
     nids: List[int]
         the indices of the neurons that we want to show their names
@@ -235,22 +236,23 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
     figsize: list
         the size of the figure
     """
-    title = "individuals-" + '-'.join(str(ms[0]).split("'")[1:-1:2])
+    title = "individuals-" + '-'.join(str(ms[0][0]).split("'")[1:-1:2])
 
     nb_odours = 2
-    nb_models = len(ms)
+    nb_repeats = len(ms)
+    nb_models = len(ms[0])
     xticks = ["%d" % i for i in range(16)]
     ylim = [-0.1, 2.1]
 
     if nids is None:
-        if ms[0].neuron_ids is None:
-            nids = np.arange(ms[0].nb_dan + ms[0].nb_mbon)[::8]
+        if ms[0][0].neuron_ids is None:
+            nids = np.arange(ms[0][0].nb_dan + ms[0][0].nb_mbon)[::8]
         else:
-            nids = ms[0].neuron_ids
+            nids = ms[0][0].neuron_ids
     if only_nids:
-        names = np.array(ms[0].names)[nids]
+        names = np.array(ms[0][0].names)[nids]
     else:
-        names = np.array(ms[0].names)
+        names = np.array(ms[0][0].names)
 
     nb_neurons = len(names)
     if only_nids:
@@ -266,16 +268,35 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
     plt.figure(title, figsize=figsize)
 
     subs = []
+    vajs, vbjs = [], []
+    for k in range(nb_repeats):
+
+        vajs.append([])
+        vbjs.append([])
+        for i in range(nb_models):
+            nb_timesteps = ms[k][i].nb_timesteps
+            v = ms[k][i]._v
+
+            va = v[1:].reshape((-1, nb_odours, nb_timesteps, v.shape[-1]))[:, 0].reshape((-1, v.shape[-1]))
+            vb = v[1:].reshape((-1, nb_odours, nb_timesteps, v.shape[-1]))[:, 1].reshape((-1, v.shape[-1]))
+
+            if only_nids:
+                va = va[:, nids]
+                vb = vb[:, nids]
+
+            vajs[k].append([])
+            vbjs[k].append([])
+            for j in range(nb_neurons):
+                vajs[k][i].append(va[:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,)))
+                vbjs[k][i].append(vb[:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,)))
+
+    vaj_mean = np.mean(vajs, axis=0)
+    vbj_mean = np.mean(vbjs, axis=0)
+    print(vaj_mean.shape)
+
     for i in range(nb_models-1, -1, -1):
-        nb_timesteps = ms[i].nb_timesteps
-        nb_trials = ms[i].nb_trials
-
-        v = ms[i]._v
-
-        # trial, odour, time-step, neuron
-        va = v[1:].reshape((-1, nb_odours, nb_timesteps, v.shape[-1]))[:, 0].reshape((-1, v.shape[-1]))
-        if only_nids:
-            va = va[:, nids]
+        nb_timesteps = ms[0][i].nb_timesteps
+        nb_trials = ms[0][i].nb_trials
 
         x_ticks_ = xticks[1:(nb_trials // 2) // 2] * 2
         n = len(x_ticks_)
@@ -286,14 +307,13 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
         x_ = np.arange(0, nb_trials // 2, 1 / (nb_timesteps - 1)) - 1 / (nb_timesteps - 1)
 
         for j in range(nb_neurons):
-
             label = None
             s = (i + 1) / (nb_models + 1)
             a_col = np.array([s * 205, s * 222, 238]) / 255.
             if j == nb_neurons - 1:
-                label = ms[i].routine_name
+                label = ms[0][i].routine_name
 
-            vaj = va[:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))
+            vaj = vaj_mean[i, j]
             if len(subs) <= j:
                 axa = plt.subplot(nb_rows, nb_cols, 2 * (j // nb_cols) * nb_cols + j % nb_cols + 1)
                 # axa.plot([[15, 17, 19, 21, 23, 25]] * 2, [[0] * 6, [ylim] * 6], 'r-')
@@ -325,16 +345,13 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
             subs[j].plot(x_[12:15], vaj[12:15], color=(.8, .8, .8))
             subs[j].plot(x_[23:], vaj[23:], color=(.8, .8, .8))
             subs[j].plot(x_[14:24], vaj[14:24], color=a_col, label=label)
-            if ("extinction" in ms[i].routine_name or "unpaired" in ms[i].routine_name or
+            if ("extinction" in ms[0][i].routine_name or "unpaired" in ms[0][i].routine_name or
                     "d" not in names[j] and "c" not in names[j] or "av" not in names[j]):
                 continue
             shock_i = [15, 17, 19, 21, 23]
             subs[j].plot(x_[shock_i], vaj[shock_i], 'r.')
 
         # axb = plt.subplot(nb_models * 2, 2, 2 + i * 4)
-        vb = v[1:].reshape((-1, nb_odours, nb_timesteps, v.shape[-1]))[:, 1].reshape((-1, v.shape[-1]))
-        if only_nids:
-            vb = vb[:, nids]
         x_b = x_ + 1 - 1 / (nb_timesteps - 1)
         for j in range(nb_neurons):
             jn = j + nb_neurons
@@ -343,9 +360,9 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
             s = (i + 1) / (nb_models + 1)
             b_col = np.array([255, s * 197, s * 200]) / 255.
             if j == nb_neurons - 1:
-                label = ms[i].routine_name
+                label = ms[0][i].routine_name
 
-            vbj = vb[:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))
+            vbj = vbj_mean[i, j]
             if len(subs) <= jn:
                 axb = plt.subplot(nb_rows, nb_cols, (2 * (j // nb_cols) + 1) * nb_cols + j % nb_cols + 1)
                 axb.set_xticks(_x_ticks)
@@ -990,7 +1007,7 @@ def _plot_subcircuit(m, nids, nnames, ncolours, uss=None, title="sub-circuit", s
         plt.show()
 
 
-def plot_arena_paths(data, cases, names, name="arena-paths", lw=1., alpha=.2, figsize=None):
+def plot_arena_paths(data, cases, names, repeats, code, name="arena-paths", lw=1., alpha=.2, figsize=None):
     """
     Plots the paths in the arena for all the given cases andme names.
 
@@ -1002,6 +1019,10 @@ def plot_arena_paths(data, cases, names, name="arena-paths", lw=1., alpha=.2, fi
         list of the required cases
     names: list[str]
         list of names of the cases
+    repeats: list[int]
+        list of repeats that specify the repeat of each case
+    code: str
+        the combination of MBONs to show
     name: str, optional
         the title of the figure. Default is 'arena-paths'
     lw: float, optional
@@ -1014,9 +1035,10 @@ def plot_arena_paths(data, cases, names, name="arena-paths", lw=1., alpha=.2, fi
     if figsize is None:
         figsize = (5, 4)
     plt.figure(name, figsize=figsize)
-    for d, c, n in zip(data, cases, names):
-        ax = plt.subplot(4, 6, cases.index(c) + 1, polar=True)
-        _plot_arena_paths(d, name=n, lw=lw, alpha=alpha, save=False, show=False, ax=ax)
+    for d, c, n, r in zip(data, cases, names, repeats):
+        if c[0] == code:
+            ax = plt.subplot(np.max(repeats), 6, (r - 1) * 6 + cases.index(c) % 6 + 1, polar=True)
+            _plot_arena_paths(d, name=n, lw=lw, alpha=alpha, save=False, show=False, ax=ax)
     plt.tight_layout()
     plt.show()
 
@@ -1076,223 +1098,7 @@ def _plot_arena_paths(data, name="arena", lw=1., alpha=.2, ax=None, save=False, 
         plt.show()
 
 
-def plot_arena_stats(df, name="arena-stats", figsize=None):
-    """
-    Plots the statistics of the flies as the von-Mises densities on the top of the gradients of the odours in the arena.
-
-    Parameters
-    ----------
-    df: pd.DataFrame
-        contains the stats extracted from the flies running in the arena
-    name: str, optional
-        used as the title of the figure. Default is 'arena-stats'
-    figsize: tuple
-        the size of the figure. Default is (2, 2)
-    """
-
-    mechanisms = ["susceptible", "restrained", "long-term memory", ["susceptible", "restrained", "long-term memory"]]
-    reinforcements = ["punishment", "reward"]
-    odours = ["A", "B", "AB"]
-    ms, rs, os = np.meshgrid(mechanisms, reinforcements, odours)
-
-    if figsize is None:
-        figsize = (5, 4)
-    plt.figure(name, figsize=figsize)
-    for mechanism, reinforcement, odour in zip(ms.flatten(), rs.flatten(), os.flatten()):
-        m = mechanisms.index(mechanism)
-        r = reinforcements.index(reinforcement)
-        o = odours.index(odour)
-        ax = plt.subplot(4, 6, m * 6 + r * 3 + o + 1, polar=True)
-        ax.set_theta_zero_location("W")
-        _plot_arena_stats(df, mechanisms=mechanism, reinforcements=reinforcement, odours=odour, ax=ax,
-                          name="%s-%s-%s" % ("".join([m[0] for m in mechanism]) if isinstance(mechanism, list)
-                                             else mechanism[0], reinforcement[0], odour.lower()))
-    plt.tight_layout()
-    plt.show()
-
-
-def _plot_arena_stats(data, mechanisms=None, reinforcements=None, odours=None, name="arena-stats",
-                      bimodal_tol=np.pi/2, print_stats=False, ax=None):
-    """
-    Plots the von Mises in the arena on the top of the gradients of the odours.
-
-    Parameters
-    ----------
-    data: pd.DataFrame
-        contains the stats extracted from the flies
-    mechanisms: str, list
-        list of mechanisms that are used simultaneously
-    reinforcements: str, list
-        list of reinforcements that are used simultaneously
-    odours: str, list
-        list of odours that are observed simultaneously
-    name: optional
-        used as the title of the sub-plot. Default is 'arena-stats'
-    bimodal_tol: float, optional
-        tolerance to check whether the distribution is bimodal or not. Default is pi/2
-    print_stats: bool, optional
-        whether to print out the stats while creating the plot. Default is False
-    ax: optional
-        the axis to draw the paths on
-    """
-
-    if ax is None:
-        plt.figure(name, figsize=(2, 2))
-        ax = plt.subplot(111, polar=True)
-    else:
-        ax.set_title(name, fontsize=8)
-    if mechanisms is None:
-        mechanisms = ["susceptible", "restrained", "long-term memory"]
-    if not isinstance(mechanisms, list):
-        mechanisms = [mechanisms]
-    if reinforcements is None:
-        reinforcements = ["reward"]
-    if not isinstance(reinforcements, list):
-        reinforcements = [reinforcements]
-    if odours is None:
-        odours = ["B"]
-    if not isinstance(odours, list):
-        odours = [odours]
-
-    mechanisms_not = list({"susceptible", "restrained", "long-term memory"} - set(mechanisms))
-
-    df = data[np.all([data[m] for m in mechanisms] + [~data[m] for m in mechanisms_not], axis=0)]
-    df = df[np.any([df["reinforcement"] == r for r in reinforcements], axis=0)]
-    df = df[np.any([df["paired odour"] == o for o in odours], axis=0)]
-
-    d_pre = np.deg2rad(df[df["phase"] == "pre"]["angle"])
-    d_learn = np.deg2rad(df[df["phase"] == "learn"]["angle"])
-    d_post = np.deg2rad(df[df["phase"] == "post"]["angle"])
-
-    if print_stats:
-        from scipy.stats import circmean, circstd
-
-        n_pre = len(d_pre)
-        d_pre_mean = circmean(d_pre)
-        d_pre_std = circstd(d_pre)
-        print("pre:", np.rad2deg(d_pre_mean), np.rad2deg(d_pre_std), n_pre)
-
-        if d_pre_std > np.pi/2:
-            d_pre_000 = d_pre[np.all([-bimodal_tol/2 <= ((d_pre + np.pi) % (2 * np.pi) - np.pi),
-                                      ((d_pre + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
-            d_pre_090 = d_pre[np.all([-bimodal_tol/2 <= ((d_pre - np.pi/2 + np.pi) % (2 * np.pi) - np.pi),
-                                     ((d_pre - np.pi/2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
-            d_pre_180 = d_pre[np.all([-bimodal_tol/2 <= ((d_pre - np.pi + np.pi) % (2 * np.pi) - np.pi),
-                                     ((d_pre - np.pi + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
-            d_pre_270 = d_pre[np.all([-bimodal_tol/2 <= ((d_pre + np.pi/2 + np.pi) % (2 * np.pi) - np.pi),
-                                     ((d_pre + np.pi/2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
-
-            n_pre_000 = len(d_pre_000)
-            d_pre_000_mean = circmean(d_pre_000)
-            d_pre_000_std = circstd(d_pre_000)
-            print("pre   0:", np.rad2deg(d_pre_000_mean), np.rad2deg(d_pre_000_std), n_pre_000)
-
-            n_pre_090 = len(d_pre_090)
-            d_pre_090_mean = circmean(d_pre_090)
-            d_pre_090_std = circstd(d_pre_090)
-            print("pre  90:", np.rad2deg(d_pre_090_mean), np.rad2deg(d_pre_090_std), n_pre_090)
-
-            n_pre_180 = len(d_pre_180)
-            d_pre_180_mean = circmean(d_pre_180)
-            d_pre_180_std = circstd(d_pre_180)
-            print("pre 180:", np.rad2deg(d_pre_180_mean), np.rad2deg(d_pre_180_std), n_pre_180)
-
-            n_pre_270 = len(d_pre_270)
-            d_pre_270_mean = circmean(d_pre_270)
-            d_pre_270_std = circstd(d_pre_270)
-            print("pre 270:", np.rad2deg(d_pre_270_mean), np.rad2deg(d_pre_270_std), n_pre_270)
-
-        n_learn = len(d_learn)
-        d_learn_mean = circmean(d_learn, high=np.pi, low=-np.pi)
-        d_learn_std = circstd(d_learn)
-        print("learn:", np.rad2deg(d_learn_mean), np.rad2deg(d_learn_std), n_learn)
-
-        if d_learn_std > np.pi/2:
-            d_learn_000 = d_learn[np.all([-bimodal_tol/2 <= ((d_learn + np.pi) % (2 * np.pi) - np.pi),
-                                         ((d_learn + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
-            d_learn_090 = d_learn[np.all([-bimodal_tol/2 <= ((d_learn - np.pi/2 + np.pi) % (2 * np.pi) - np.pi),
-                                         ((d_learn - np.pi/2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
-            d_learn_180 = d_learn[np.all([-bimodal_tol/2 <= ((d_learn - np.pi + np.pi) % (2 * np.pi) - np.pi),
-                                         ((d_learn - np.pi + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
-            d_learn_270 = d_learn[np.all([-bimodal_tol/2 <= ((d_learn + np.pi/2 + np.pi) % (2 * np.pi) - np.pi),
-                                         ((d_learn + np.pi/2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
-
-            n_learn_000 = len(d_learn_000)
-            d_learn_000_mean = circmean(d_learn_000)
-            d_learn_000_std = circstd(d_learn_000)
-            print("learn   0:", np.rad2deg(d_learn_000_mean), np.rad2deg(d_learn_000_std), n_learn_000)
-
-            n_learn_090 = len(d_learn_090)
-            d_learn_090_mean = circmean(d_learn_090)
-            d_learn_090_std = circstd(d_learn_090)
-            print("learn  90:", np.rad2deg(d_learn_090_mean), np.rad2deg(d_learn_090_std), n_learn_090)
-
-            n_learn_180 = len(d_learn_180)
-            d_learn_180_mean = circmean(d_learn_180)
-            d_learn_180_std = circstd(d_learn_180)
-            print("learn 180:", np.rad2deg(d_learn_180_mean), np.rad2deg(d_learn_180_std), n_learn_180)
-
-            n_learn_270 = len(d_learn_270)
-            d_learn_270_mean = circmean(d_learn_270)
-            d_learn_270_std = circstd(d_learn_270)
-            print("learn 270:", np.rad2deg(d_learn_270_mean), np.rad2deg(d_learn_270_std), n_learn_270)
-
-        n_post = len(d_post)
-        d_post_mean = circmean(d_post, high=np.pi, low=-np.pi)
-        d_post_std = circstd(d_post)
-        print("post:", np.rad2deg(d_post_mean), np.rad2deg(d_post_std), n_post)
-
-        if d_post_std > np.pi/2:
-            d_post_000 = d_post[np.all([-bimodal_tol/2 <= ((d_post + np.pi) % (2 * np.pi) - np.pi),
-                                       ((d_post + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
-            d_post_090 = d_post[np.all([-bimodal_tol/2 <= ((d_post - np.pi/2 + np.pi) % (2 * np.pi) - np.pi),
-                                       ((d_post - np.pi/2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
-            d_post_180 = d_post[np.all([-bimodal_tol/2 <= ((d_post - np.pi + np.pi) % (2 * np.pi) - np.pi),
-                                       ((d_post - np.pi + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
-            d_post_270 = d_post[np.all([-bimodal_tol/2 <= ((d_post + np.pi/2 + np.pi) % (2 * np.pi) - np.pi),
-                                       ((d_post + np.pi/2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol/2], axis=0)]
-
-            n_post_000 = len(d_post_000)
-            d_post_000_mean = circmean(d_post_000)
-            d_post_000_std = circstd(d_post_000)
-            print("post   0:", np.rad2deg(d_post_000_mean), np.rad2deg(d_post_000_std), n_post_000)
-
-            n_post_090 = len(d_post_090)
-            d_post_090_mean = circmean(d_post_090)
-            d_post_090_std = circstd(d_post_090)
-            print("post  90:", np.rad2deg(d_post_090_mean), np.rad2deg(d_post_090_std), n_post_090)
-
-            n_post_180 = len(d_post_180)
-            d_post_180_mean = circmean(d_post_180)
-            d_post_180_std = circstd(d_post_180)
-            print("post 180:", np.rad2deg(d_post_180_mean), np.rad2deg(d_post_180_std), n_post_180)
-
-            n_post_270 = len(d_post_270)
-            d_post_270_mean = circmean(d_post_270)
-            d_post_270_std = circstd(d_post_270)
-            print("post 270:", np.rad2deg(d_post_270_mean), np.rad2deg(d_post_270_std), n_post_270)
-
-    draw_gradients(ax, radius=1.)
-
-    kappa = 10
-    # density_pre = gaussian_kde(d_pre, bw_method=partial(my_kde_bandwidth, fac=.5))
-    x, density_pre = vonmises_fft_kde(d_pre, kappa=kappa, n_bins=36)
-    x, density_learn = vonmises_fft_kde(d_learn, kappa=kappa, n_bins=36)
-    x, density_post = vonmises_fft_kde(d_post, kappa=kappa, n_bins=36)
-
-    rein_c = 'r' if "punishment" in reinforcements else "g"
-    ax.fill_between(x, density_pre * 0., density_pre, facecolor='b', alpha=.2)
-    ax.plot(x, density_pre, 'b', lw=.5)
-    ax.fill_between(x, density_learn * 0., density_learn, facecolor=rein_c, alpha=.2)
-    ax.plot(x, density_learn, rein_c, lw=.5)
-    ax.fill_between(x, density_post * 0., density_post, facecolor='k', alpha=.2)
-    ax.plot(x, density_post, 'k', lw=.5)
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.set_ylim([0, 1])
-
-
-def plot_arena_box(df, name="arena-box", show=True):
+def plot_arena_box(df, max_repeat=None, name="arena-box", show=True):
     """
     Plots box-plots based on the arena statistics.
 
@@ -1300,23 +1106,30 @@ def plot_arena_box(df, name="arena-box", show=True):
     ----------
     df: pd.DataFrame
         contains the stats extracted from the flies running in the arena
+    max_repeat : int, optional
+        the maximum repeat to visualise. Default is None
     name: str, optional
         it will be used as the title of the figure. Default is 'arena-box'
     show: bool, optional
         if True, it shows the plot. Default is True
     """
 
-    mechanisms = [["susceptible"], ["restrained"], ["long-term memory"],
-                  ["susceptible", "restrained", "long-term memory"]]
+    repeats = np.unique(df["repeat"])
+    if max_repeat is not None:
+        repeats = repeats[repeats <= max_repeat]
+    repeats = list(repeats)
+    # mechanisms = [["susceptible"], ["restrained"], ["long-term memory"],
+    #               ["susceptible", "restrained", "long-term memory"]]
     reinforcements = ["punishment", "reward"]
     odours = ["A", "B", "AB"]
-    ms, rs, os = np.meshgrid(mechanisms, reinforcements, odours)
+    ms, rs, os = np.meshgrid(repeats, reinforcements, odours)
 
-    labels, data = [""] * 24, [[]] * 24
-    for mechanism, reinforcement, odour in zip(ms.flatten(), rs.flatten(), os.flatten()):
+    labels, data = [""] * (6 * len(repeats)), [[]] * (6 * len(repeats))
+    for repeat, reinforcement, odour in zip(ms.flatten(), rs.flatten(), os.flatten()):
 
-        mechanisms_not = list({"susceptible", "restrained", "long-term memory"} - set(mechanism))
-        dff = df[np.all([df[m] for m in mechanism] + [~df[m] for m in mechanisms_not], axis=0)]
+        # mechanisms_not = list({"susceptible", "restrained", "long-term memory"} - set(mechanism))
+        # dff = df[np.all([df[m] for m in mechanism] + [~df[m] for m in mechanisms_not], axis=0)]
+        dff = df[np.any([df["repeat"] == repeat], axis=0)]
         dff = dff[np.any([dff["reinforcement"] == reinforcement], axis=0)]
         dff = dff[np.any([dff["paired odour"] == odour], axis=0)]
 
@@ -1324,21 +1137,20 @@ def plot_arena_box(df, name="arena-box", show=True):
         d_learn = np.array(dff[dff["phase"] == "learn"]["PI"])
         d_post = np.array(dff[dff["phase"] == "post"]["PI"])
 
-        i_mecha = mechanisms.index(mechanism)
+        # i_mecha = mechanisms.index(mechanism)
+        i_repea = repeats.index(repeat)
         i_reinf = reinforcements.index(reinforcement)
         i_odour = odours.index(odour)
-        i = i_mecha * 6 + i_reinf * 3 + i_odour
-        label = "%s%s-%s" % (reinforcement[0],
-                             "".join([m[0] for m in mechanism]) if isinstance(mechanism, list) else mechanism[0],
-                             odour.lower())
+        i = i_repea * 6 + i_reinf * 3 + i_odour
+        label = "%s-%s-%02d" % (odour.lower(), reinforcement[0], repeat)
 
         labels[i] = label
         data[i] = [d_pre, d_learn, d_post]
 
-    plt.figure(name, figsize=(4, 4))
+    plt.figure(name, figsize=(4, len(repeats)))
     ticks = []
     for i in range(len(labels)):
-        plt.subplot(4, 1, i // 6 + 1)
+        plt.subplot(len(repeats), 1, i // 6 + 1)
         plt.plot([0, 7], [0, 0], 'grey', lw=2)
         data_0 = np.array(data[i][0])
         plt.boxplot(data_0[~np.isnan(data_0)], positions=[i % 6 + 0.8], notch=True, patch_artist=True,
@@ -1363,18 +1175,19 @@ def plot_arena_box(df, name="arena-box", show=True):
                     capprops=dict(color="k"),
                     medianprops=dict(color="k"))
         if i < 6:
-            title = labels[i][3:].upper() + "+" + labels[i][0]
+            title = labels[i].split('-')[0].upper() + "+" + labels[i].split('-')[1]
             title = title.replace("p", "shock")
             title = title.replace("r", "sugar")
             title = title.replace("AB", "A/B")
             ticks.append(title)
-        if i >= 18:
+        if i // 6 >= len(repeats) - 1:
             plt.xticks([1, 2, 3, 4, 5, 6], ticks)
         else:
             plt.xticks([1, 2, 3, 4, 5, 6], [""] * 6)
 
         if i % 6 == 0:
-            plt.ylabel(["s (PI)", "r (PI)", "m (PI)", "s/r/m (PI)"][i // 6])
+            # plt.ylabel(["s (PI)", "r (PI)", "m (PI)", "s/r/m (PI)"][i // 6])
+            plt.ylabel("r%02d (PI)" % repeats[i // 6])
         plt.yticks([-1, 0, 1], ["A", "0", "B"])
         plt.ylim([-1.05, 1.05])
         plt.xlim([.5, 6.5])
@@ -1382,82 +1195,6 @@ def plot_arena_box(df, name="arena-box", show=True):
     plt.tight_layout()
     if show:
         plt.show()
-
-
-def _get_bimodal_mean(data, bimodal_tol=np.pi, verbose=False):
-    """
-    Gets the data and tries to identify bimodal distributions. It returns a list of means, standard deviations and
-    number of samples, containing one entry per identified model.
-
-    Parameters
-    ----------
-    data: np.ndarray
-        the data containing directions in rads
-    bimodal_tol: float, optional
-        the tolerance of bimodal distributions. Default is pi
-    verbose: bool, optional
-        whether to print out feedback while identifying the distributions or not. Default is False
-
-    Returns
-    -------
-    d_mean: list
-        list with the means
-    d_std: list
-        list with the standard deviations
-    n: list
-        list with the number of samples associated with the models
-    """
-    n = [len(data)]
-    d_mean = [circmean(data)]
-    d_std = [circstd(data)]
-
-    if d_std[0] > np.pi / 3:
-        d_000 = data[np.all([-bimodal_tol / 2 <= ((data + np.pi) % (2 * np.pi) - np.pi),
-                             ((data + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol / 2], axis=0)]
-        d_090 = data[np.all([-bimodal_tol / 2 <= ((data - np.pi / 2 + np.pi) % (2 * np.pi) - np.pi),
-                             ((data - np.pi / 2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol / 2], axis=0)]
-        d_180 = data[np.all([-bimodal_tol / 2 <= ((data - np.pi + np.pi) % (2 * np.pi) - np.pi),
-                             ((data - np.pi + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol / 2], axis=0)]
-        d_270 = data[np.all([-bimodal_tol / 2 <= ((data + np.pi / 2 + np.pi) % (2 * np.pi) - np.pi),
-                             ((data + np.pi / 2 + np.pi) % (2 * np.pi) - np.pi) < bimodal_tol / 2], axis=0)]
-
-        n_000 = len(d_000)
-        d_000_mean = circmean(d_000)
-        d_000_std = circstd(d_000)
-        if verbose:
-            print("data   0:", np.rad2deg(d_000_mean), np.rad2deg(d_000_std), n_000)
-
-        n_090 = len(d_090)
-        d_090_mean = circmean(d_090)
-        d_090_std = circstd(d_090)
-        if verbose:
-            print("data  90:", np.rad2deg(d_090_mean), np.rad2deg(d_090_std), n_090)
-
-        n_180 = len(d_180)
-        d_180_mean = circmean(d_180)
-        d_180_std = circstd(d_180)
-        if verbose:
-            print("data 180:", np.rad2deg(d_180_mean), np.rad2deg(d_180_std), n_180)
-
-        n_270 = len(d_270)
-        d_270_mean = circmean(d_270)
-        d_270_std = circstd(d_270)
-        if verbose:
-            print("data 270:", np.rad2deg(d_270_mean), np.rad2deg(d_270_std), n_270)
-
-        if d_000_std < np.pi / 6 and d_180_std < np.pi / 6:
-            # bimodal on horizontal axis
-            d_mean = [d_000_mean, d_180_mean]
-            d_std = [d_000_std, d_180_std]
-            n = [n_000, n_180]
-
-        elif d_090_std < np.pi / 6 and d_270_std < np.pi / 6:
-            # bimodal on vertical axis
-            d_mean = [d_090_mean, d_270_mean]
-            d_std = [d_090_std, d_270_std]
-            n = [n_090, n_270]
-
-    return d_mean, d_std, n
 
 
 def draw_gradients(ax, radius=1., draw_sources=True, cmap="coolwarm", levels=20, vminmax=3):
@@ -1500,8 +1237,12 @@ def draw_gradients(ax, radius=1., draw_sources=True, cmap="coolwarm", levels=20,
     ax.contour(rho-np.pi/2, dist, p_b - p_a, levels=[-.0001, .0001], colors='lightsteelblue', linestyles='--')
 
     if draw_sources:
-        ax.scatter(np.angle(a_mean), np.absolute(a_mean), s=20, color="C0", label="odour A")
-        ax.scatter(np.angle(b_mean), np.absolute(b_mean), s=20, color="C1", label="odour B")
+        ax.add_patch(patches.Circle((np.angle(a_mean), np.absolute(a_mean)), radius=FruitFly.r_radius, linestyle="--",
+                                    color="C0", linewidth=2, fill=False))
+        ax.scatter(np.angle(a_mean), np.absolute(a_mean), s=FruitFly.r_radius * 100, color="C0", label="odour A")
+        ax.add_patch(patches.Circle((np.angle(b_mean), np.absolute(b_mean)), radius=FruitFly.r_radius, linestyle="--",
+                                    color="C1", linewidth=2, fill=False))
+        ax.scatter(np.angle(b_mean), np.absolute(b_mean), s=FruitFly.r_radius * 100, color="C1", label="odour B")
 
     return ax
 
@@ -1695,61 +1436,3 @@ def _plot_arena_weights(data, d_names, name="arena", ax=None, save=False, show=T
         plt.savefig(name + ".svg", dpi=600)
     if show:
         plt.show()
-
-
-def vonmises_pdf(x, mu, kappa):
-    """
-    The von-Mises density function
-
-    Parameters
-    ----------
-    x: float, np.ndarray
-        samples
-    mu: float
-        mean value
-    kappa: float
-        the kappa parameter of the von-Mises distribution
-
-    Returns
-    -------
-    X: float, np.ndarray
-        the von-Mises PDF value
-    """
-    from scipy.special import i0
-
-    return np.exp(kappa * np.cos(x - mu)) / (2. * np.pi * i0(kappa))
-
-
-def vonmises_fft_kde(data, kappa, n_bins):
-    """
-    Calculates the bins for the von-Mises KDE using the data, the kappa parameter and the number of bins.
-
-    Parameters
-    ----------
-    data: np.ndarray
-        angles (in rads) of the directions of the flies
-    kappa: float
-        parameter for the von-Mises distribution
-    n_bins: int
-        number of bins
-
-    Returns
-    -------
-    bin_centre: np.ndarray
-        the centres of the bins created
-    kde: np.ndarray
-        the KDE values for these centres
-    """
-    bins = np.linspace(-np.pi, np.pi, n_bins + 1, endpoint=True)
-    hist_n, bin_edges = np.histogram(data, bins=bins)
-    bin_centers = np.mean([bin_edges[1:], bin_edges[:-1]], axis=0)
-    kernel = vonmises_pdf(
-        x=bin_centers,
-        mu=0,
-        kappa=kappa
-    )
-    kde = np.fft.fftshift(np.fft.irfft(np.fft.rfft(kernel) * np.fft.rfft(hist_n)))
-    kde /= np.trapz(kde, x=bin_centers)
-    bin_centers = np.r_[bin_centers, bin_centers[0]]
-    kde = np.r_[kde, kde[0]]
-    return bin_centers, kde

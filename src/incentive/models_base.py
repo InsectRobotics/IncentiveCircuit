@@ -22,7 +22,7 @@ from copy import copy
 class MBModel(object):
     def __init__(self, nb_pn=2, nb_kc=10, nb_mbon=6, nb_dan=6, nb_apl=0, learning_rule="default", nb_trials=24,
                  nb_timesteps=3, nb_kc_odour=5, nb_kc_odour_1=None, nb_kc_odour_2=None, leak=0., sharp_changes=True,
-                 rng=np.random.RandomState(2021)):
+                 nb_active_kcs=5, rng=np.random.RandomState(2021)):
         """
         The model of the mushroom body from the Drosophila melanogaster brain. It creates the connections from the
         Kenyon cells (KCs) to the output neurons (MBONs), from the MBONs to the dopaminergic neurons (DANs) and from
@@ -61,6 +61,8 @@ class MBModel(object):
             function. Default is 0, which mean no negative part
         sharp_changes: bool, optional
             when true allows sharp changes in the values. Default is True
+        nb_active_kcs: float, optional
+            we assume that a fixed number of KCs is active in every time-step. Default is 2.
         rng : np.random.RandomState
             the random pattern generator
         """
@@ -72,6 +74,7 @@ class MBModel(object):
         self.us_dims = 2  # dimensions of US signal
         self._t = 0  # internal time variable
         self._sharp_changes = sharp_changes
+        self._nb_active_kcs = nb_active_kcs
         self.rng = rng
 
         # Set the PN-to-KC weights
@@ -94,7 +97,7 @@ class MBModel(object):
                 s = nb_kc - nb_odour
             e = s + nb_odour
             # self.w_p2k[p, s:e] = 1
-            self.w_p2k[p, s:e] = nb_pn / nb_odour
+            self.w_p2k[p, s:e] = nb_pn / self._nb_active_kcs
 
         # create map from the US to the extrinsic neurons
         self.w_u2d = np.zeros((self.us_dims, nb_dan + nb_mbon), dtype=float)
@@ -232,8 +235,7 @@ class MBModel(object):
 
             # feed forward responses: PN(CS) -> KC
             k = cs @ self.w_p2k + rng.rand(self.nb_kc) * .001
-            k[np.argsort(k)[:self.nb_kc//2]] = 0.
-            # k[np.argsort(k)[:-2]] = 0.
+            k[np.argsort(k)[:-self._nb_active_kcs]] = 0.
 
             eta = float(1) / float(repeat)
             for r in range(repeat):

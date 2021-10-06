@@ -38,10 +38,10 @@ if __name__ == '__main__':
 
     rw = read_arg(["-rw", "--rescorla-wagner"])
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
-    repeat = read_arg(['-r', '--repeat'], vtype=int, default=4)
+    repeat = read_arg(['-r', '--repeat'], vtype=int, default=10)
 
     file_names = os.listdir(__data_dir__)
-    d_raw, cases, d_names = load_arena_paths(file_names, repeat=repeat, prediction_error=rw)
-    plot_arena_paths(d_raw, cases, d_names, figsize=(5, 4),
+    d_raw, cases, d_names, d_repeats = load_arena_paths(file_names, max_repeat=repeat, prediction_error=rw)
+    plot_arena_paths(d_raw, cases, d_names, d_repeats, "srm", figsize=(5, repeat),
                      name="%sarena-paths%s" % ("rw-" if rw else "", "-%02d" % repeat if repeat is not None else ""))
 
