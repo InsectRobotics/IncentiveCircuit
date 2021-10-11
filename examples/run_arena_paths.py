@@ -36,7 +36,7 @@ if __name__ == '__main__':
     from incentive.arena import load_arena_paths
     from incentive.plot import plot_arena_paths
 
-    nb_active_kcs = 8
+    nb_active_kcs = 5
     rpe = read_arg(["-rpe", "--reward-prediction-error"])
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
     repeat = read_arg(['-r', '--repeat'], vtype=int, default=10)

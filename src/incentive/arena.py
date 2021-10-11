@@ -27,14 +27,14 @@ __data_dir__ = os.path.realpath(os.path.join(__dir__, "data", "arena"))
 
 class FruitFly(object):
     a_source = .6+0j
-    a_sigma = .15
     b_source = -.6+0j
-    b_sigma = .2
-    r_radius = .4
+    a_sigma = .3
+    b_sigma = .3
+    r_radius = .3
     i_threshold = .2
 
     def __init__(self, nb_kcs=10, nb_kc_odour_a=None, nb_kc_odour_b=None, nb_steps=1000, nb_in_trial=1,
-                 learning_rule="dlr", nb_active_kcs=2, gain=.02, rng=np.random.RandomState(2021)):
+                 learning_rule="dlr", nb_active_kcs=2, ltm_speed=.3, gain=.02, rng=np.random.RandomState(2021)):
         """
         Simulation parameters and methods for the fly running in an arena with two odour distributions. The incentive
         circuit is used in order to find the most attractive or aversive direction and move towards or away from it.
@@ -61,7 +61,7 @@ class FruitFly(object):
             the random generator
         """
         self.mb = IncentiveCircuit(
-            learning_rule=learning_rule, nb_apl=0, nb_timesteps=nb_in_trial, nb_trials=nb_steps,
+            learning_rule=learning_rule, nb_apl=0, nb_timesteps=nb_in_trial, nb_trials=nb_steps, ltm_speed=ltm_speed,
             nb_active_kcs=nb_active_kcs, nb_kc=nb_kcs, nb_kc_odour_1=nb_kc_odour_a, nb_kc_odour_2=nb_kc_odour_b,
             has_real_names=False, has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
         self.xy = np.zeros(nb_steps, dtype=complex)

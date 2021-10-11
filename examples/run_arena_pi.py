@@ -24,7 +24,7 @@ if __name__ == '__main__':
     from incentive.plot import plot_arena_box
     from incentive.arena import load_arena_stats
 
-    nb_active_kcs = 8
+    nb_active_kcs = 5
     rpe = read_arg(["-rpe", "--reward-prediction-error"])
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
 

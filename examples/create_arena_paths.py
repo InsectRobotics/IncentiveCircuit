@@ -16,9 +16,10 @@ is being set by the restrained MBONs only, run
 
 """
 
-from incentive.tools import read_arg
+from incentive.tools import read_arg, ROOT_DIR
 
 import numpy as np
+import yaml
 import os
 
 __author__ = "Evripidis Gkanias"
@@ -30,18 +31,22 @@ __email__ = "ev.gkanias@ed.ac.uk"
 __status__ = "Production"
 
 
-# the directory of the file
-__dir__ = os.path.dirname(os.path.abspath(__file__))
+with open(os.path.join(os.path.join(ROOT_DIR, "data"), 'model-parameters.yml'), 'rb') as f:
+    model_params = yaml.load(f, Loader=yaml.BaseLoader)
+    """load the default parameters of the model"""
+
 
 if __name__ == '__main__':
     from incentive.arena import FruitFly
     from incentive import arena
 
-    nb_kcs = 10
-    nb_active_kcs = 8
-    sv = 1.
-    rv = 1.
-    mv = 1.
+    nb_kcs = int(model_params["number-kc"])
+    nb_kc1 = int(model_params["number-kc-odour-a"])
+    nb_kc2 = int(model_params["number-kc-odour-b"])
+    nb_active_kcs = int(model_params["number-kc-active"])
+    sv = float(model_params["susceptible-weight"])
+    rv = float(model_params["stm-weight"])
+    mv = float(model_params["ltm-weight"])
     nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=50)
     nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=100)  # seconds
     arena.__data_dir__ = directory = os.path.abspath(read_arg(["-d", "--dir"], vtype=str, default=arena.__data_dir__))
@@ -125,8 +130,9 @@ if __name__ == '__main__':
             print(name, end=' ')
             for i in range(nb_flies):
                 if len(flies) <= i:
-                    fly = FruitFly(rng=rng, nb_steps=nb_timesteps, nb_kcs=nb_kcs, nb_active_kcs=nb_active_kcs,
-                                   gain=0.05)
+                    fly = FruitFly(rng=rng, nb_steps=nb_timesteps, gain=0.05, nb_kcs=nb_kcs,
+                                   nb_kc_odour_a=nb_kc1, nb_kc_odour_b=nb_kc2, nb_active_kcs=nb_active_kcs,
+                                   ltm_speed=float(model_params["ltm-speed"]))
                     flies.append(fly)
                 else:
                     fly = flies[i]

@@ -15,6 +15,9 @@ from .plot import *
 from .models_base import MBModel
 
 import sys
+import os
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def a_structure(model, models, only_nids=True):
