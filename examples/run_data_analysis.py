@@ -22,7 +22,8 @@ __maintainer__ = "Evripidis Gkanias"
 __email__ = "ev.gkanias@ed.ac.uk"
 __status__ = "Production"
 
-from incentive.imaging import load_data, plot_phase_overlap_mean_responses_from_data
+from incentive.imaging import load_data, get_summarised_responses
+from incentive.plot import plot_phase_overlap_mean_responses_from_data
 from incentive.tools import read_arg
 
 
@@ -59,9 +60,12 @@ if __name__ == '__main__':
         print("mean #flies/neuron:", nb_flies / nb_neurons)
 
     if read_arg(["-a", "--all"]):
+        sum_res = get_summarised_responses(df, experiment=experiment)
         # plot the data from all the available neurons
-        plot_phase_overlap_mean_responses_from_data(df, experiment)
+        neurons = None
     else:
         # plot the data from the selected neurons for the TSM model
         neurons = [33, 39, 21, 41, 42, 30, 13, 16, 14, 17, 12, 2]
-        plot_phase_overlap_mean_responses_from_data(df, experiment, nids=neurons, only_nids=read_arg(["--only-nids"]))
+        sum_res = get_summarised_responses(df, experiment=experiment, nids=neurons, only_nids=read_arg(["--only-nids"]))
+
+    plot_phase_overlap_mean_responses_from_data(sum_res, only_nids=read_arg(["--only-nids"]))

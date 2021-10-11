@@ -22,6 +22,8 @@ __maintainer__ = "Evripidis Gkanias"
 __email__ = "ev.gkanias@ed.ac.uk"
 __status__ = "Production"
 
+import numpy as np
+
 from incentive.tools import read_arg
 
 import os
@@ -36,14 +38,18 @@ if __name__ == '__main__':
     from incentive.arena import load_arena_traces
     from incentive.plot import plot_arena_traces, plot_arena_weights
 
-    rw = read_arg(["-rw", "--rescorla-wagner"])
+    rpe = read_arg(["-rpe", "--rescorla-wagner"])
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
     repeat = read_arg(['-r', '--repeat'], vtype=int, default=10)
 
     file_names = os.listdir(__data_dir__)
-    d_res, d_wei, d_nam, cases, d_names = load_arena_traces(file_names, repeat=repeat, prediction_error=rw)
+    for r in np.arange(1, repeat+1):
+        d_res, d_wei, d_nam, cases, d_names = load_arena_traces(file_names, nb_active_kcs=2, repeat=r,
+                                                                prediction_error=rpe)
 
-    # plot_arena_traces(d_res, d_nam, cases, d_names, figsize=(20, 5),
-    #                   name="%sarena-trace%s" % ("rw-" if rw else "", "-%02d" % repeat if repeat is not None else ""))
-    plot_arena_weights(d_wei, d_nam, cases, d_names, figsize=(20, 5),
-                       name="%sarena-weights%s" % ("rw-" if rw else "", "-%02d" % repeat if repeat is not None else ""))
+        # plot_arena_traces(d_res, d_nam, cases, d_names, figsize=(20, 5),
+        #                   name="%sarena-trace%s" % ("rpe-" if rpe else "",
+        #                                             "-%02d" % repeat if repeat is not None else ""))
+        plot_arena_weights(d_wei, d_nam, cases, d_names, figsize=(10, 5),
+                           name="%sarena-weights%s" % ("rpe-" if rpe else "",
+                                                       "-%02d" % r if repeat is not None else ""))

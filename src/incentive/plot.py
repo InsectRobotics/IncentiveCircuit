@@ -14,115 +14,20 @@ __maintainer__ = "Evripidis Gkanias"
 from .models_base import MBModel
 
 from typing import List
-from scipy.stats import circmean, circstd
-from matplotlib import cm
-from matplotlib import patches
-from matplotlib.colors import Normalize
+from matplotlib import cm, colors
+from matplotlib.colors import Normalize, ListedColormap
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-def plot_population(ms, nids=None, vmin=-2., vmax=2., only_nids=False, figsize=None):
-    """
-    Plots the responses as a matrix where the rows are different neurons and the columns are the time-steps. The colour
-    reveals the actual responses of the neurons.
-
-    Parameters
-    ----------
-    ms: List[MBModel]
-        the models where the values are taken from
-    nids: List[int]
-        the indices of the neurons that we want to show their names
-    vmin: float
-        the lower bound for the colour map. Default is -2
-    vmax: float
-        the upper bound for the colour map. Default is 2
-    only_nids: bool
-        when True, only the specified neurons are plotted
-    figsize: list
-        the size of the figure
-    """
-    title = "motivation-" + '-'.join(str(ms[0]).split("'")[1:-1:2])
-
-    nb_models = len(ms)
-    xticks = ["%d" % (i+1) for i in range(16)]
-
-    if figsize is None:
-        figsize = (7.5, 10)
-    plt.figure(title, figsize=figsize)
-
-    for i in range(nb_models):
-        nb_timesteps = ms[i].nb_timesteps
-        nb_trials = ms[i].nb_trials
-
-        yticks = np.array(ms[i].names)
-        if nids is None:
-            if ms[i].neuron_ids is None:
-                nids = np.arange(ms[i].nb_dan + ms[i].nb_mbon)[::8]
-            else:
-                nids = ms[i].neuron_ids
-        ylim = (len(nids) if only_nids else (ms[i].nb_dan + ms[i].nb_mbon)) - 1
-
-        v = ms[i]._v
-        w = ms[i].w_k2m
-
-        ax = plt.subplot(nb_models * 2, 2, 1 + i * 4)
-        # trial, odour, time-step, neuron
-        va = v[1:].reshape((-1, 2, nb_timesteps, v.shape[-1]))[:, ::2].reshape((-1, v.shape[-1]))
-        if only_nids:
-            va = va[:, nids]
-        plt.imshow(va.T, vmin=vmin, vmax=vmax, cmap="coolwarm", aspect="auto")
-        if "reversal" in ms[i].routine_name:
-            plt.plot([np.array([8, 9, 10, 11, 12, 13]) * nb_timesteps - 1] * 2, [[0] * 6, [ylim] * 6], 'r-')
-        elif "unpaired" in ms[i].routine_name:
-            plt.plot([(np.array([8, 9, 10, 11, 12, 13]) - 1) * nb_timesteps] * 2, [[0] * 6, [ylim] * 6], 'r-')
-        plt.xticks(nb_timesteps * np.arange(nb_trials // 2) + nb_timesteps / 4, xticks[:nb_trials // 2])
-        plt.yticks(np.arange(len(nids)) if only_nids else nids, [r'$%s$' % tick for tick in yticks[nids]])
-        ax.yaxis.set_ticks_position('both')
-        plt.title("%s - odour A - value" % ms[i].routine_name, color="C%d" % (2 * i + 0))
-
-        ax = plt.subplot(nb_models * 2, 2, 2 + i * 4)
-        vb = v[1:].reshape((-1, 2, nb_timesteps, v.shape[-1]))[:, 1::2].reshape((-1, v.shape[-1]))
-        if only_nids:
-            vb = vb[:, nids]
-        plt.imshow(vb.T, vmin=vmin, vmax=vmax, cmap="coolwarm", aspect="auto")
-        plt.plot([np.array([2, 3, 4, 5, 6]) * nb_timesteps - 1] * 2, [[0] * 5, [ylim] * 5], 'r-')
-        plt.xticks(nb_timesteps * np.arange(nb_trials // 2) + nb_timesteps / 4, xticks[:nb_trials // 2])
-        plt.yticks(np.arange(len(nids)) if only_nids else nids, [r'$%s$' % tick for tick in yticks[nids]])
-        ax.yaxis.set_ticks_position('both')
-        ax.tick_params(labelleft=False, labelright=True)
-        plt.title("%s - odour B - value" % ms[i].routine_name, color="C%d" % (2 * i + 1))
-
-        ax = plt.subplot(nb_models * 2, 2, 3 + i * 4)
-        wa = w[1:, 0]
-        if only_nids:
-            wa = wa[:, nids]
-        plt.imshow(wa.T, vmin=vmin, vmax=vmax, cmap="coolwarm", aspect="auto")
-        if "reversal" in ms[i].routine_name:
-            plt.plot([np.array([8, 9, 10, 11, 12, 13]) * 2 * nb_timesteps - 1] * 2, [[0] * 6, [ylim] * 6], 'r-')
-        elif "unpaired" in ms[i].routine_name:
-            plt.plot([(np.array([8, 9, 10, 11, 12, 13]) - 1) * 2 * nb_timesteps] * 2, [[0] * 6, [ylim] * 6], 'r-')
-        plt.xticks(2 * nb_timesteps * np.arange(nb_trials // 2) + nb_timesteps, xticks[:nb_trials // 2])
-        plt.yticks(np.arange(len(nids)) if only_nids else nids, [r'$%s$' % tick for tick in yticks[nids]])
-        ax.yaxis.set_ticks_position('both')
-        plt.title("%s - odour A - weights" % ms[i].routine_name, color="C%d" % (2 * i + 0))
-
-        ax = plt.subplot(nb_models * 2, 2, 4 + i * 4)
-        wb = w[1:, 5]
-        if only_nids:
-            wb = wb[:, nids]
-        plt.imshow(wb.T, vmin=vmin, vmax=vmax, cmap="coolwarm", aspect="auto")
-        plt.plot([np.array([2, 3, 4, 5, 6]) * 2 * nb_timesteps - 1] * 2, [[0] * 5, [ylim] * 5], 'r-')
-        plt.xticks(2 * nb_timesteps * np.arange(nb_trials // 2) + nb_timesteps, xticks[:nb_trials // 2])
-        plt.yticks(np.arange(len(nids)) if only_nids else nids, [r'$%s$' % tick for tick in yticks[nids]])
-        ax.yaxis.set_ticks_position('both')
-        ax.tick_params(labelleft=False, labelright=True)
-        plt.title("%s - odour B - weights" % ms[i].routine_name, color="C%d" % (2 * i + 1))
-
-    # plt.colorbar()
-    plt.tight_layout()
-    plt.show()
+REWARD_COLOUR = np.array(colors.to_rgb("green"))
+PUNISHMENT_COLOUR = np.array(colors.to_rgb("red"))
+ODOUR_A_COLOUR = np.array([246, 74, 138]) / 255
+ODOUR_B_COLOUR = np.array([255, 165, 0]) / 255
+ODOUR_A_CMAP = ListedColormap(np.clip(np.linspace(np.ones(3), ODOUR_A_COLOUR, 100), 0, 1))
+ODOUR_B_CMAP = ListedColormap(np.clip(np.linspace(np.ones(3), ODOUR_B_COLOUR, 100), 0, 1))
+PRETRAINING_COLOUR = np.array(colors.to_rgb("blue"))
+POSTRAINING_COLOUR = np.array(colors.to_rgb("black"))
 
 
 def plot_weights_matrices(ms, nids=None, vmin=-2., vmax=2., only_nids=False, figsize=None):
@@ -221,7 +126,7 @@ def plot_weights_matrices(ms, nids=None, vmin=-2., vmax=2., only_nids=False, fig
     plt.show()
 
 
-def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=None):
+def plot_phase_overlap_mean_responses_from_model(ms, nids=None, only_nids=True, figsize=None):
     """
     Plots the average responses of the neurons per phase/trial with overlapping lines.
 
@@ -292,7 +197,6 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
 
     vaj_mean = np.mean(vajs, axis=0)
     vbj_mean = np.mean(vbjs, axis=0)
-    print(vaj_mean.shape)
 
     for i in range(nb_models-1, -1, -1):
         nb_timesteps = ms[0][i].nb_timesteps
@@ -308,8 +212,7 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
 
         for j in range(nb_neurons):
             label = None
-            s = (i + 1) / (nb_models + 1)
-            a_col = np.array([s * 205, s * 222, 238]) / 255.
+            a_col = ODOUR_A_CMAP(1 - (i + 1) / (nb_models + 1))
             if j == nb_neurons - 1:
                 label = ms[0][i].routine_name
 
@@ -336,8 +239,7 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
                 axa.spines['top'].set_visible(False)
                 axa.spines['right'].set_visible(False)
 
-                s = (i + 2) / (nb_models + 1)
-                a_acol = np.array([s * 205, s * 222, 238]) / 255.
+                a_acol = ODOUR_A_CMAP(1 / (nb_models + 1))
                 axa.plot(x_[:4], vaj[:4], color=(.8, .8, .8))
                 axa.plot(x_[3:13], vaj[3:13], color=a_acol, label="acquisition")
                 subs.append(axa)
@@ -349,7 +251,7 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
                     "d" not in names[j] and "c" not in names[j] or "av" not in names[j]):
                 continue
             shock_i = [15, 17, 19, 21, 23]
-            subs[j].plot(x_[shock_i], vaj[shock_i], 'r.')
+            subs[j].plot(x_[shock_i], vaj[shock_i], color=PUNISHMENT_COLOUR, marker='.', linestyle=' ')
 
         # axb = plt.subplot(nb_models * 2, 2, 2 + i * 4)
         x_b = x_ + 1 - 1 / (nb_timesteps - 1)
@@ -357,8 +259,9 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
             jn = j + nb_neurons
 
             label = None
-            s = (i + 1) / (nb_models + 1)
-            b_col = np.array([255, s * 197, s * 200]) / 255.
+            b_col = ODOUR_B_CMAP(1 - (i + 1) / (nb_models + 1))
+            # b_col = ODOUR_B_COLOUR * np.array([1, s, s])
+            # b_col = np.array([255, s * 197, s * 200]) / 255.
             if j == nb_neurons - 1:
                 label = ms[0][i].routine_name
 
@@ -386,8 +289,7 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
                 axb.spines['top'].set_visible(False)
                 axb.spines['right'].set_visible(False)
 
-                s = (i + 2) / (nb_models + 1)
-                b_acol = np.array([255, s * 197, s * 200]) / 255.
+                b_acol = ODOUR_B_CMAP(1 / (nb_models + 1))
                 axb.plot(x_b[:3], vbj[:3], color=(.8, .8, .8))
                 axb.plot(x_b[2:12], vbj[2:12], color=b_acol, label="acquisition")
                 subs.append(axb)
@@ -399,12 +301,147 @@ def plot_phase_overlap_mean_responses(ms, nids=None, only_nids=True, figsize=Non
             if i > 0 or "d" not in names[j] and "c" not in names[j] or "av" not in names[j]:
                 continue
             shock_i = [3, 5, 7, 9, 11]
-            subs[jn].plot(x_b[shock_i], vbj[shock_i], 'r.')
+            subs[jn].plot(x_b[shock_i], vbj[shock_i], color=PUNISHMENT_COLOUR, marker='.', linestyle=' ')
 
     if only_nids:
         subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left',
                                       framealpha=0., labelspacing=1.)
         subs[-1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left', framealpha=0., labelspacing=1)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_phase_overlap_mean_responses_from_data(sum_res, only_nids=True, figsize=None, show_legend=True):
+    """
+    Plots the average responses of the neurons per phase/trial for a specific experiment with overlapping phases.
+
+    Parameters
+    ----------
+    sum_res: dict
+        the dictionary with the responses
+    only_nids: bool, optional
+        whether to plot only the responses of the specified neurons. Default is True
+    figsize: tuple, optional
+        the size of the figure
+    show_legend: bool, optional
+        whether to also plot the legend
+    """
+    import matplotlib.pyplot as plt
+
+    title = "individuals-from-data"
+
+    genotypes = [key for key in sum_res.keys()]
+
+    ymin, ymax = 0, 2
+    y_lim = [ymin - .1, ymax + .1]
+
+    nb_genotypes = len(genotypes)
+    nb_plots = nb_genotypes * 2
+    subs = []
+
+    nb_rows = 4
+    nb_cols = nb_plots // nb_rows
+    while nb_cols > 7:
+        nb_rows += 4
+        nb_cols = nb_plots // nb_rows + 1
+
+    if figsize is None:
+        figsize = (8 - 2 * int(not only_nids), nb_rows + 1)
+    plt.figure(title, figsize=figsize)
+
+    xticks_b = 2 * np.arange(10) + 4
+    xticks_a = xticks_b.copy() - 1
+    xticks_a[5:] += 2
+
+    for j, genotype in enumerate(genotypes):
+
+        xa = sum_res[genotype]["xa"]
+        data_a_q25 = sum_res[genotype]["qa25"]
+        data_a_q50 = sum_res[genotype]["qa50"]
+        data_a_q75 = sum_res[genotype]["qa75"]
+
+        a_col = ODOUR_A_CMAP(.8)
+
+        if len(subs) <= j:
+            axa = plt.subplot(nb_rows, nb_cols, 2 * (j // nb_cols) * nb_cols + j % nb_cols + 1)
+            axa.set_xticks(xticks_a)
+            axa.set_yticks([0, ymax/2, ymax])
+            axa.set_ylim(y_lim)
+            axa.set_xlim([2, 24])
+            axa.tick_params(labelsize=8)
+            axa.set_xticklabels(["" for _ in xticks_a])
+            axa.set_title(r"$%s$" % genotype, fontsize=8)
+            if j % nb_cols == 0:
+                axa.set_ylabel("Odour A", fontsize=8)
+            else:
+                axa.set_yticklabels([""] * 3)
+                axa.spines['left'].set_visible(False)
+                axa.set_yticks([])
+            axa.spines['top'].set_visible(False)
+            axa.spines['right'].set_visible(False)
+
+            a_acol = ODOUR_A_CMAP(.2)
+            axa.fill_between(xa[2:12], data_a_q25[2:12], data_a_q75[2:12], color=a_acol, alpha=0.2)
+            axa.plot(xa[:3], data_a_q50[:3], color=(.8, .8, .8), lw=2)
+            axa.plot(xa[2:12], data_a_q50[2:12], color=a_acol, lw=2, label="acquisition")
+            subs.append(axa)
+        subs[-1].fill_between(xa[14:], data_a_q25[14:], data_a_q75[14:], color=a_col, alpha=0.2)
+        subs[-1].plot(xa[11:15], data_a_q50[11:15], color=(.8, .8, .8), lw=2)
+        subs[-1].plot(xa[14:], data_a_q50[14:], color=a_col, lw=2, label="reversal")
+        subs[-1].plot([15, 17], data_a_q50[[15, 17]], color=PUNISHMENT_COLOUR, marker='.', linestyle=' ')
+
+    for j, genotype in enumerate(genotypes):
+
+        xb = sum_res[genotype]["xb"]
+        data_b_q25 = sum_res[genotype]["qb25"]
+        data_b_q50 = sum_res[genotype]["qb50"]
+        data_b_q75 = sum_res[genotype]["qb75"]
+
+        b_col = ODOUR_B_CMAP(.8)
+
+        jn = j + (nb_rows * nb_cols) // 2
+
+        if len(subs) <= jn:
+            axb = plt.subplot(nb_rows, nb_cols, (2 * (j // nb_cols) + 1) * nb_cols + j % nb_cols + 1)
+            axb.set_xticks(xticks_b)
+            axb.set_yticks([0, ymax/2, ymax])
+            axb.set_ylim(y_lim)
+            axb.set_xlim([2, 24])
+            axb.tick_params(labelsize=8)
+            axb.set_xticklabels(["%s" % (i + 1) for i in range(5)] * 2)
+            if jn % nb_cols == 0:
+                axb.set_ylabel("Odour B", fontsize=8)
+                axb.text(-6, -.8, "Trial #", fontsize=8)
+            else:
+                axb.set_yticklabels([""] * 3)
+                axb.spines['left'].set_visible(False)
+                axb.set_yticks([])
+
+            axb.spines['top'].set_visible(False)
+            axb.spines['right'].set_visible(False)
+
+            b_acol = ODOUR_B_CMAP(0.2)
+
+            axb.fill_between(xb[2:12], data_b_q25[2:12], data_b_q75[2:12], color=b_acol, alpha=0.2)
+            axb.plot(xb[:3], data_b_q50[:3], color=(.8, .8, .8), lw=2)
+            axb.plot(xb[2:12], data_b_q50[2:12], color=b_acol, lw=2, label="acquisition")
+
+            subs.append(axb)
+
+        subs[-1].fill_between(xb[12:16], data_b_q25[12:], data_b_q75[12:], color=b_col, alpha=0.2)
+        subs[-1].plot(xb[11:13], data_b_q50[11:13], color=(.8, .8, .8), lw=2)
+        subs[-1].plot(xb[12:16], data_b_q50[12:], color=b_col, lw=2, label="reversal")
+        subs[-1].plot(xb[[3, 5, 7, 9, 11]], data_b_q50[[3, 5, 7, 9, 11]], color=PUNISHMENT_COLOUR,
+                      marker='.', linestyle=' ')
+
+    if show_legend:
+        subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left',
+                                      framealpha=0., labelspacing=1.)
+        subs[-1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left', framealpha=0., labelspacing=1)
+
+    # subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.), loc='upper left',
+    #                               framealpha=0., labelspacing=1.)
+    # subs[-1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.), loc='upper left', framealpha=0., labelspacing=1)
     plt.tight_layout()
     plt.show()
 
@@ -477,8 +514,7 @@ def plot_weights(ms, nids=None, only_nids=True, figsize=None):
         for j in range(nb_neurons):
 
             label = None
-            s = (i + 1) / (nb_models + 1)
-            a_col = np.array([s * 205, s * 222, 238]) / 255.
+            a_col = ODOUR_A_CMAP(1 - (i + 1) / (nb_models + 1))
             if j == nb_neurons - 1:
                 label = ms[i].routine_name
 
@@ -503,8 +539,7 @@ def plot_weights(ms, nids=None, only_nids=True, figsize=None):
                 axa.spines['top'].set_visible(False)
                 axa.spines['right'].set_visible(False)
 
-                s = (i + 2) / (nb_models + 1)
-                a_acol = np.array([s * 205, s * 222, 238]) / 255.
+                a_acol = ODOUR_A_CMAP(1 / (nb_models + 1))
                 axa.plot(x_[:4], waj[:4], color=(.8, .8, .8))
                 axa.plot(x_[3:13], waj[3:13], color=a_acol, label="acquisition")
                 subs.append(axa)
@@ -516,7 +551,7 @@ def plot_weights(ms, nids=None, only_nids=True, figsize=None):
                     "d" not in names[j] and "c" not in names[j] or "av" not in names[j]):
                 continue
             shock_i = [15, 17, 19, 21, 23]
-            subs[j].plot(x_[shock_i], waj[shock_i], 'r.')
+            subs[j].plot(x_[shock_i], waj[shock_i], color=PUNISHMENT_COLOUR, linestyle='.')
 
         # axb = plt.subplot(nb_models * 2, 2, 2 + i * 4)
         wb = np.nanmean(w[1:, 5:], axis=1).reshape((-1, nb_odours, nb_timesteps, w.shape[-1]))[:, 1].reshape((-1, w.shape[-1]))
@@ -527,8 +562,7 @@ def plot_weights(ms, nids=None, only_nids=True, figsize=None):
             jn = j + nb_neurons
 
             label = None
-            s = (i + 1) / (nb_models + 1)
-            b_col = np.array([255, s * 197, s * 200]) / 255.
+            b_col = ODOUR_B_CMAP(1 - (i + 1) / (nb_models + 1))
             if j == nb_neurons - 1:
                 label = ms[i].routine_name
 
@@ -553,8 +587,7 @@ def plot_weights(ms, nids=None, only_nids=True, figsize=None):
                 axb.spines['top'].set_visible(False)
                 axb.spines['right'].set_visible(False)
 
-                s = (i + 2) / (nb_models + 1)
-                b_acol = np.array([255, s * 197, s * 200]) / 255.
+                b_acol = ODOUR_B_CMAP(1 / (nb_models + 1))
                 axb.plot(x_b[:3], wbj[:3], color=(.8, .8, .8))
                 axb.plot(x_b[2:12], wbj[2:12], color=b_acol, label="acquisition")
                 subs.append(axb)
@@ -566,7 +599,7 @@ def plot_weights(ms, nids=None, only_nids=True, figsize=None):
             if i > 0 or "d" not in names[j] and "c" not in names[j] or "av" not in names[j]:
                 continue
             shock_i = [3, 5, 7, 9, 11]
-            subs[jn].plot(x_b[shock_i], wbj[shock_i], 'r.')
+            subs[jn].plot(x_b[shock_i], wbj[shock_i], color=PUNISHMENT_COLOUR, linestyle='.')
 
     subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left',
                                   framealpha=0., labelspacing=1.)
@@ -1083,10 +1116,12 @@ def _plot_arena_paths(data, name="arena", lw=1., alpha=.2, ax=None, save=False, 
         e_pre = int(.2 * nb_steps)
         s_post = int(.5 * nb_steps)
         for i in range(nb_flies):
-            ax.plot(np.angle(data[i, :e_pre]), np.absolute(data[i, :e_pre]), color='b', alpha=alpha, lw=lw)
+            ax.plot(np.angle(data[i, :e_pre]), np.absolute(data[i, :e_pre]),
+                    color=PRETRAINING_COLOUR, alpha=alpha, lw=lw)
             ax.plot(np.angle(data[i, e_pre:s_post]), np.absolute(data[i, e_pre:s_post]),
-                    color='r' if 'quinine' in name else 'g', alpha=alpha, lw=lw)
-            ax.plot(np.angle(data[i, s_post:]), np.absolute(data[i, s_post:]), color='k', alpha=alpha, lw=lw)
+                    color=PUNISHMENT_COLOUR if 'quinine' in name else REWARD_COLOUR, alpha=alpha, lw=lw)
+            ax.plot(np.angle(data[i, s_post:]), np.absolute(data[i, s_post:]),
+                    color=POSTRAINING_COLOUR, alpha=alpha, lw=lw)
 
     ax.set_yticks([])
     ax.set_xticks([])
@@ -1113,6 +1148,7 @@ def plot_arena_box(df, max_repeat=None, name="arena-box", show=True):
     show: bool, optional
         if True, it shows the plot. Default is True
     """
+    from .arena import FruitFly, gaussian_p
 
     repeats = np.unique(df["repeat"])
     if max_repeat is not None:
@@ -1147,20 +1183,50 @@ def plot_arena_box(df, max_repeat=None, name="arena-box", show=True):
         labels[i] = label
         data[i] = [d_pre, d_learn, d_post]
 
+    m_a = FruitFly.a_source.real
+    m_b = FruitFly.b_source.real
+    s_a = FruitFly.a_sigma
+    s_b = FruitFly.b_sigma
+
+    # a = 1 / (2 * std1 ** 2) - 1 / (2 * std2 ** 2)
+    # b = m2 / (std2 ** 2) - m1 / (std1 ** 2)
+    # c = m1 ** 2 / (2 * std1 ** 2) - m2 ** 2 / (2 * std2 ** 2) - np.log(std2 / std1)
+    # return np.roots([a, b, c])
+
+    a = 1 / (2 * s_a ** 2) - 1 / (2 * s_b ** 2)
+    b = m_b / (s_b ** 2) - m_a / (s_a ** 2)
+    c = m_a ** 2 / (2 * s_a ** 2) - m_b ** 2 / (2 * s_b ** 2) - np.log(s_b / s_a)
+    mid_point = np.roots([a, b, c]) * (m_b - m_a) / 2
+
+    # print("A:", m_a, s_a)
+    # print("B:", m_b, s_b)
+    # print("Mid-points", mid_point)
+    #
+    # x = np.linspace(-1, 1, 1000)
+    # y_a = gaussian_p(x + 0j, m_a + 0j, s_a)
+    # y_b = gaussian_p(x + 0j, m_b + 0j, s_b)
+    # plt.plot(x, y_a)
+    # plt.plot(x, y_b)
+    # plt.xticks([-1., -.6, -.2, .2, .6, 1])
+    # plt.show()
+    #
+    # return
+
     plt.figure(name, figsize=(4, len(repeats)))
     ticks = []
     for i in range(len(labels)):
         plt.subplot(len(repeats), 1, i // 6 + 1)
-        plt.plot([0, 7], [0, 0], 'grey', lw=2)
+        plt.plot([0, 7], [0, 0], 'grey', lw=.5, linestyle=":")
+        plt.plot([0, 7], [mid_point, mid_point], 'grey', lw=2)
         data_0 = np.array(data[i][0])
         plt.boxplot(data_0[~np.isnan(data_0)], positions=[i % 6 + 0.8], notch=True, patch_artist=True,
-                    boxprops=dict(color="b", facecolor="b"),
-                    whiskerprops=dict(color="b"),
-                    flierprops=dict(color="b", markeredgecolor="b", marker="."),
-                    capprops=dict(color="b"),
-                    medianprops=dict(color="b"))
+                    boxprops=dict(color=PRETRAINING_COLOUR, facecolor=PRETRAINING_COLOUR),
+                    whiskerprops=dict(color=PRETRAINING_COLOUR),
+                    flierprops=dict(color=PRETRAINING_COLOUR, markeredgecolor=PRETRAINING_COLOUR, marker="."),
+                    capprops=dict(color=PRETRAINING_COLOUR),
+                    medianprops=dict(color=PRETRAINING_COLOUR))
         data_1 = np.array(data[i][1])
-        r_colour = "red" if ("p" in labels[i]) else "green"
+        r_colour = PUNISHMENT_COLOUR if ("p" in labels[i]) else REWARD_COLOUR
         plt.boxplot(data_1[~np.isnan(data_1)], positions=[i % 6 + 1.0], notch=True, patch_artist=True,
                     boxprops=dict(color=r_colour, facecolor=r_colour),
                     whiskerprops=dict(color=r_colour),
@@ -1169,11 +1235,11 @@ def plot_arena_box(df, max_repeat=None, name="arena-box", show=True):
                     medianprops=dict(color=r_colour))
         data_2 = np.array(data[i][2])
         plt.boxplot(data_2[~np.isnan(data_2)], positions=[i % 6 + 1.2], notch=True, patch_artist=True,
-                    boxprops=dict(color="k", facecolor="k"),
-                    whiskerprops=dict(color="k"),
-                    flierprops=dict(color="k", markeredgecolor="k", marker="."),
-                    capprops=dict(color="k"),
-                    medianprops=dict(color="k"))
+                    boxprops=dict(color=POSTRAINING_COLOUR, facecolor=POSTRAINING_COLOUR),
+                    whiskerprops=dict(color=POSTRAINING_COLOUR),
+                    flierprops=dict(color=POSTRAINING_COLOUR, markeredgecolor=POSTRAINING_COLOUR, marker="."),
+                    capprops=dict(color=POSTRAINING_COLOUR),
+                    medianprops=dict(color=POSTRAINING_COLOUR))
         if i < 6:
             title = labels[i].split('-')[0].upper() + "+" + labels[i].split('-')[1]
             title = title.replace("p", "shock")
@@ -1197,7 +1263,7 @@ def plot_arena_box(df, max_repeat=None, name="arena-box", show=True):
         plt.show()
 
 
-def draw_gradients(ax, radius=1., draw_sources=True, cmap="coolwarm", levels=20, vminmax=3):
+def draw_gradients(ax, radius=1., draw_sources=False, levels=5):
     """
     Draws the odour distribution (gradients) on the given axis as contours.
 
@@ -1209,12 +1275,8 @@ def draw_gradients(ax, radius=1., draw_sources=True, cmap="coolwarm", levels=20,
         the radius of the arena. Default is 1
     draw_sources: bool, optional
         whether to draw the sources or not. Default is True
-    cmap: str, optional
-        the colormap of the contours. Default is 'coolwarm'
     levels: int, optional
         the levels of the contours. Default is 20
-    vminmax: float
-        the absolute min/max value for the contours. Default is 3
 
     Returns
     -------
@@ -1232,17 +1294,14 @@ def draw_gradients(ax, radius=1., draw_sources=True, cmap="coolwarm", levels=20,
     p_a = gaussian_p(p, a_mean, a_sigma)
     p_b = gaussian_p(p, b_mean, b_sigma)
 
+    levels = np.linspace(FruitFly.i_threshold, max(np.max(p_a), np.max(p_b)), levels)
     rho, dist = np.angle(p), np.absolute(p)
-    ax.contourf(rho-np.pi/2, dist, p_b - p_a, cmap=cmap, levels=levels, vmin=-vminmax, vmax=vminmax)
-    ax.contour(rho-np.pi/2, dist, p_b - p_a, levels=[-.0001, .0001], colors='lightsteelblue', linestyles='--')
+    ax.contourf(rho-np.pi/2, dist, p_a, levels=levels, cmap=ODOUR_A_CMAP)
+    ax.contourf(rho-np.pi/2, dist, p_b, levels=levels, cmap=ODOUR_B_CMAP)
 
     if draw_sources:
-        ax.add_patch(patches.Circle((np.angle(a_mean), np.absolute(a_mean)), radius=FruitFly.r_radius, linestyle="--",
-                                    color="C0", linewidth=2, fill=False))
-        ax.scatter(np.angle(a_mean), np.absolute(a_mean), s=FruitFly.r_radius * 100, color="C0", label="odour A")
-        ax.add_patch(patches.Circle((np.angle(b_mean), np.absolute(b_mean)), radius=FruitFly.r_radius, linestyle="--",
-                                    color="C1", linewidth=2, fill=False))
-        ax.scatter(np.angle(b_mean), np.absolute(b_mean), s=FruitFly.r_radius * 100, color="C1", label="odour B")
+        ax.scatter(np.angle(a_mean), np.absolute(a_mean), s=20, color=ODOUR_A_COLOUR, label="odour A")
+        ax.scatter(np.angle(b_mean), np.absolute(b_mean), s=20, color=ODOUR_B_COLOUR, label="odour B")
 
     return ax
 
@@ -1323,22 +1382,22 @@ def _plot_arena_trace(data, d_names, name="arena", lw=1., alpha=.2, ax=None, sav
             ax.fill_between(x_pre,
                             3 * i + np.nanquantile(data[:, :e_pre, ..., i], .25, axis=(0, 2) if data.ndim > 3 else 0),
                             3 * i + np.nanquantile(data[:, :e_pre, ..., i], .75, axis=(0, 2) if data.ndim > 3 else 0),
-                            facecolor='b', alpha=.2)
+                            facecolor=PRETRAINING_COLOUR, alpha=.2)
             ax.fill_between(x_train,
                             3 * i + np.nanquantile(data[:, e_pre:s_post, ..., i], .25, axis=(0, 2) if data.ndim > 3 else 0),
                             3 * i + np.nanquantile(data[:, e_pre:s_post, ..., i], .75, axis=(0, 2) if data.ndim > 3 else 0),
-                            facecolor='r' if 'quinine' in name else 'g', alpha=.2)
+                            facecolor=PUNISHMENT_COLOUR if 'quinine' in name else REWARD_COLOUR, alpha=.2)
             ax.fill_between(x_post,
                             3 * i + np.nanquantile(data[:, s_post:, ..., i], .25, axis=(0, 2) if data.ndim > 3 else 0),
                             3 * i + np.nanquantile(data[:, s_post:, ..., i], .75, axis=(0, 2) if data.ndim > 3 else 0),
-                            facecolor='k', alpha=.2)
+                            facecolor=POSTRAINING_COLOUR, alpha=.2)
             # ax.plot([x_pre] * 100, 3 * i + np.median(data[:, :e_pre, ..., i], axis=2), color='b', lw=.05)
             ax.plot(x_pre, 3 * i + np.nanmedian(data[:, :e_pre, ..., i], axis=(0, 2) if data.ndim > 3 else 0),
-                    color='b', lw=lw)
+                    color=PRETRAINING_COLOUR, lw=lw)
             ax.plot(x_train, 3 * i + np.nanmedian(data[:, e_pre:s_post, ..., i], axis=(0, 2) if data.ndim > 3 else 0),
-                    color='r' if 'quinine' in name else 'g', lw=lw)
+                    color=PUNISHMENT_COLOUR if 'quinine' in name else REWARD_COLOUR, lw=lw)
             ax.plot(x_post, 3 * i + np.nanmedian(data[:, s_post:, ..., i], axis=(0, 2) if data.ndim > 3 else 0),
-                    color='k', lw=lw)
+                    color=POSTRAINING_COLOUR, lw=lw)
 
         ax.set_yticks(np.arange(0, nb_en * 3, 3))
         ax.set_yticklabels([r'$%s$' % nm for nm in d_names], fontsize=16)
@@ -1414,16 +1473,16 @@ def _plot_arena_weights(data, d_names, name="arena", ax=None, save=False, show=T
         e_pre = int(.2 * nb_steps)
         s_post = int(.5 * nb_steps)
 
-        learn = 0 if 'quinine' in name else 1
-        data_i = np.zeros((data.shape[1], (nb_en // 2) * (nb_kc + 1) - 1, 3), dtype=float)
+        r_colour = PUNISHMENT_COLOUR if 'quinine' in name else REWARD_COLOUR
+        data_i = np.ones((data.shape[1], (nb_en // 2) * (nb_kc + 1) - 1, 3), dtype=float)
         for i in range(nb_en // 2):
             data_t = np.nanmedian(data[..., i + nb_en // 2], axis=0)
             i_start = i * (nb_kc + 1)
             i_end = (i + 1) * (nb_kc + 1) - 1
 
-            data_i[:e_pre, i_start:i_end, 2] = data_t[:e_pre]
-            data_i[e_pre:s_post, i_start:i_end, learn] = data_t[e_pre:s_post]
-            data_i[s_post:, i_start:i_end] = data_t[s_post:][..., np.newaxis]
+            data_i[:e_pre, i_start:i_end] = data_t[:e_pre][..., np.newaxis] * PRETRAINING_COLOUR
+            data_i[e_pre:s_post, i_start:i_end] = data_t[e_pre:s_post][..., np.newaxis] * r_colour
+            data_i[s_post:, i_start:i_end] = data_t[s_post:][..., np.newaxis] * (1 - POSTRAINING_COLOUR)
 
         ax.imshow(np.clip(np.transpose(data_i, (1, 0, 2)) / 2., 0, 1), aspect="auto")
 

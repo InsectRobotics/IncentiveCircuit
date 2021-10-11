@@ -21,7 +21,7 @@ import numpy as np
 
 class IncentiveCircuit(MBModel):
     def __init__(self, has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True,
-                 has_real_names=False, as_microcircuits=False, *args, **kwargs):
+                 has_real_names=False, as_microcircuits=False, ltm_speed=.1, *args, **kwargs):
         """
         The Incentive Circuit (IC) is a simplified version of the mushroom body from the Drosophila melanogaster
         brain, which is a hypothetical sub-circuit in it. It contains the connections from the Kenyon cells (KCs) to the
@@ -55,7 +55,7 @@ class IncentiveCircuit(MBModel):
 
         shock_magnitude = 2.
         odour_magnitude = 2.
-        ltm_speed = .5 if as_microcircuits else .05
+        # ltm_speed = .5 if as_microcircuits else .05
 
         pds, pde = 0, 2
         pcs, pce = 2, 4

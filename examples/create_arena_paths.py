@@ -37,11 +37,13 @@ if __name__ == '__main__':
     from incentive.arena import FruitFly
     from incentive import arena
 
+    nb_kcs = 10
+    nb_active_kcs = 8
     sv = 1.
     rv = 1.
     mv = 1.
-    nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=100)
-    nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=500)  # seconds
+    nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=50)
+    nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=100)  # seconds
     arena.__data_dir__ = directory = os.path.abspath(read_arg(["-d", "--dir"], vtype=str, default=arena.__data_dir__))
     repeats = read_arg(["-R", "--repeat"], vtype=int, default=10)
 
@@ -93,6 +95,7 @@ if __name__ == '__main__':
             ps.reshape(-1), ss.reshape(-1), rs.reshape(-1), ms.reshape(-1), a_s.reshape(-1), bs.reshape(-1)):
 
         name = "arena-quinine-" if punishment else "arena-sugar-"
+        name += "kc%d-" % nb_active_kcs
         name_ext = ""
         if susceptible:
             name_ext += "s"
@@ -114,7 +117,7 @@ if __name__ == '__main__':
 
         data = np.zeros((nb_flies, nb_timesteps), dtype=complex)
         responses = np.zeros((nb_flies, nb_timesteps, 12), dtype=float)
-        weights = np.zeros((nb_flies, nb_timesteps, 10, 12), dtype=float)
+        weights = np.zeros((nb_flies, nb_timesteps, nb_kcs, 12), dtype=float)
         names = None
         flies = []
 
@@ -122,12 +125,13 @@ if __name__ == '__main__':
             print(name, end=' ')
             for i in range(nb_flies):
                 if len(flies) <= i:
-                    fly = FruitFly(rng=rng, nb_steps=nb_timesteps)
+                    fly = FruitFly(rng=rng, nb_steps=nb_timesteps, nb_kcs=nb_kcs, nb_active_kcs=nb_active_kcs,
+                                   gain=0.05)
                     flies.append(fly)
                 else:
                     fly = flies[i]
                 fly(punishment=punishment, noise=.5, susceptible=susceptible, reciprocal=reciprocal, ltm=ltm,
-                    only_a=only_a, only_b=only_b, gain=0.05)
+                    only_a=only_a, only_b=only_b)
                 data[i] = fly.xy.copy()
                 responses[i] = fly.mb._v[1:].copy()
                 weights[i] = fly.mb.w_k2m[1:].copy()

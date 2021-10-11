@@ -188,10 +188,11 @@ def get_summarised_responses(data, experiment="B+", nids=None, only_nids=True):
                 q[quantile] = np.array([q_odour, q_shock]).T.reshape((-1,))
 
         # normalise responses
-        z = np.maximum(np.max(qa[.75]), np.max(qb[.75])) / 2
+        q_min = np.minimum(np.min(qa[.25]), np.min(qb[.25])) / 2
+        q_max = np.maximum(np.max(qa[.75]), np.max(qb[.75])) / 2
         for q in [qa, qb]:
             for key in q:
-                q[key] /= z
+                q[key] = (q[key] - q_min) / (q_max - q_min)
 
         responses[genotype] = {
             "xa": xa,
@@ -205,143 +206,3 @@ def get_summarised_responses(data, experiment="B+", nids=None, only_nids=True):
         }
 
     return responses
-
-
-def plot_phase_overlap_mean_responses_from_data(data, experiment="B+", nids=None, only_nids=True, figsize=None,
-                                                show_legend=True):
-    """
-    Plots the average responses of the neurons per phase/trial for a specific experiment with overlapping phases.
-
-    Parameters
-    ----------
-    data: pd.DataFrame
-        the DataFrame with the responses
-    experiment: str, optional
-        the experiment whose data we want to plot. Default is 'B+'
-    nids: list, optional
-        list of neuron IDs that we want to show their name. If None, it shows all the names
-    only_nids: bool, optional
-        whether to plot only the responses of the specified neurons. Default is True
-    figsize: tuple, optional
-        the size of the figure
-    show_legend: bool, optional
-        whether to also plot the legend
-    """
-    import matplotlib.pyplot as plt
-
-    title = "individuals-from-data"
-
-    sum_res = get_summarised_responses(data, experiment=experiment, nids=nids, only_nids=only_nids)
-    genotypes = [key for key in sum_res.keys()]
-
-    ymin, ymax = 0, 2
-    y_lim = [ymin - .1, ymax + .1]
-
-    nb_genotypes = len(genotypes)
-    nb_plots = nb_genotypes * 2
-    subs = []
-
-    nb_rows = 4
-    nb_cols = nb_plots // nb_rows
-    while nb_cols > 7:
-        nb_rows += 4
-        nb_cols = nb_plots // nb_rows + 1
-
-    if figsize is None:
-        figsize = (8 - 2 * int(not only_nids), nb_rows + 1)
-    plt.figure(title, figsize=figsize)
-
-    xticks_b = 2 * np.arange(10) + 4
-    xticks_a = xticks_b.copy() - 1
-    xticks_a[5:] += 2
-
-    for j, genotype in enumerate(genotypes):
-
-        xa = sum_res[genotype]["xa"]
-        data_a_q25 = sum_res[genotype]["qa25"]
-        data_a_q50 = sum_res[genotype]["qa50"]
-        data_a_q75 = sum_res[genotype]["qa75"]
-
-        a_col = np.array([.5 * 205, .5 * 222, 238]) / 255.
-
-        if len(subs) <= j:
-            axa = plt.subplot(nb_rows, nb_cols, 2 * (j // nb_cols) * nb_cols + j % nb_cols + 1)
-            axa.set_xticks(xticks_a)
-            axa.set_yticks([0, ymax/2, ymax])
-            axa.set_ylim(y_lim)
-            axa.set_xlim([2, 24])
-            axa.tick_params(labelsize=8)
-            axa.set_xticklabels(["" for _ in xticks_a])
-            axa.set_title(r"$%s$" % genotype, fontsize=8)
-            if j % nb_cols == 0:
-                axa.set_ylabel("Odour A", fontsize=8)
-            else:
-                axa.set_yticklabels([""] * 3)
-                axa.spines['left'].set_visible(False)
-                axa.set_yticks([])
-            axa.spines['top'].set_visible(False)
-            axa.spines['right'].set_visible(False)
-
-            a_acol = np.array([205, 222, 238]) / 255.
-            axa.fill_between(xa[2:12], data_a_q25[2:12], data_a_q75[2:12], color=a_acol, alpha=0.2)
-            axa.plot(xa[:3], data_a_q50[:3], color=(.8, .8, .8), lw=2)
-            axa.plot(xa[2:12], data_a_q50[2:12], color=a_acol, lw=2, label="acquisition")
-            subs.append(axa)
-        subs[-1].fill_between(xa[14:], data_a_q25[14:], data_a_q75[14:], color=a_col, alpha=0.2)
-        subs[-1].plot(xa[11:15], data_a_q50[11:15], color=(.8, .8, .8), lw=2)
-        subs[-1].plot(xa[14:], data_a_q50[14:], color=a_col, lw=2, label="reversal")
-        subs[-1].plot([15, 17], data_a_q50[[15, 17]], 'r.')
-
-    for j, genotype in enumerate(genotypes):
-
-        xb = sum_res[genotype]["xb"]
-        data_b_q25 = sum_res[genotype]["qb25"]
-        data_b_q50 = sum_res[genotype]["qb50"]
-        data_b_q75 = sum_res[genotype]["qb75"]
-
-        b_col = np.array([255, .5 * 197, .5 * 200]) / 255.
-
-        jn = j + (nb_rows * nb_cols) // 2
-
-        if len(subs) <= jn:
-            axb = plt.subplot(nb_rows, nb_cols, (2 * (j // nb_cols) + 1) * nb_cols + j % nb_cols + 1)
-            axb.set_xticks(xticks_b)
-            axb.set_yticks([0, ymax/2, ymax])
-            axb.set_ylim(y_lim)
-            axb.set_xlim([2, 24])
-            axb.tick_params(labelsize=8)
-            axb.set_xticklabels(["%s" % (i + 1) for i in range(5)] * 2)
-            if jn % nb_cols == 0:
-                axb.set_ylabel("Odour B", fontsize=8)
-                axb.text(-6, -.8, "Trial #", fontsize=8)
-            else:
-                axb.set_yticklabels([""] * 3)
-                axb.spines['left'].set_visible(False)
-                axb.set_yticks([])
-
-            axb.spines['top'].set_visible(False)
-            axb.spines['right'].set_visible(False)
-
-            b_acol = np.array([255, 197, 200]) / 255.
-
-            axb.fill_between(xb[2:12], data_b_q25[2:12], data_b_q75[2:12], color=b_acol, alpha=0.2)
-            axb.plot(xb[:3], data_b_q50[:3], color=(.8, .8, .8), lw=2)
-            axb.plot(xb[2:12], data_b_q50[2:12], color=b_acol, lw=2, label="acquisition")
-
-            subs.append(axb)
-
-        subs[-1].fill_between(xb[12:16], data_b_q25[12:], data_b_q75[12:], color=b_col, alpha=0.2)
-        subs[-1].plot(xb[11:13], data_b_q50[11:13], color=(.8, .8, .8), lw=2)
-        subs[-1].plot(xb[12:16], data_b_q50[12:], color=b_col, lw=2, label="reversal")
-        subs[-1].plot(xb[[3, 5, 7, 9, 11]], data_b_q50[[3, 5, 7, 9, 11]], 'r.')
-
-    if show_legend:
-        subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left',
-                                      framealpha=0., labelspacing=1.)
-        subs[-1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left', framealpha=0., labelspacing=1)
-
-    # subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.), loc='upper left',
-    #                               framealpha=0., labelspacing=1.)
-    # subs[-1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.), loc='upper left', framealpha=0., labelspacing=1)
-    plt.tight_layout()
-    plt.show()

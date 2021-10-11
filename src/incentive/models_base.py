@@ -293,10 +293,10 @@ class MBModel(object):
         # the dopaminergic factor
         D = np.maximum(v, 0).dot(self.w_d2k)
 
-        if self._learning_rule in ["dopaminergic", "dlr", "dan-base", "default"]:
+        if self._learning_rule in ["dopaminergic", "dlr", "default"]:
             w_new = dopaminergic(k, D, w_k2m, eta=eta_w, w_rest=self.w_rest)
-        elif self._learning_rule in ["rescorla-wagner", "rw", "kc-based", "pe", "prediction-error"]:
-            w_new = prediction_error(k, v, D, w_k2m, eta=eta_w, w_rest=self.w_rest)
+        elif self._learning_rule in ["reward-prediction-error", "rpe", "prediction-error"]:
+            w_new = reward_prediction_error(k, v, D, w_k2m, eta=eta_w, w_rest=self.w_rest)
         elif callable(self._learning_rule):
             w_new = self._learning_rule(k, v, D, w_k2m, eta_w, self.w_rest)
         else:
@@ -396,9 +396,9 @@ def leaky_relu(v, alpha=.1, v_max=np.inf, v_min=-np.inf):
     return np.clip(v, np.maximum(alpha * v, v_min), v_max)
 
 
-def prediction_error(r_pre, r_post, D, w, eta=1., w_rest=1.):
+def reward_prediction_error(r_pre, r_post, D, w, eta=1., w_rest=1.):
     """
-    The prediction-error learning rule introduced in [1]_.
+    The reward-prediction-error learning rule introduced in [1]_.
 
         tau * dw / dt = r_pre * (rein - r_post - w_rest)
 

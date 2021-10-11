@@ -6,13 +6,13 @@ Creates the paths of the freely-moving flies using the incentive circuit and the
 
 Examples:
 In order to create all the possible combinations for 100 flies each and for 500 seconds, run
-    $ python3 create_arena_paths_rw.py --nb-flies 100 --nb-time-steps 500
+    $ python3 create_arena_paths_rpe.py --nb-flies 100 --nb-time-steps 500
 or
-    $ python3 create_arena_paths_rw.py -f 100 -t 500
+    $ python3 create_arena_paths_rpe.py -f 100 -t 500
 
 In order to generate the data for 100 flies and for 500 seconds, for the punishment delivery case where the motivation
 is being set by the restrained MBONs only, run
-    $ python3 create_arena_paths_rw.py -f 100 -t 500 -p -ns -r -nm
+    $ python3 create_arena_paths_rpe.py -f 100 -t 500 -p -ns -r -nm
 
 """
 
@@ -32,19 +32,19 @@ import os
 
 # the directory of the file
 __dir__ = os.path.dirname(os.path.abspath(__file__))
-# the directory of the data
-__data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "src", "incentive", "data", "arena"))
 
 if __name__ == '__main__':
     from incentive.arena import FruitFly
+    from incentive import arena
 
+    nb_active_kcs = 3
     sv = 1.
     rv = 1.
     mv = 1.
-    nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=100)
-    nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=100)
-    directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
-    repeats = read_arg(["-R", "--repeat"], vtype=int, default=20)
+    nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=50)
+    nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=500)
+    arena.__data_dir__ = directory = os.path.abspath(read_arg(["-d", "--dir"], vtype=str, default=arena.__data_dir__))
+    repeats = read_arg(["-R", "--repeat"], vtype=int, default=10)
 
     if read_arg(["-p", "--punishment"]):
         punishment = [True]
@@ -87,26 +87,32 @@ if __name__ == '__main__':
         punishment, susceptible, reciprocal, ltm, only_a, only_b
     )
 
+    conditions = ["srm", "s", "r", "m"]
+    regions = ["", "a", "b"]
+
     for punishment, susceptible, reciprocal, ltm, only_a, only_b in zip(
             ps.reshape(-1), ss.reshape(-1), rs.reshape(-1), ms.reshape(-1), a_s.reshape(-1), bs.reshape(-1)):
-        if (((not susceptible) and reciprocal and ltm) or
-                (susceptible and (not reciprocal) and ltm) or
-                (susceptible and reciprocal and (not ltm)) or
-                ((not susceptible) and (not reciprocal) and (not ltm)) or
-                (only_a and only_b)):
+
+        name = "rpe-arena-quinine-" if punishment else "rpe-arena-sugar-"
+        name += "kc%d-" % nb_active_kcs
+        name_ext = ""
+        if susceptible:
+            name_ext += "s"
+        if reciprocal:
+            name_ext += "r"
+        if ltm:
+            name_ext += "m"
+
+        name_reg = ""
+        if only_a:
+            name_reg += "a"
+        if only_b:
+            name_reg += "b"
+
+        if name_ext not in conditions or name_reg not in regions:
             continue
 
-        name = "rw-arena-quinine-" if punishment else "rw-arena-sugar-"
-        if susceptible:
-            name += "s"
-        if reciprocal:
-            name += "r"
-        if ltm:
-            name += "m"
-        if only_a:
-            name += "a"
-        if only_b:
-            name += "b"
+        name += name_ext + name_reg
 
         data = np.zeros((nb_flies, nb_timesteps), dtype=complex)
         flies = []
@@ -115,12 +121,12 @@ if __name__ == '__main__':
 
             for i in range(nb_flies):
                 if len(flies) <= i:
-                    fly = FruitFly(rng=rng, nb_steps=nb_timesteps, learning_rule="rw")
+                    fly = FruitFly(rng=rng, nb_steps=nb_timesteps, learning_rule="rpe")
                     flies.append(fly)
                 else:
                     fly = flies[i]
                 fly(punishment=punishment, noise=.5, susceptible=susceptible, reciprocal=reciprocal, ltm=ltm,
-                    only_a=only_a, only_b=only_b)
+                    only_a=only_a, only_b=only_b, nb_active_kcs=nb_active_kcs, gain=0.05)
                 data[i] = fly.xy
 
             if repeats > 1:

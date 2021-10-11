@@ -24,15 +24,17 @@ if __name__ == '__main__':
     from incentive.plot import plot_arena_box
     from incentive.arena import load_arena_stats
 
-    rw = read_arg(["-rw", "--rescorla-wagner"])
+    nb_active_kcs = 8
+    rpe = read_arg(["-rpe", "--reward-prediction-error"])
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
 
     file_names = os.listdir(directory)
 
-    df = load_arena_stats(file_names, prediction_error=rw)
+    df = load_arena_stats(file_names, nb_active_kcs=nb_active_kcs, prediction_error=rpe)
     df["dist_A"][df["phase"] == "learn"] = df["dist_A"][df["phase"] == "learn"]
 
     df["PI"] = (df["dist_A"] - df["dist_B"]) / (df["dist_A"] + df["dist_B"])
+    # df["PI"] = -df["absolute"] / 0.6
     df["avoid A"] = df["dist_A"] - 1
     df["avoid B"] = df["dist_B"] - 1
     df["avoid A/B"] = np.max([df["dist_A"], df["dist_B"]], axis=0) / 0.6 - 1
@@ -47,11 +49,11 @@ if __name__ == '__main__':
                                   df["restrained"] == ("r" in code),
                                   df["long-term memory"] == ("m" in code)], axis=0)],
                        max_repeat=10,
-                       name="%sarena-box-%s" % ("rw-" if rw else "", code),
+                       name="%sarena-box-k%d-%s" % ("rpe-" if rpe else "", nb_active_kcs, code),
                        show=code == codes[-1])
 
     # repeats = np.unique(df["repeat"])
     # repeats = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     # for repeat in repeats:
-    #     plot_arena_box(df[df["repeat"] == repeat], "%sarena-box-%02d" % ("rw-" if rw else "", repeat),
+    #     plot_arena_box(df[df["repeat"] == repeat], "%sarena-box-%02d" % ("rpe-" if rpe else "", repeat),
     #                    show=repeat == repeats[-1])

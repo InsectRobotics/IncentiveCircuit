@@ -17,14 +17,14 @@ if __name__ == '__main__':
     # read the parameters
     only_nids = read_arg(["--only-nids"])
     nb_kcs = read_arg(["-k", "--nb-kc", "--nb-kcs"], vtype=int, default=10)
-    kc1 = read_arg(["-k1", "--nb-kc1", "--odour1"], vtype=int, default=nb_kcs // 2)
-    kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=nb_kcs // 2)
+    kc1 = read_arg(["-k1", "--nb-kc1", "--odour1"], vtype=int, default=7)
+    kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=6)
     # kc1 = read_arg(["-k1", "--nb-kc1", "--odour1"], vtype=int, default=nb_kcs // 2 + 1)
     # kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=nb_kcs // 2 + 2)
 
     # create the Incentive Circuit
     model = IncentiveCircuit(
-        learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=26, nb_active_kcs=2,
+        learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=26, nb_active_kcs=5, ltm_speed=.3,
         nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
         has_sm=True, has_rm=True, has_rrm=True, has_ltm=True, has_rfm=True, has_mam=True)
 
