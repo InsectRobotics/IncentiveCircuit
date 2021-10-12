@@ -28,6 +28,7 @@ ODOUR_A_CMAP = ListedColormap(np.clip(np.linspace(np.ones(3), ODOUR_A_COLOUR, 10
 ODOUR_B_CMAP = ListedColormap(np.clip(np.linspace(np.ones(3), ODOUR_B_COLOUR, 100), 0, 1))
 PRETRAINING_COLOUR = np.array(colors.to_rgb("blue"))
 POSTRAINING_COLOUR = np.array(colors.to_rgb("black"))
+MAX_NUMBER_OF_EXPERIMENTS = 3
 
 
 def plot_weights_matrices(ms, nids=None, vmin=-2., vmax=2., only_nids=False, figsize=None):
@@ -121,12 +122,11 @@ def plot_weights_matrices(ms, nids=None, vmin=-2., vmax=2., only_nids=False, fig
         ax.yaxis.set_ticks_position('both')
         plt.title(ms[i].routine_name, color=np.array([255, s * 197, s * 200]) / 255.)
 
-    # plt.colorbar()
     plt.tight_layout()
     plt.show()
 
 
-def plot_phase_overlap_mean_responses_from_model(ms, nids=None, only_nids=True, figsize=None):
+def plot_phase_overlap_mean_responses_from_model(ms, nids=None, only_nids=True, figsize=None, show_legend=True):
     """
     Plots the average responses of the neurons per phase/trial with overlapping lines.
 
@@ -146,8 +146,6 @@ def plot_phase_overlap_mean_responses_from_model(ms, nids=None, only_nids=True, 
     nb_odours = 2
     nb_repeats = len(ms)
     nb_models = len(ms[0])
-    xticks = ["%d" % i for i in range(16)]
-    ylim = [-0.1, 2.1]
 
     if nids is None:
         if ms[0][0].neuron_ids is None:
@@ -172,7 +170,7 @@ def plot_phase_overlap_mean_responses_from_model(ms, nids=None, only_nids=True, 
             figsize = (5, 7)
     plt.figure(title, figsize=figsize)
 
-    subs = []
+    exp_names = []
     vajs, vbjs = [], []
     for k in range(nb_repeats):
 
@@ -195,120 +193,18 @@ def plot_phase_overlap_mean_responses_from_model(ms, nids=None, only_nids=True, 
                 vajs[k][i].append(va[:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,)))
                 vbjs[k][i].append(vb[:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,)))
 
-    vaj_mean = np.mean(vajs, axis=0)
-    vbj_mean = np.mean(vbjs, axis=0)
-
-    for i in range(nb_models-1, -1, -1):
-        nb_timesteps = ms[0][i].nb_timesteps
-        nb_trials = ms[0][i].nb_trials
-
-        x_ticks_ = xticks[1:(nb_trials // 2) // 2] * 2
-        n = len(x_ticks_)
-        _x_ticks = np.arange(n, dtype=float) + 2 - 1 / (nb_timesteps - 1)
-        _x_ticks[n//2:] += 1. - 1 / (nb_timesteps - 1)
-        # _x_ticks = _x_ticks[1:]
-
-        x_ = np.arange(0, nb_trials // 2, 1 / (nb_timesteps - 1)) - 1 / (nb_timesteps - 1)
-
-        for j in range(nb_neurons):
-            label = None
-            a_col = ODOUR_A_CMAP(1 - (i + 1) / (nb_models + 1))
-            if j == nb_neurons - 1:
-                label = ms[0][i].routine_name
-
-            vaj = vaj_mean[i, j]
-            if len(subs) <= j:
-                axa = plt.subplot(nb_rows, nb_cols, 2 * (j // nb_cols) * nb_cols + j % nb_cols + 1)
-                # axa.plot([[15, 17, 19, 21, 23, 25]] * 2, [[0] * 6, [ylim] * 6], 'r-')
-                # axa.set_xticks((nb_timesteps - 1) * np.arange(2 * (nb_trials // 4)) + (nb_timesteps - 1) / 4)
-                axa.set_xticks(_x_ticks)
-                axa.set_xticklabels(["" for _ in x_ticks_])
-                axa.set_yticks([0, 1, 2])
-                axa.set_ylim(ylim)
-                axa.set_xlim([0, n + 1 + 1 / (nb_timesteps - 1)])
-                axa.tick_params(labelsize=8)
-                axa.set_title(r"$%s$" % names[j], fontsize=8)
-                if j % nb_cols == 0:
-                    axa.set_ylabel("Odour A", fontsize=8)
-                else:
-                    axa.set_yticklabels([""] * 3)
-                    axa.spines['left'].set_visible(False)
-                    axa.set_yticks([])
-
-                # axa.yaxis.grid()
-                axa.spines['top'].set_visible(False)
-                axa.spines['right'].set_visible(False)
-
-                a_acol = ODOUR_A_CMAP(1 / (nb_models + 1))
-                axa.plot(x_[:4], vaj[:4], color=(.8, .8, .8))
-                axa.plot(x_[3:13], vaj[3:13], color=a_acol, label="acquisition")
-                subs.append(axa)
-            # y_for = va[6*nb_timesteps:, j].reshape((-1, nb_timesteps))[:, 1:].reshape((-1,))[2:-2]
-            subs[j].plot(x_[12:15], vaj[12:15], color=(.8, .8, .8))
-            subs[j].plot(x_[23:], vaj[23:], color=(.8, .8, .8))
-            subs[j].plot(x_[14:24], vaj[14:24], color=a_col, label=label)
-            if ("extinction" in ms[0][i].routine_name or "unpaired" in ms[0][i].routine_name or
-                    "d" not in names[j] and "c" not in names[j] or "av" not in names[j]):
-                continue
-            shock_i = [15, 17, 19, 21, 23]
-            subs[j].plot(x_[shock_i], vaj[shock_i], color=PUNISHMENT_COLOUR, marker='.', linestyle=' ')
-
-        # axb = plt.subplot(nb_models * 2, 2, 2 + i * 4)
-        x_b = x_ + 1 - 1 / (nb_timesteps - 1)
-        for j in range(nb_neurons):
-            jn = j + nb_neurons
-
-            label = None
-            b_col = ODOUR_B_CMAP(1 - (i + 1) / (nb_models + 1))
-            # b_col = ODOUR_B_COLOUR * np.array([1, s, s])
-            # b_col = np.array([255, s * 197, s * 200]) / 255.
-            if j == nb_neurons - 1:
-                label = ms[0][i].routine_name
-
-            vbj = vbj_mean[i, j]
-            if len(subs) <= jn:
-                axb = plt.subplot(nb_rows, nb_cols, (2 * (j // nb_cols) + 1) * nb_cols + j % nb_cols + 1)
-                axb.set_xticks(_x_ticks)
-                axb.set_xticklabels(x_ticks_)
-                axb.set_yticks([0, 1, 2])
-                axb.set_ylim(ylim)
-                axb.set_xlim([0, n + 1 + 1 / (nb_timesteps - 1)])
-                axb.tick_params(labelsize=8)
-                if j % nb_cols == 0:
-                    axb.set_ylabel("Odour B", fontsize=8)
-                    if only_nids:
-                        axb.text(-3, -.8, "Trial #", fontsize=8)
-                    # else:
-                    #     axb.text(-7, -.5, "Trial #", fontsize=8)
-                else:
-                    axb.set_yticklabels([""] * 3)
-                    axb.spines['left'].set_visible(False)
-                    axb.set_yticks([])
-
-                # axb.yaxis.grid()
-                axb.spines['top'].set_visible(False)
-                axb.spines['right'].set_visible(False)
-
-                b_acol = ODOUR_B_CMAP(1 / (nb_models + 1))
-                axb.plot(x_b[:3], vbj[:3], color=(.8, .8, .8))
-                axb.plot(x_b[2:12], vbj[2:12], color=b_acol, label="acquisition")
-                subs.append(axb)
-
-            subs[jn].plot(x_b[11:14], vbj[11:14], color=(.8, .8, .8))
-            subs[jn].plot(x_b[22:], vbj[22:], color=(.8, .8, .8))
-            subs[jn].plot(x_b[13:23], vbj[13:23], color=b_col, label=label)
-
-            if i > 0 or "d" not in names[j] and "c" not in names[j] or "av" not in names[j]:
-                continue
-            shock_i = [3, 5, 7, 9, 11]
-            subs[jn].plot(x_b[shock_i], vbj[shock_i], color=PUNISHMENT_COLOUR, marker='.', linestyle=' ')
-
-    if only_nids:
-        subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left',
-                                      framealpha=0., labelspacing=1.)
-        subs[-1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left', framealpha=0., labelspacing=1)
-    plt.tight_layout()
-    plt.show()
+    va_q25 = np.nanquantile(vajs, .25, axis=0)
+    va_q50 = np.nanquantile(vajs, .50, axis=0)
+    va_q75 = np.nanquantile(vajs, .75, axis=0)
+    vb_q25 = np.nanquantile(vbjs, .25, axis=0)
+    vb_q50 = np.nanquantile(vbjs, .50, axis=0)
+    vb_q75 = np.nanquantile(vbjs, .75, axis=0)
+    for i in range(nb_models):
+        exp_names.append(ms[0][i].routine_name)
+    _plot_phase_overlap_mean_responses([va_q25, va_q50, va_q75], [vb_q25, vb_q50, vb_q75],
+                                       exp_names=exp_names, neuron_names=names,
+                                       nb_timesteps=ms[0][0].nb_timesteps, nb_trials=ms[0][0].nb_trials,
+                                       title=title, figsize=figsize, show_legend=show_legend and only_nids)
 
 
 def plot_phase_overlap_mean_responses_from_data(sum_res, only_nids=True, figsize=None, show_legend=True):
@@ -326,18 +222,69 @@ def plot_phase_overlap_mean_responses_from_data(sum_res, only_nids=True, figsize
     show_legend: bool, optional
         whether to also plot the legend
     """
-    import matplotlib.pyplot as plt
-
     title = "individuals-from-data"
-
     genotypes = [key for key in sum_res.keys()]
 
-    ymin, ymax = 0, 2
-    y_lim = [ymin - .1, ymax + .1]
+    va, vb = [[[]], [[]], [[]]], [[[]], [[]], [[]]]
+    for j, genotype in enumerate(genotypes):
 
-    nb_genotypes = len(genotypes)
-    nb_plots = nb_genotypes * 2
-    subs = []
+        data_a_q25 = sum_res[genotype]["qa25"]
+        data_a_q50 = sum_res[genotype]["qa50"]
+        data_a_q75 = sum_res[genotype]["qa75"]
+        data_b_q25 = sum_res[genotype]["qb25"]
+        data_b_q50 = sum_res[genotype]["qb50"]
+        data_b_q75 = sum_res[genotype]["qb75"]
+
+        data_aj_q25 = np.hstack([np.full(1, np.nan, dtype=data_a_q25.dtype), data_a_q25,
+                                 np.full(26 - data_a_q25.shape[0] - 1, np.nan, dtype=data_a_q25.dtype)])
+        data_aj_q50 = np.hstack([np.full(1, np.nan, dtype=data_a_q50.dtype), data_a_q50,
+                                 np.full(26 - data_a_q50.shape[0] - 1, np.nan, dtype=data_a_q50.dtype)])
+        data_aj_q75 = np.hstack([np.full(1, np.nan, dtype=data_a_q75.dtype), data_a_q75,
+                                 np.full(26 - data_a_q75.shape[0] - 1, np.nan, dtype=data_a_q75.dtype)])
+
+        va[0][0].append(data_aj_q25)
+        va[1][0].append(data_aj_q50)
+        va[2][0].append(data_aj_q75)
+
+        br = 12
+        data_bj_q25 = np.hstack([data_b_q25[:br], np.full(1, data_b_q25[br], dtype=data_a_q25.dtype), data_b_q25[br:],
+                                 np.full(26 - data_b_q25.shape[0] - 1, np.nan, dtype=data_b_q25.dtype)])
+        data_bj_q50 = np.hstack([data_b_q50[:br], np.full(1, data_b_q50[br], dtype=data_a_q50.dtype), data_b_q50[br:],
+                                 np.full(26 - data_b_q50.shape[0] - 1, np.nan, dtype=data_b_q50.dtype)])
+        data_bj_q75 = np.hstack([data_b_q75[:br], np.full(1, data_b_q75[br], dtype=data_a_q75.dtype), data_b_q75[br:],
+                                 np.full(26 - data_b_q75.shape[0] - 1, np.nan, dtype=data_b_q75.dtype)])
+        vb[0][0].append(data_bj_q25)
+        vb[1][0].append(data_bj_q50)
+        vb[2][0].append(data_bj_q75)
+
+    va = np.array(va)
+    vb = np.array(vb)
+
+    _plot_phase_overlap_mean_responses(va, vb, exp_names="reversal", neuron_names=genotypes, is_data=True,
+                                       nb_timesteps=3, nb_trials=26,
+                                       title=title, show_legend=show_legend and only_nids, figsize=figsize)
+
+
+def _plot_phase_overlap_mean_responses(va, vb, neuron_names, exp_names=None, nb_timesteps=1, nb_trials=1,
+                                       title=None, figsize=None, show_legend=True, is_data=False):
+
+    if exp_names is None:
+        exp_names = ["reversal"]
+    elif not isinstance(exp_names, list):
+        exp_names = [exp_names]
+
+    if title is None:
+        title = "phase-overlap-responses"
+
+    plot_shock = ["d_{av}", "c_{av}", "f_{av}", "320a", "296a", "301a"]
+
+    ymin, ymax = 0, 2
+    ylim = [ymin - .1, ymax + .1]
+    xticks = ["%d" % i for i in range(16)]
+
+    nb_models = len(exp_names)
+    nb_neurons = len(neuron_names)
+    nb_plots = nb_neurons * 2
 
     nb_rows = 4
     nb_cols = nb_plots // nb_rows
@@ -346,102 +293,117 @@ def plot_phase_overlap_mean_responses_from_data(sum_res, only_nids=True, figsize
         nb_cols = nb_plots // nb_rows + 1
 
     if figsize is None:
-        figsize = (8 - 2 * int(not only_nids), nb_rows + 1)
+        figsize = (8 - 2 * int(nb_neurons != 12), nb_rows + 1)
+
     plt.figure(title, figsize=figsize)
+    subs = []
+    for i in range(len(exp_names)-1, -1, -1):
+        x_ticks_ = xticks[1:(nb_trials // 2) // 2] * 2
+        n = len(x_ticks_)
+        _x_ticks = np.arange(n, dtype=float) + 2 - 1 / (nb_timesteps - 1)
+        _x_ticks[n//2:] += 1. - 1 / (nb_timesteps - 1)
 
-    xticks_b = 2 * np.arange(10) + 4
-    xticks_a = xticks_b.copy() - 1
-    xticks_a[5:] += 2
+        x_ = np.arange(0, nb_trials // 2, 1 / (nb_timesteps - 1)) - 1 / (nb_timesteps - 1)
 
-    for j, genotype in enumerate(genotypes):
+        for j in range(nb_neurons):
+            label = None
+            a_col = ODOUR_A_CMAP(1 - (i + 1) / (MAX_NUMBER_OF_EXPERIMENTS + 1))
+            if j == nb_neurons - 1:
+                label = exp_names[i]
 
-        xa = sum_res[genotype]["xa"]
-        data_a_q25 = sum_res[genotype]["qa25"]
-        data_a_q50 = sum_res[genotype]["qa50"]
-        data_a_q75 = sum_res[genotype]["qa75"]
+            vaj_q25, vaj_q50, vaj_q75 = [v[i, j] for v in va]
+            if len(subs) <= j:
+                axa = plt.subplot(nb_rows, nb_cols, 2 * (j // nb_cols) * nb_cols + j % nb_cols + 1)
+                axa.set_xticks(_x_ticks)
+                axa.set_xticklabels(["" for _ in x_ticks_])
+                axa.set_yticks([0, ymax/2, ymax])
+                axa.set_ylim(ylim)
+                axa.set_xlim([0, n + 1 + 1 / (nb_timesteps - 1)])
+                axa.tick_params(labelsize=8)
+                axa.set_title(neuron_names[j].replace("_", "\n") if is_data else r"$%s$" % neuron_names[j], fontsize=8)
+                if j % nb_cols == 0:
+                    axa.set_ylabel("Odour A", fontsize=8)
+                else:
+                    axa.set_yticklabels([""] * 3)
+                    axa.spines['left'].set_visible(False)
+                    axa.set_yticks([])
+                axa.spines['top'].set_visible(False)
+                axa.spines['right'].set_visible(False)
 
-        a_col = ODOUR_A_CMAP(.8)
+                a_acol = ODOUR_A_CMAP(.2)
 
-        if len(subs) <= j:
-            axa = plt.subplot(nb_rows, nb_cols, 2 * (j // nb_cols) * nb_cols + j % nb_cols + 1)
-            axa.set_xticks(xticks_a)
-            axa.set_yticks([0, ymax/2, ymax])
-            axa.set_ylim(y_lim)
-            axa.set_xlim([2, 24])
-            axa.tick_params(labelsize=8)
-            axa.set_xticklabels(["" for _ in xticks_a])
-            axa.set_title(r"$%s$" % genotype, fontsize=8)
-            if j % nb_cols == 0:
-                axa.set_ylabel("Odour A", fontsize=8)
-            else:
-                axa.set_yticklabels([""] * 3)
-                axa.spines['left'].set_visible(False)
-                axa.set_yticks([])
-            axa.spines['top'].set_visible(False)
-            axa.spines['right'].set_visible(False)
+                if nb_models == 1:
+                    axa.fill_between(x_[3:13], vaj_q25[3:13], vaj_q75[3:13], facecolor=a_acol, alpha=.2)
+                axa.plot(x_[:4], vaj_q50[:4], color=(.8, .8, .8), lw=2)
+                axa.plot(x_[3:13], vaj_q50[3:13], color=a_acol, lw=2, label="acquisition")
+                subs.append(axa)
 
-            a_acol = ODOUR_A_CMAP(.2)
-            axa.fill_between(xa[2:12], data_a_q25[2:12], data_a_q75[2:12], color=a_acol, alpha=0.2)
-            axa.plot(xa[:3], data_a_q50[:3], color=(.8, .8, .8), lw=2)
-            axa.plot(xa[2:12], data_a_q50[2:12], color=a_acol, lw=2, label="acquisition")
-            subs.append(axa)
-        subs[-1].fill_between(xa[14:], data_a_q25[14:], data_a_q75[14:], color=a_col, alpha=0.2)
-        subs[-1].plot(xa[11:15], data_a_q50[11:15], color=(.8, .8, .8), lw=2)
-        subs[-1].plot(xa[14:], data_a_q50[14:], color=a_col, lw=2, label="reversal")
-        subs[-1].plot([15, 17], data_a_q50[[15, 17]], color=PUNISHMENT_COLOUR, marker='.', linestyle=' ')
+            if nb_models == 1:
+                subs[j].fill_between(x_[14+int(is_data):24+int(is_data)], vaj_q25[14+int(is_data):24+int(is_data)],
+                                     vaj_q75[14+int(is_data):24+int(is_data)], facecolor=a_col, alpha=.2)
+            subs[j].plot(x_[12:15+int(is_data)], vaj_q50[12:15+int(is_data)], color=(.8, .8, .8), lw=2)
+            subs[j].plot(x_[23+int(is_data):], vaj_q50[23+int(is_data):], color=(.8, .8, .8), lw=2)
+            subs[j].plot(x_[14+int(is_data):24+int(is_data)], vaj_q50[14+int(is_data):24+int(is_data)],
+                         color=a_col, lw=2, label=label)
+            if ("extinction" in exp_names[i] or "unpaired" in exp_names[i] or
+                    np.all([ps not in neuron_names[j] for ps in plot_shock])):
+                continue
+            shock_i = [15+int(is_data), 17+int(is_data), 19+int(is_data), 21+int(is_data), 23+int(is_data)]
+            subs[j].plot(x_[shock_i], vaj_q50[shock_i], color=PUNISHMENT_COLOUR, marker='.', linestyle=' ')
 
-    for j, genotype in enumerate(genotypes):
+        x_b = x_ + 1 - 1 / (nb_timesteps - 1)
+        for j in range(nb_neurons):
+            jn = j + nb_neurons
 
-        xb = sum_res[genotype]["xb"]
-        data_b_q25 = sum_res[genotype]["qb25"]
-        data_b_q50 = sum_res[genotype]["qb50"]
-        data_b_q75 = sum_res[genotype]["qb75"]
+            label = None
+            b_col = ODOUR_B_CMAP(1 - (i + 1) / (MAX_NUMBER_OF_EXPERIMENTS + 1))
+            if j == nb_neurons - 1:
+                label = exp_names[i]
 
-        b_col = ODOUR_B_CMAP(.8)
+            vbj_q25, vbj_q50, vbj_q75 = [v[i, j] for v in vb]
+            if len(subs) <= jn:
+                axb = plt.subplot(nb_rows, nb_cols, (2 * (j // nb_cols) + 1) * nb_cols + j % nb_cols + 1)
+                axb.set_xticks(_x_ticks)
+                axb.set_xticklabels(x_ticks_)
+                axb.set_yticks([0, ymax/2, ymax])
+                axb.set_ylim(ylim)
+                axb.set_xlim([0, n + 1 + 1 / (nb_timesteps - 1)])
+                axb.tick_params(labelsize=8)
+                if j % nb_cols == 0:
+                    axb.set_ylabel("Odour B", fontsize=8)
+                    if nb_rows <= 4:
+                        axb.text(-3, -.8, "Trial #", fontsize=8)
+                else:
+                    axb.set_yticklabels([""] * 3)
+                    axb.spines['left'].set_visible(False)
+                    axb.set_yticks([])
 
-        jn = j + (nb_rows * nb_cols) // 2
+                axb.spines['top'].set_visible(False)
+                axb.spines['right'].set_visible(False)
 
-        if len(subs) <= jn:
-            axb = plt.subplot(nb_rows, nb_cols, (2 * (j // nb_cols) + 1) * nb_cols + j % nb_cols + 1)
-            axb.set_xticks(xticks_b)
-            axb.set_yticks([0, ymax/2, ymax])
-            axb.set_ylim(y_lim)
-            axb.set_xlim([2, 24])
-            axb.tick_params(labelsize=8)
-            axb.set_xticklabels(["%s" % (i + 1) for i in range(5)] * 2)
-            if jn % nb_cols == 0:
-                axb.set_ylabel("Odour B", fontsize=8)
-                axb.text(-6, -.8, "Trial #", fontsize=8)
-            else:
-                axb.set_yticklabels([""] * 3)
-                axb.spines['left'].set_visible(False)
-                axb.set_yticks([])
+                b_acol = ODOUR_B_CMAP(0.2)
 
-            axb.spines['top'].set_visible(False)
-            axb.spines['right'].set_visible(False)
+                if nb_models == 1:
+                    axb.fill_between(x_b[2:12], vbj_q25[2:12], vbj_q75[2:12], facecolor=b_acol, alpha=.2)
+                axb.plot(x_b[:3], vbj_q50[:3], color=(.8, .8, .8))
+                axb.plot(x_b[2:12], vbj_q50[2:12], color=b_acol, lw=2, label="acquisition")
+                subs.append(axb)
 
-            b_acol = ODOUR_B_CMAP(0.2)
+            if nb_models == 1:
+                subs[jn].fill_between(x_b[13:23], vbj_q25[13:23], vbj_q75[13:23], facecolor=b_col, alpha=.2)
+            subs[jn].plot(x_b[11:14], vbj_q50[11:14], color=(.8, .8, .8), lw=2)
+            subs[jn].plot(x_b[22:], vbj_q50[22:], color=(.8, .8, .8), lw=2)
+            subs[jn].plot(x_b[13:23], vbj_q50[13:23], color=b_col, lw=2, label=label)
 
-            axb.fill_between(xb[2:12], data_b_q25[2:12], data_b_q75[2:12], color=b_acol, alpha=0.2)
-            axb.plot(xb[:3], data_b_q50[:3], color=(.8, .8, .8), lw=2)
-            axb.plot(xb[2:12], data_b_q50[2:12], color=b_acol, lw=2, label="acquisition")
-
-            subs.append(axb)
-
-        subs[-1].fill_between(xb[12:16], data_b_q25[12:], data_b_q75[12:], color=b_col, alpha=0.2)
-        subs[-1].plot(xb[11:13], data_b_q50[11:13], color=(.8, .8, .8), lw=2)
-        subs[-1].plot(xb[12:16], data_b_q50[12:], color=b_col, lw=2, label="reversal")
-        subs[-1].plot(xb[[3, 5, 7, 9, 11]], data_b_q50[[3, 5, 7, 9, 11]], color=PUNISHMENT_COLOUR,
-                      marker='.', linestyle=' ')
+            if i > 0 or np.all([ps not in neuron_names[j] for ps in plot_shock]):
+                continue
+            shock_i = [3, 5, 7, 9, 11]
+            subs[jn].plot(x_b[shock_i], vbj_q50[shock_i], color=PUNISHMENT_COLOUR, marker='.', linestyle=' ')
 
     if show_legend:
         subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left',
                                       framealpha=0., labelspacing=1.)
         subs[-1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.35), loc='upper left', framealpha=0., labelspacing=1)
-
-    # subs[len(subs)//2 - 1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.), loc='upper left',
-    #                               framealpha=0., labelspacing=1.)
-    # subs[-1].legend(fontsize=8, bbox_to_anchor=(1.05, 1.), loc='upper left', framealpha=0., labelspacing=1)
     plt.tight_layout()
     plt.show()
 

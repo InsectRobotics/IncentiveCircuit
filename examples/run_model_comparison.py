@@ -41,18 +41,35 @@ def main(*args):
 
     data_names, model_names = [], []
     data_feats, model_feats = [], []
+    dq25_feats, dq75_feats = [], []
     for neuron in data_res:
         data_names.append(neuron)
-        data_feats.append(np.r_[  # data_res[neuron]["qa50"][2:12] - data_res[neuron]["qa50"][0:10],
+        data_feats.append(np.r_[
+                                # data_res[neuron]["qa50"][2:12] - data_res[neuron]["qa50"][0:10],
                                 data_res[neuron]["qa50"][8:12] - data_res[neuron]["qa50"][0:4],
                                 data_res[neuron]["qa50"][14:18] - data_res[neuron]["qa50"][12:16],
                                 # data_res[neuron]["qb50"][2:12] - data_res[neuron]["qb50"][0:10],
                                 data_res[neuron]["qb50"][8:12] - data_res[neuron]["qb50"][0:4],
                                 data_res[neuron]["qb50"][12:16] - data_res[neuron]["qb50"][10:14]])
+        dq25_feats.append(np.r_[
+                                # data_res[neuron]["qa25"][2:12] - data_res[neuron]["qa25"][0:10],
+                                data_res[neuron]["qa25"][8:12] - data_res[neuron]["qa25"][0:4],
+                                data_res[neuron]["qa25"][14:18] - data_res[neuron]["qa25"][12:16],
+                                # data_res[neuron]["qb25"][2:12] - data_res[neuron]["qb25"][0:10],
+                                data_res[neuron]["qb25"][8:12] - data_res[neuron]["qb25"][0:4],
+                                data_res[neuron]["qb25"][12:16] - data_res[neuron]["qb25"][10:14]])
+        dq75_feats.append(np.r_[
+                                # data_res[neuron]["qa75"][2:12] - data_res[neuron]["qa75"][0:10],
+                                data_res[neuron]["qa75"][8:12] - data_res[neuron]["qa75"][0:4],
+                                data_res[neuron]["qa75"][14:18] - data_res[neuron]["qa75"][12:16],
+                                # data_res[neuron]["qb75"][2:12] - data_res[neuron]["qb75"][0:10],
+                                data_res[neuron]["qb75"][8:12] - data_res[neuron]["qb75"][0:4],
+                                data_res[neuron]["qb75"][12:16] - data_res[neuron]["qb75"][10:14]])
 
     for neuron in model_res:
         model_names.append(neuron)
-        model_feats.append(np.r_[  # model_res[neuron]["va"][3:13] - model_res[neuron]["va"][1:11],
+        model_feats.append(np.r_[
+                                 # model_res[neuron]["va"][3:13] - model_res[neuron]["va"][1:11],
                                  model_res[neuron]["va"][9:13] - model_res[neuron]["va"][1:5],
                                  model_res[neuron]["va"][14:18] - model_res[neuron]["va"][12:16],
                                  # model_res[neuron]["vb"][2:12] - model_res[neuron]["vb"][0:10],
@@ -60,6 +77,8 @@ def main(*args):
                                  model_res[neuron]["vb"][13:17] - model_res[neuron]["vb"][11:15]])
 
     data_feats = np.array(data_feats)[:, ::2] / 2
+    dq25_feats = np.array(dq25_feats)[:, ::2] / 2
+    dq75_feats = np.array(dq75_feats)[:, ::2] / 2
     model_feats = np.array(model_feats)[:, ::2] / 2
 
     c = np.zeros((model_feats.shape[0], data_feats.shape[0]), dtype=float)
@@ -68,6 +87,11 @@ def main(*args):
         for j in range(c.shape[1]):
             c[i, j] = np.correlate(data_feats[j], model_feats[i])
             d[i, j] = np.correlate(-data_feats[j], model_feats[i])
+            # d_high = np.maximum(dq75_feats[j] - model_feats[i], 0)
+            # d_low = np.minimum(model_feats[i] - dq25_feats[j], 0)
+            # c[i, j] = 1
+            # d[i, j] = np.sqrt(np.sum(np.square(d_high - d_low)))
+            # print(np.sum(d_high))
 
     c = c - d
     # c = np.maximum(c, 0) - np.maximum(d, 0)
