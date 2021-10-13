@@ -82,17 +82,22 @@ class IncentiveCircuit(MBModel):
 
         # susceptible memory (SM) sub-circuit
         if has_sm:
-            # Susceptible memories depress their respective DANs
+            # Susceptible memories depress their opposite DANs
             self._w_m2v[pss:pse, pds:pde] = np.array([  # S-MBONs to D-DANs
                 [+0., -1.],  # MBON-γ1ped (s_at)
                 [-1., +0.]  # MBON-γ4>γ1γ2 (s_av)
             ]) * .3
+            # # Susceptible memories excite their respective DANs
+            # self._w_m2v[pss:pse, pds:pde] = np.array([  # S-MBONs to D-DANs
+            #     [+1., -0.],  # MBON-γ1ped (s_at)
+            #     [-0., +1.]  # MBON-γ4>γ1γ2 (s_av)
+            # ]) * .7
             # Discharging DANs depress their respective susceptible MBONs
             self._w_d2k[pds:pde, pss:pse] += -np.array([
                 [float(m == (d + ((pde-pds) // 2)) % (pde-pds))
                  for m in range(pse-pss)]
                 for d in range(pde-pds)
-            ])
+            ]) * 1.
 
         # restrained memory (RM) sub-circuit
         if has_rm:
@@ -106,8 +111,8 @@ class IncentiveCircuit(MBModel):
         if has_rrm:
             # Restrained memories enhance their opposite DANs
             self._w_m2v[prs:pre, pcs:pce] = np.array([  # R-MBONs to C-DANs
-                [+1., +.0],  # MBON-γ2α'1 (r_at)
-                [+.0, +1.]  # MBON-γ5β'2a (r_av)
+                [+1., +0.],  # MBON-γ2α'1 (r_at)
+                [+0., +1.]  # MBON-γ5β'2a (r_av)
             ]) * .5
 
             # Charging DANs depress their opposite restrained MBONs
@@ -156,7 +161,7 @@ class IncentiveCircuit(MBModel):
         u = np.zeros((2, self.nb_dan + self.nb_mbon), dtype=float)
         u[:, pds:pde] = np.eye(pde-pds) * shock_magnitude
         u[:, pcs:pce] = np.eye(pce-pcs) * shock_magnitude
-        # u[:, pfs:pfe] = np.eye(pfe-pfs) * shock_magnitude
+        # u[:, pfs:pfe] = np.eye(pfe-pfs) * shock_magnitude / 2
         self.w_u2d = np.array(u)
 
         self.us_names = ["sugar", "shock"]
@@ -174,9 +179,5 @@ class IncentiveCircuit(MBModel):
         self.neuron_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
     def __repr__(self):
-        s = "IncentiveCircuit("
-        s += "lr='" + self._learning_rule + "'"
-        if self.nb_apl > 0:
-            s += ", apl=%d" % self.nb_apl
-        s += ")"
+        s = f"IncentiveCircuit(lr='{self._learning_rule}')"
         return s

@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     # create the Incentive Circuit
     model = IncentiveCircuit(
-        learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=26, nb_active_kcs=nb_active_kc, ltm_speed=ltm_speed,
+        learning_rule="dlr", nb_timesteps=3, nb_trials=26, nb_active_kcs=nb_active_kc, ltm_speed=ltm_speed,
         nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
         has_sm=True, has_rm=True, has_rrm=True, has_ltm=True, has_rfm=True, has_mam=True)
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
         # run all the experiments and get a copy of the model with the history of their responses and parameters for each
         # one of them
         model.rng = np.random.RandomState(2021 + repeat)
-        models.append(run_main_experiments(model, reversal=True, unpaired=False, extinction=False))
+        models.append(run_main_experiments(model, reversal=True, unpaired=True, extinction=True))
 
     # plot the results based on the input flags
     run_arg(model, models, only_nids)
