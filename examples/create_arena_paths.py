@@ -47,7 +47,7 @@ if __name__ == '__main__':
     sv = float(model_params["susceptible-weight"])
     rv = float(model_params["stm-weight"])
     mv = float(model_params["ltm-weight"])
-    nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=50)
+    nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=100)
     nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=100)  # seconds
     arena.__data_dir__ = directory = os.path.abspath(read_arg(["-d", "--dir"], vtype=str, default=arena.__data_dir__))
     repeats = read_arg(["-R", "--repeat"], vtype=int, default=10)

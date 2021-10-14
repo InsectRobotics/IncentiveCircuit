@@ -61,7 +61,7 @@ class FruitFly(object):
             the random generator
         """
         self.mb = IncentiveCircuit(
-            learning_rule=learning_rule, nb_apl=0, nb_timesteps=nb_in_trial, nb_trials=nb_steps, ltm_speed=ltm_speed,
+            learning_rule=learning_rule, nb_timesteps=nb_in_trial, nb_trials=nb_steps, ltm_speed=ltm_speed,
             nb_active_kcs=nb_active_kcs, nb_kc=nb_kcs, nb_kc_odour_1=nb_kc_odour_a, nb_kc_odour_2=nb_kc_odour_b,
             has_real_names=False, has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
         self.xy = np.zeros(nb_steps, dtype=complex)
