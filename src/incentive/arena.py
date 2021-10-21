@@ -263,14 +263,15 @@ def load_arena_stats(file_names, nb_active_kcs=2, prediction_error=False):
     """
 
     d_names = ["susceptible", "restrained", "long-term memory", "reinforcement",
-               "paired odour", "phase", "angle", "absolute", "dist_A", "dist_B", "ang_A", "ang_B", "repeat"]
-    d_raw = [[], [], [], [], [], [], [], [], [], [], [], [], []]
+               "paired odour", "phase", "angle", "absolute", "dist_A", "dist_B", "ang_A", "ang_B",
+               "time_A", "time_B", "repeat"]
+    d_raw = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
 
     for fname in file_names:
         if prediction_error:
-            pattern = r'rw-arena-([\w]+)-kc([0-9])-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
+            pattern = r'^rpe-arena-([\w]+)-kc([0-9])-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
         else:
-            pattern = r'arena-([\w]+)-kc([0-9])-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
+            pattern = r'^arena-([\w]+)-kc([0-9])-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
         details = re.findall(pattern, fname)
         if len(details) < 1:
             continue
@@ -319,7 +320,13 @@ def load_arena_stats(file_names, nb_active_kcs=2, prediction_error=False):
         d_raw[11].extend(np.angle(data[:, e_pre-1] - FruitFly.b_source))
         d_raw[11].extend(np.angle(data[:, s_post-1] - FruitFly.b_source))
         d_raw[11].extend(np.angle(data[:, -1] - FruitFly.b_source))
-        d_raw[12].extend([repeat] * 3 * nb_flies)
+        d_raw[12].extend(np.mean(np.absolute(data[:, :e_pre] - FruitFly.a_source) < FruitFly.r_radius, axis=1) * 20)
+        d_raw[12].extend(np.mean(np.absolute(data[:, e_pre:s_post] - FruitFly.a_source) < FruitFly.r_radius, axis=1) * 30)
+        d_raw[12].extend(np.mean(np.absolute(data[:, :s_post] - FruitFly.a_source) < FruitFly.r_radius, axis=1) * 50)
+        d_raw[13].extend(np.mean(np.absolute(data[:, :e_pre] - FruitFly.b_source) < FruitFly.r_radius, axis=1) * 20)
+        d_raw[13].extend(np.mean(np.absolute(data[:, e_pre:s_post] - FruitFly.b_source) < FruitFly.r_radius, axis=1) * 30)
+        d_raw[13].extend(np.mean(np.absolute(data[:, :s_post] - FruitFly.b_source) < FruitFly.r_radius, axis=1) * 50)
+        d_raw[14].extend([repeat] * 3 * nb_flies)
     d_raw = np.array(d_raw)
     df = pd.DataFrame(d_raw, index=d_names).T
     df["angle"] = np.rad2deg(np.array(df["angle"], dtype=float))
@@ -328,6 +335,8 @@ def load_arena_stats(file_names, nb_active_kcs=2, prediction_error=False):
     df["dist_B"] = np.array(df["dist_B"], dtype=float)
     df["ang_A"] = np.rad2deg(np.array(df["ang_A"], dtype=float))
     df["ang_B"] = np.rad2deg(np.array(df["ang_B"], dtype=float))
+    df["time_A"] = np.array(df["time_A"], dtype=float)
+    df["time_B"] = np.array(df["time_B"], dtype=float)
     df["susceptible"] = np.array(df["susceptible"] == "True", dtype=bool)
     df["restrained"] = np.array(df["restrained"] == "True", dtype=bool)
     df["long-term memory"] = np.array(df["long-term memory"] == "True", dtype=bool)
@@ -395,7 +404,7 @@ def load_arena_paths(file_names, nb_active_kcs=2, max_repeat=None, prediction_er
 
     for fname in file_names:
         if prediction_error:
-            pattern = r'^rw-arena-([\w]+)-kc([0-9])-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
+            pattern = r'^rpe-arena-([\w]+)-kc([0-9])-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
         else:
             pattern = r'^arena-([\w]+)-kc([0-9])-(s{0,1})(r{0,1})(m{0,1})(a{0,1})(b{0,1})-?([0-9]*)'
         details = re.findall(pattern, fname)

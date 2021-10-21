@@ -92,6 +92,7 @@ class IncentiveCircuit(MBModel):
             #     [+1., -0.],  # MBON-γ1ped (s_at)
             #     [-0., +1.]  # MBON-γ4>γ1γ2 (s_av)
             # ]) * .7
+
             # Discharging DANs depress their respective susceptible MBONs
             self._w_d2k[pds:pde, pss:pse] += -np.array([
                 [float(m == (d + ((pde-pds) // 2)) % (pde-pds))
@@ -109,11 +110,17 @@ class IncentiveCircuit(MBModel):
 
         # reciprocal restrained memories (RRM) sub-circuit
         if has_rrm:
-            # Restrained memories enhance their opposite DANs
+            # Restrained memories enhance their same-valence DANs
             self._w_m2v[prs:pre, pcs:pce] = np.array([  # R-MBONs to C-DANs
                 [+1., +0.],  # MBON-γ2α'1 (r_at)
                 [+0., +1.]  # MBON-γ5β'2a (r_av)
             ]) * .5
+
+            # # Restrained memories inhibit their opposite DANs
+            # self._w_m2v[prs:pre, pcs:pce] = np.array([  # R-MBONs to C-DANs
+            #     [+0., -1.],  # MBON-γ2α'1 (r_at)
+            #     [-1., +0.]  # MBON-γ5β'2a (r_av)
+            # ]) * .5
 
             # Charging DANs depress their opposite restrained MBONs
             self._w_d2k[pcs:pce, prs:pre] += -np.array([
@@ -128,6 +135,13 @@ class IncentiveCircuit(MBModel):
                 [+1.0, +.0],  # MBON-β2β'2a (m_at)
                 [+.0, +1.0],  # MBON-α'1 (m_av)
             ]) * ltm_speed
+
+            # # Long-term memory (LTM) sub-circuit
+            # self._w_m2v[pms:pme, pcs:pce] += np.array([  # M-MBONs to C-DANs
+            #     [+.0, -1.0],  # MBON-β2β'2a (m_at)
+            #     [-1.0, +.0],  # MBON-α'1 (m_av)
+            # ]) * ltm_speed
+
             # Charging DANs enhance their respective memory MBONs
             self._w_d2k[pcs:pce, pms:pme] += np.array([
                 [float(m == (d + ((pce-pcs) // 2) + 1) % (pce-pcs))

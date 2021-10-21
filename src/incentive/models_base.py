@@ -258,7 +258,6 @@ class MBModel(object):
 
             # store values and weights in history
             self._v[self._t + 1], self.w_k2m[self._t + 1] = v_post, w_k2m_post
-            # self._v_apl[self._t + 1] = v_apl_post
 
     def update_weights(self, kc, v, w_k2m):
         """

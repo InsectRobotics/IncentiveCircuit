@@ -31,16 +31,34 @@ if __name__ == '__main__':
     file_names = os.listdir(directory)
 
     df = load_arena_stats(file_names, nb_active_kcs=nb_active_kcs, prediction_error=rpe)
-    df["dist_A"][df["phase"] == "learn"] = df["dist_A"][df["phase"] == "learn"]
 
-    df["PI"] = (df["dist_A"] - df["dist_B"]) / (df["dist_A"] + df["dist_B"])
-    # df["PI"] = -df["absolute"] / 0.6
-    df["avoid A"] = df["dist_A"] - 1
-    df["avoid B"] = df["dist_B"] - 1
-    df["avoid A/B"] = np.max([df["dist_A"], df["dist_B"]], axis=0) / 0.6 - 1
-    df["attract A"] = df["dist_A"] - 1
-    df["attract B"] = df["dist_B"] - 1
-    df["attract A/B"] = np.min([df["dist_A"], df["dist_B"]], axis=0) / 0.6 - 1
+    # df["PI"] = -(df["time_A"] - df["time_B"]) / (df["time_A"] + df["time_B"])
+    # df["PI"] = (df["dist_A"] - df["dist_B"]) / (df["dist_A"] + df["dist_B"])
+
+    d_pi = np.full_like(df["time_A"], np.nan)
+
+    i_learn = np.zeros(df["phase"].shape[0] // 3, dtype=bool)
+    t_learn = np.array(df[df["phase"] == "learn"]["time_A"])
+    i_learn[t_learn > 0] = True
+    t_pre = np.array(df[df["phase"] == "pre"]["time_A"])[t_learn > 0]
+    t_post = np.array(df[df["phase"] == "post"]["time_A"])[t_learn > 0]
+    i_pi = np.array(df["phase"] == "pre")
+    i_pi[i_pi] = i_learn
+    d_pi[i_pi] = (t_post - t_pre) / (t_post + t_pre)
+
+    i_learn = np.zeros(df["phase"].shape[0] // 3, dtype=bool)
+    t_learn = np.array(df[df["phase"] == "learn"]["time_B"])
+    i_learn[t_learn > 0] = True
+    t_pre = np.array(df[df["phase"] == "pre"]["time_B"])[t_learn > 0]
+    t_post = np.array(df[df["phase"] == "post"]["time_B"])[t_learn > 0]
+    i_pi = np.array(df["phase"] == "learn")
+    i_pi[i_pi] = i_learn
+    d_pi[i_pi] = (t_post - t_pre) / (t_post + t_pre)
+
+    d_pi[np.array(df["phase"] == "post")] = (d_pi[df["phase"] == "learn"] - d_pi[df["phase"] == "pre"]) / (
+        (d_pi[df["phase"] == "learn"] + d_pi[df["phase"] == "pre"]))
+
+    df["PI"] = d_pi
 
     codes = ["srm"]
     # codes = ["srm", "s", "r", "m"]
@@ -51,9 +69,3 @@ if __name__ == '__main__':
                        max_repeat=10,
                        name="%sarena-box-k%d-%s" % ("rpe-" if rpe else "", nb_active_kcs, code),
                        show=code == codes[-1])
-
-    # repeats = np.unique(df["repeat"])
-    # repeats = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    # for repeat in repeats:
-    #     plot_arena_box(df[df["repeat"] == repeat], "%sarena-box-%02d" % ("rpe-" if rpe else "", repeat),
-    #                    show=repeat == repeats[-1])

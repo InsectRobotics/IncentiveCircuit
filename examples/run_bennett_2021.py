@@ -140,7 +140,7 @@ def main(*args):
                 colours.append("lightgrey")
         plt.plot([-10, 10], [0, 0], 'lightgrey', ls=':')
         plt.plot([0, 0], [-3, 3], 'lightgrey', ls=':')
-        plt.scatter(delta_f_model, delta_f_data, edgecolors=colours, facecolors='none', marker='o', s=80)
+        plt.scatter(delta_f_model, delta_f_data, edgecolors=colours, facecolors='none', marker='o', s=20)
         plt.yticks([-2, -1, 0, 1, 2], fontsize=8)
         plt.xticks([-6, -3, 0, 3, 6], fontsize=8)
         plt.ylim(-3, 3)
