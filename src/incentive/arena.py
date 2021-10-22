@@ -232,7 +232,7 @@ def arena_routine(agent, noise=0.1, r_start=.2, r_end=.5, reward=False, punishme
             agent.xy[t] *= 0.
 
 
-def load_arena_stats(file_names, nb_active_kcs=2, prediction_error=False):
+def load_arena_stats(file_names, nb_active_kcs=5, prediction_error=False, nb_kcs=10):
     """
     Creates a DataFrame that contains the stats of experiments in the arena.
 
@@ -262,10 +262,11 @@ def load_arena_stats(file_names, nb_active_kcs=2, prediction_error=False):
         a DataFrame of size N x C, where N is the number of files x 3 and C is the number of features calculated
     """
 
+    mb_names = ["s+", "s-", "r+", "r-", "m+", "m-"]
     d_names = ["susceptible", "restrained", "long-term memory", "reinforcement",
                "paired odour", "phase", "angle", "absolute", "dist_A", "dist_B", "ang_A", "ang_B",
-               "time_A", "time_B", "repeat"]
-    d_raw = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
+               "time_A", "time_B", "repeat"] + ["k%d2%s" % (k, m) for k in range(nb_kcs) for m in mb_names]
+    d_raw = [[] for _ in range(15 + nb_kcs * len(mb_names))]
 
     for fname in file_names:
         if prediction_error:
@@ -288,7 +289,8 @@ def load_arena_stats(file_names, nb_active_kcs=2, prediction_error=False):
 
         repeat = 0 if details[0][7] == '' else int(details[0][7])
 
-        data = np.load(os.path.join(__data_dir__, fname))["data"]
+        data_ = np.load(os.path.join(__data_dir__, fname))
+        data, weights = data_["data"], data_["weights"]
 
         nb_flies, nb_time_steps = data.shape
 
@@ -322,13 +324,19 @@ def load_arena_stats(file_names, nb_active_kcs=2, prediction_error=False):
         d_raw[11].extend(np.angle(data[:, -1] - FruitFly.b_source))
         d_raw[12].extend(np.mean(np.absolute(data[:, :e_pre] - FruitFly.a_source) < FruitFly.r_radius, axis=1) * 20)
         d_raw[12].extend(np.mean(np.absolute(data[:, e_pre:s_post] - FruitFly.a_source) < FruitFly.r_radius, axis=1) * 30)
-        d_raw[12].extend(np.mean(np.absolute(data[:, :s_post] - FruitFly.a_source) < FruitFly.r_radius, axis=1) * 50)
+        d_raw[12].extend(np.mean(np.absolute(data[:, s_post:] - FruitFly.a_source) < FruitFly.r_radius, axis=1) * 50)
         d_raw[13].extend(np.mean(np.absolute(data[:, :e_pre] - FruitFly.b_source) < FruitFly.r_radius, axis=1) * 20)
         d_raw[13].extend(np.mean(np.absolute(data[:, e_pre:s_post] - FruitFly.b_source) < FruitFly.r_radius, axis=1) * 30)
-        d_raw[13].extend(np.mean(np.absolute(data[:, :s_post] - FruitFly.b_source) < FruitFly.r_radius, axis=1) * 50)
+        d_raw[13].extend(np.mean(np.absolute(data[:, s_post:] - FruitFly.b_source) < FruitFly.r_radius, axis=1) * 50)
         d_raw[14].extend([repeat] * 3 * nb_flies)
+        for k in range(nb_kcs):
+            for m in range(len(mb_names)):
+                d_raw[15+k*len(mb_names)+m].extend(np.mean(weights[:, :e_pre, k, 6 + m], axis=1))
+                d_raw[15+k*len(mb_names)+m].extend(np.mean(weights[:, e_pre:s_post, k, 6 + m], axis=1))
+                d_raw[15+k*len(mb_names)+m].extend(np.mean(weights[:, s_post:, k, 6 + m], axis=1))
     d_raw = np.array(d_raw)
     df = pd.DataFrame(d_raw, index=d_names).T
+
     df["angle"] = np.rad2deg(np.array(df["angle"], dtype=float))
     df["absolute"] = np.array(df["absolute"], dtype=float)
     df["dist_A"] = np.array(df["dist_A"], dtype=float)
@@ -341,6 +349,9 @@ def load_arena_stats(file_names, nb_active_kcs=2, prediction_error=False):
     df["restrained"] = np.array(df["restrained"] == "True", dtype=bool)
     df["long-term memory"] = np.array(df["long-term memory"] == "True", dtype=bool)
     df["repeat"] = np.array(df["repeat"], dtype=int)
+    for k in range(nb_kcs):
+        for m in mb_names:
+            df["k%d2%s" % (k, m)] = np.array(df["k%d2%s" % (k, m)], dtype=float)
 
     return df
 

@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     file_names = os.listdir(__data_dir__)
     for r in np.arange(1, repeat+1):
-        d_res, d_wei, d_nam, cases, d_names = load_arena_traces(file_names, nb_active_kcs=2, repeat=r,
+        d_res, d_wei, d_nam, cases, d_names = load_arena_traces(file_names, nb_active_kcs=5, repeat=r,
                                                                 prediction_error=rpe)
 
         # plot_arena_traces(d_res, d_nam, cases, d_names, figsize=(20, 5),

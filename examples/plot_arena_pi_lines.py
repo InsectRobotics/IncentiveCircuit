@@ -30,8 +30,7 @@ if __name__ == '__main__':
     odours_visited = "A and B"
 
     nb_active_kcs = 5
-    # rpe = read_arg(["-rpe", "--reward-prediction-error"])
-    rpe = True
+    rpe = read_arg(["-rpe", "--reward-prediction-error"])  # or True
     directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
 
     file_names = os.listdir(directory)
@@ -87,8 +86,6 @@ if __name__ == '__main__':
         reinforcement = details.group(2)
         col = i + 1
 
-        a_pre, a_post, a_learn = [], [], []
-        b_pre, b_post, b_learn = [], [], []
         for r in range(10):
             for t, time in enumerate(["time_A", "time_B"]):
                 for p, phase in enumerate(["pre", "learn", "post"]):
@@ -116,33 +113,7 @@ if __name__ == '__main__':
         # # keep only the first time that gets in the reinforced area
         # db_c = db_c[np.argmax(db_c > 0, axis=0), np.arange(db_c.shape[1])]
         b_ps = data[title][:, 5]  # - data[title][:, 4]
-        # if "AB" in odour:
-        #     d_learn = np.array(np.any([data[title][:, 1] > 0, data[title][:, 4] > 0], axis=0), dtype=float)
-        #     pi_c = np.max([d_learn * (a_pr - b_pr) / (a_pr + b_pr), d_learn * (b_pr - a_pr) / (a_pr + b_pr)], axis=0)
-        #     pi_i = np.max([d_learn * (a_ps - b_ps) / (a_ps + b_ps), d_learn * (b_ps - a_ps) / (a_ps + b_ps)], axis=0)
-        # elif "A" in odour:
-        #     d_learn = np.array(data[title][:, 1] > 0, dtype=float)
-        #     # time spend with odour A in higher than time spent with odour B
-        #     pi_c = d_learn * (a_pr - b_pr) / (a_pr + b_pr)
-        #     pi_i = d_learn * (a_ps - b_ps) / (a_ps + b_ps)
-        # elif "B" in odour:
-        #     d_learn = np.array(data[title][:, 4] > 0, dtype=float)
-        #     # time spend with odour B in higher than time spent with odour A
-        #     pi_c = d_learn * (b_pr - a_pr) / (a_pr + b_pr)
-        #     pi_i = d_learn * (b_ps - a_ps) / (a_ps + b_ps)
-        # else:
-        #     d_learn = False
-        #     pi_c = np.zeros_like(data[title][:, 0])
-        #     pi_i = np.zeros_like(data[title][:, 0])
-        #
-        # f_c = (pi_c + 1) / 2
-        # f_i = (pi_i + 1) / 2
 
-        # d_f = (f_i - f_c) / np.sqrt(.5 * (f_i + f_c) * (1 - .5 * (f_i + f_c)))
-        #
-        # d_q25 = np.nanquantile(d_f, .25, axis=1)
-        # d_q50 = np.nanquantile(d_f, .50, axis=1)
-        # d_q75 = np.nanquantile(d_f, .75, axis=1)
         ia = np.any(a_tr > 0, axis=0)
         ib = np.any(b_tr > 0, axis=0)
 
@@ -198,10 +169,18 @@ if __name__ == '__main__':
         color_r = 'red' if reinforcement == "punishment" else "green"
 
         lw = .2
-        alpha = .2
-        # nb_samples = 10
-        nb_samples = c.shape[1]
-        s = np.random.permutation(np.arange(c.shape[1]))[:nb_samples]
+        alpha = .5
+        nb_samples = 3
+
+        t_in = np.argmax(c > 0, axis=0) // 3
+        s, p = [], []
+        for t in range(10):
+            ss = np.arange(c.shape[1])[t_in == t]
+            if len(ss) > 0:
+                s.append(ss[0])
+                p.append(len(ss))
+        s = np.array(s)[np.argsort(p)[::-1]][:nb_samples]
+
         # y_max = np.maximum(ca.max(), cb.max()) * 1.1
         y_max = np.maximum(np.sqrt(ca.max()), np.sqrt(cb.max())) * 1.1
 
@@ -228,7 +207,7 @@ if __name__ == '__main__':
         ax.spines['bottom'].set_visible(False)
 
         ax = plt.subplot(2, 6, col + 6)
-        plt.plot([0, 10], [0, 0], 'k:', lw=.5)
+        # plt.plot([0, 10], [0, 0], 'k:', lw=.5)
         plt.plot(x, c[:, s], '-', color='black', lw=lw, alpha=alpha)
         # plt.fill_between(x, c_q25, c_q75, facecolor='black', alpha=.2)
         plt.plot(x, c_q50, 'k-', lw=2)
