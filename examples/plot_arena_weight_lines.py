@@ -205,9 +205,9 @@ if __name__ == '__main__':
             plt.plot(x, -cb[:, s], '-', color=ODOUR_B_CMAP(0.99), lw=lw, alpha=alpha)
 
             if "A" in odour:
-                plt.plot(x, -co_q50, ':', color=ODOUR_A_CMAP(0.99), lw=2)
+                plt.plot(x, -co_q50, '--', color=ODOUR_A_CMAP(0.99), lw=1.5)
             if "B" in odour:
-                plt.plot(x, co_q50, ':', color=ODOUR_B_CMAP(0.99), lw=2)
+                plt.plot(x, co_q50, '--', color=ODOUR_B_CMAP(0.99), lw=1.5)
             plt.plot(x, ca_q50, '-', color=ODOUR_A_CMAP(0.99), lw=2)
             plt.plot(x, -cb_q50, '-', color=ODOUR_B_CMAP(0.99), lw=2)
 

@@ -20,6 +20,7 @@ with open(os.path.join(__data_dir__, "intervention-examples.yaml"), 'r') as f:
 
 def main(*args):
 
+    learning_rule = "rpe"
     nb_train, nb_test = 10, 2
     nb_trials = 10
     nb_samples = 20
@@ -29,7 +30,7 @@ def main(*args):
     pd.set_option('display.max_rows', 93)
     pd.set_option('display.width', 1000)
 
-    plt.figure("bennett-2021", figsize=(10, 10))
+    plt.figure("bennett-2021-%s" % learning_rule, figsize=(7, 7))
 
     targets = [
         ["s", "d"],
@@ -93,7 +94,7 @@ def main(*args):
                 #       np.array(data["Cell types"])[e_id])
 
                 ben = Bennett(train=train, test=test, nb_train=nb_train, nb_test=nb_test, nb_in_trial=nb_trials,
-                              rng=rng)
+                              rng=rng, learning_rule=learning_rule)
                 ben(excite=excite, inhibit=inhibit, intervention=0, noise=0.1)
 
                 pi_control = np.nanmean(ben.get_pi("A vs B", train=False).flatten())
@@ -149,7 +150,7 @@ def main(*args):
         plt.xlabel(r"$\Delta_f$ (model)")
 
     plt.tight_layout()
-    plt.savefig(os.path.join(__data_dir__, "bennett-2021.png"), dpi=300)
+    plt.savefig(os.path.join(__data_dir__, "bennett-2021-%s.png" % learning_rule), dpi=300)
     plt.show()
 
 
