@@ -28,6 +28,7 @@ if __name__ == '__main__':
     from incentive.arena import load_arena_stats
 
     odours_visited = "A and B"
+    codes = ["srm"]
 
     nb_active_kcs = 5
     rpe = read_arg(["-rpe", "--reward-prediction-error"])  # or True
@@ -66,7 +67,6 @@ if __name__ == '__main__':
 
     df["PI"] = d_pi
 
-    codes = ["srm"]
     import matplotlib.pyplot as plt
 
     plt.figure(("rpe-" if rpe else "") + "arena-pi-lines-" + odours_visited.lower().replace(" ", "-"), figsize=(8, 3))
@@ -185,18 +185,26 @@ if __name__ == '__main__':
         y_max = np.maximum(np.sqrt(ca.max()), np.sqrt(cb.max())) * 1.1
 
         x = np.arange(30) / 3 + 1
-        ax = plt.subplot(2, 6, col)
-        plt.plot(x, np.sqrt(ca[:, s]), '-', color=ODOUR_A_CMAP(0.99), lw=lw, alpha=alpha)
-        # plt.fill_between(x, ca_q25, ca_q75, facecolor=ODOUR_A_CMAP(0.99), alpha=.2)
-        plt.plot(x, np.sqrt(ca_q50), '-', color=ODOUR_A_CMAP(0.99), lw=2)
 
-        plt.plot(x, -np.sqrt(cb[:, s]), '-', color=ODOUR_B_CMAP(0.99), lw=lw, alpha=alpha)
-        # plt.fill_between(x, -cb_q25, -cb_q75, facecolor=ODOUR_B_CMAP(0.99), alpha=.2)
-        plt.plot(x, -np.sqrt(cb_q50), '-', color=ODOUR_B_CMAP(0.99), lw=2)
+        ax = plt.subplot(2, 6, col)
+
+        plt.plot(x, np.sqrt(ca[:, s]), linestyle=(0, (5, 10)), color=ODOUR_A_CMAP(0.99), lw=lw, alpha=alpha)
+        plt.plot(x, -np.sqrt(cb[:, s]), linestyle=(0, (5, 10)), color=ODOUR_B_CMAP(0.99), lw=lw, alpha=alpha)
+        plt.plot(np.array([x] * len(s)).T.reshape((-1, 3, len(s))).transpose((0, 2, 1)).reshape((-1, 3)).T,
+                 np.sqrt(ca[:, s]).reshape((-1, 3, len(s))).transpose((0, 2, 1)).reshape((-1, 3)).T, '-',
+                 color=ODOUR_A_CMAP(0.99), lw=lw, alpha=alpha)
+        plt.plot(np.array([x] * len(s)).T.reshape((-1, 3, len(s))).transpose((0, 2, 1)).reshape((-1, 3)).T,
+                 -np.sqrt(cb[:, s]).reshape((-1, 3, len(s))).transpose((0, 2, 1)).reshape((-1, 3)).T, '-',
+                 color=ODOUR_B_CMAP(0.99), lw=lw, alpha=alpha)
+
+        plt.plot(x.reshape((-1, 3)).T, np.sqrt(ca_q50).reshape((-1, 3)).T, '-', color=ODOUR_A_CMAP(0.99), lw=2)
+        plt.plot(x.reshape((-1, 3)).T, -np.sqrt(cb_q50).reshape((-1, 3)).T, '-', color=ODOUR_B_CMAP(0.99), lw=2)
+
         if "A" in odour:
             plt.plot(x[1::3], np.sqrt(ca_q50[1::3]), '.', color=color_r)
         if "B" in odour:
             plt.plot(x[1::3], -np.sqrt(cb_q50[1::3]), '.', color=color_r)
+
         plt.ylim(-y_max, y_max)
         plt.xlim(0.5, 11.4)
         plt.xticks([1, 5, 10])
@@ -207,11 +215,16 @@ if __name__ == '__main__':
         ax.spines['bottom'].set_visible(False)
 
         ax = plt.subplot(2, 6, col + 6)
-        # plt.plot([0, 10], [0, 0], 'k:', lw=.5)
-        plt.plot(x, c[:, s], '-', color='black', lw=lw, alpha=alpha)
-        # plt.fill_between(x, c_q25, c_q75, facecolor='black', alpha=.2)
-        plt.plot(x, c_q50, 'k-', lw=2)
+
+        plt.plot(x, c[:, s], linestyle=(0, (5, 10)), color='black', lw=lw, alpha=alpha)
+        plt.plot(np.array([x] * len(s)).T.reshape((-1, 3, len(s))).transpose((0, 2, 1)).reshape((-1, 3)).T,
+                 c[:, s].reshape((-1, 3, len(s))).transpose((0, 2, 1)).reshape((-1, 3)).T, '-',
+                 color='black', lw=lw, alpha=alpha)
+
+        plt.plot(x.reshape((-1, 3)).T, c_q50.reshape((-1, 3)).T, 'k-', lw=2)
+
         plt.plot(x[1::3], c_q50[1::3], '.', color=color_r)
+
         plt.ylim(-1.1, 1.1)
         plt.xlim(0.5, 11.4)
         plt.xticks([1, 5, 10])

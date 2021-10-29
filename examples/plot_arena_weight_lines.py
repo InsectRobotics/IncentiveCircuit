@@ -69,6 +69,10 @@ if __name__ == '__main__':
 
     x = np.arange(3 * nb_repeats) / 3 + 1
 
+    colour_a = ODOUR_A_CMAP(0.99)
+    colour_b = ODOUR_B_CMAP(0.99)
+    colour_ab = tuple((np.array(colour_a) + np.array(colour_b)) / 2)
+
     for i, title in enumerate(data):
         details = re.match(r"([\w]{1,2}) - ([\w]+)", title)
         odour = details.group(1)
@@ -198,18 +202,33 @@ if __name__ == '__main__':
             ax = plt.subplot(6, 6, 6 * n + col)
 
             if "A" in odour:
-                plt.plot(x, -co[:, s], '-', color=ODOUR_A_CMAP(0.99), lw=lw, alpha=alpha)
+                plt.plot(x, -co[:, s], linestyle=(0, (5, 10)), color=colour_ab, lw=lw, alpha=alpha)
+                plt.plot(np.array([x] * len(s)).T.reshape((-1, 3, len(s))).transpose((0, 2, 1)).reshape((-1, 3)).T,
+                         -co[:, s].reshape((-1, 3, len(s))).transpose((0, 2, 1)).reshape((-1, 3)).T, '-',
+                         color=colour_ab, lw=lw, alpha=alpha)
             if "B" in odour:
-                plt.plot(x, co[:, s], '-', color=ODOUR_B_CMAP(0.99), lw=lw, alpha=alpha)
-            plt.plot(x, ca[:, s], '-', color=ODOUR_A_CMAP(0.99), lw=lw, alpha=alpha)
-            plt.plot(x, -cb[:, s], '-', color=ODOUR_B_CMAP(0.99), lw=lw, alpha=alpha)
+                plt.plot(x, co[:, s], linestyle=(0, (5, 10)), color=colour_ab, lw=lw, alpha=alpha)
+                plt.plot(np.array([x] * len(s)).T.reshape((-1, 3, len(s))).transpose((0, 2, 1)).reshape((-1, 3)).T,
+                         co[:, s].reshape((-1, 3, len(s))).transpose((0, 2, 1)).reshape((-1, 3)).T, '-',
+                         color=colour_ab, lw=lw, alpha=alpha)
+
+            plt.plot(x, ca[:, s], linestyle=(0, (5, 10)), color=colour_a, lw=lw, alpha=alpha)
+            plt.plot(x, -cb[:, s], linestyle=(0, (5, 10)), color=colour_b, lw=lw, alpha=alpha)
+
+            plt.plot(np.array([x] * len(s)).T.reshape((-1, 3, len(s))).transpose((0, 2, 1)).reshape((-1, 3)).T,
+                     ca[:, s].reshape((-1, 3, len(s))).transpose((0, 2, 1)).reshape((-1, 3)).T, '-',
+                     color=colour_a, lw=lw, alpha=alpha)
+            plt.plot(np.array([x] * len(s)).T.reshape((-1, 3, len(s))).transpose((0, 2, 1)).reshape((-1, 3)).T,
+                     -cb[:, s].reshape((-1, 3, len(s))).transpose((0, 2, 1)).reshape((-1, 3)).T, '-',
+                     color=colour_b, lw=lw, alpha=alpha)
 
             if "A" in odour:
-                plt.plot(x, -co_q50, '--', color=ODOUR_A_CMAP(0.99), lw=1.5)
+                plt.plot(x.reshape((-1, 3)).T, -co_q50.reshape((-1, 3)).T, '-', color=colour_ab, lw=1.5)
             if "B" in odour:
-                plt.plot(x, co_q50, '--', color=ODOUR_B_CMAP(0.99), lw=1.5)
-            plt.plot(x, ca_q50, '-', color=ODOUR_A_CMAP(0.99), lw=2)
-            plt.plot(x, -cb_q50, '-', color=ODOUR_B_CMAP(0.99), lw=2)
+                plt.plot(x.reshape((-1, 3)).T, co_q50.reshape((-1, 3)).T, '-', color=colour_ab, lw=1.5)
+
+            plt.plot(x.reshape((-1, 3)).T, ca_q50.reshape((-1, 3)).T, '-', color=colour_a, lw=2)
+            plt.plot(x.reshape((-1, 3)).T, -cb_q50.reshape((-1, 3)).T, '-', color=colour_b, lw=2)
 
             if "A" in odour:
                 plt.plot(x[1::3], ca_q50[1::3], '.', color=color_r)

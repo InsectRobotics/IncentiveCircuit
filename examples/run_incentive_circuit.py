@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     # create the Incentive Circuit
     model = IncentiveCircuit(
-        learning_rule="dlr", nb_timesteps=3, nb_trials=26, nb_active_kcs=nb_active_kc, ltm_speed=ltm_speed,
+        learning_rule="rpe", nb_timesteps=3, nb_trials=26, nb_active_kcs=nb_active_kc, ltm_speed=ltm_speed,
         nb_kc=nb_kcs, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
         has_sm=True, has_rm=True, has_rrm=True, has_ltm=True, has_rfm=True, has_mam=True)
 

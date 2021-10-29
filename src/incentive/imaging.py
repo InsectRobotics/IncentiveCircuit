@@ -206,3 +206,50 @@ def get_summarised_responses(data, experiment="B+", nids=None, only_nids=True):
         }
 
     return responses
+
+
+def get_individual_responses(data, experiment="B+", nids=None, only_nids=True):
+
+    data_exp = data[experiment]
+    genotypes = np.sort(data_exp.index)
+    odour_a_xs = np.array([np.arange(28, 43) + i * 200 for i in range(9)])
+    shock_a_xs = np.array([np.arange(44, 49) + i * 200 for i in range(9)])
+    odour_b_xs = np.array([np.arange(28, 43) + i * 200 + 100 for i in range(8)])
+    shock_b_xs = np.array([np.arange(44, 49) + i * 200 + 100 for i in range(8)])
+    xa = np.arange(18)
+    xb = xa + 1
+
+    if nids is None:
+        nids = np.arange(len(genotypes))
+    if only_nids:
+        genotypes = genotypes[nids]
+
+    xticks_b = 2 * np.arange(10) + 4
+    xticks_a = xticks_b.copy() - 1
+    xticks_a[5:] += 2
+
+    responses = {}
+
+    for genotype in genotypes:
+
+        ma, mb = [], []
+        for m, xs in zip([ma, mb], [[odour_a_xs, shock_a_xs], [odour_b_xs, shock_b_xs]]):
+            m_odour = np.nanmean(np.array(data_exp[genotype])[xs[0]], axis=1)
+            m_shock = np.nanmean(np.array(data_exp[genotype])[xs[1]], axis=1)
+            m.append(np.array([m_odour, m_shock]).transpose((2, 1, 0)).reshape((m_odour.shape[-1], -1)))
+        ma, mb = ma[0], mb[0]
+
+        # normalise responses
+        m_min = np.minimum(np.min(ma, axis=1), np.min(mb, axis=1))[..., np.newaxis]
+        m_max = np.maximum(np.max(ma, axis=1), np.max(mb, axis=1))[..., np.newaxis]
+        for m in [ma, mb]:
+            m[:] = (m[:] - m_min) / (m_max - m_min)
+
+        responses[genotype] = {
+            "xa": xa,
+            "xb": xb,
+            "ma": ma,
+            "mb": mb
+        }
+
+    return responses

@@ -1,8 +1,9 @@
-import numpy as np
-
 from incentive.bennett import Bennett, read_data, translate_condition_code, pi_binomial_adjustment
 
+from scipy.stats.stats import pearsonr
+
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 import yaml
@@ -121,8 +122,9 @@ def main(*args):
         z_model = np.sqrt(np.nansum(np.square(delta_f_model)))
         delta_f_models.append(delta_f_model.copy())
 
-        corr = np.nansum((delta_f_data / z_data) * (delta_f_model / z_model))
-        print("".join(target_intervention), "Correlation: %.4f" % corr)
+        # corr = np.nansum((delta_f_data / z_data) * (delta_f_model / z_model))
+        corr, p = pearsonr(delta_f_data / z_data, delta_f_model / z_model)
+        print("".join(target_intervention), "Correlation: R=%.4f, p=%.4e" % (corr, p))
 
         condition_colours = {
             4312: "#00B51C",  # light green

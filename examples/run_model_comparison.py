@@ -8,9 +8,11 @@ __email__ = "ev.gkanias@ed.ac.uk"
 __status__ = "Production"
 
 
-from incentive.imaging import load_data, get_summarised_responses
+from incentive.imaging import load_data, get_individual_responses
 from incentive.circuit import IncentiveCircuit
 from incentive.results import run_main_experiments
+
+from scipy.stats.stats import pearsonr
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,19 +22,19 @@ def main(*args):
 
     nb_kcs = 10
     nb_kc_odour = 5
+    show_max = False
 
     # read the parameters
     experiment = "B+"
 
     # load the data
     df = load_data(experiment)
-    data_res = get_summarised_responses(df, experiment=experiment)
+    data_res = get_individual_responses(df, experiment=experiment)
 
     # create the Incentive Complex
     model = IncentiveCircuit(
-        learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=26, nb_kc=nb_kcs, has_real_names=False,
-        nb_kc_odour=nb_kc_odour, nb_active_kcs=3,
-        # nb_kc_odour_1=nb_kc_odour + 1, nb_kc_odour_2=nb_kc_odour + 2,
+        learning_rule="dlr", nb_timesteps=3, nb_trials=26, nb_kc=nb_kcs, has_real_names=False,
+        nb_kc_odour=nb_kc_odour, nb_active_kcs=5, nb_kc_odour_1=7, nb_kc_odour_2=6,
         has_sm=True, has_rm=True, has_rrm=True, has_ltm=True, has_rfm=True, has_mam=True)
 
     # run the reversal experiment and get a copy of the model with the history of their responses and parameters
@@ -41,30 +43,15 @@ def main(*args):
 
     data_names, model_names = [], []
     data_feats, model_feats = [], []
-    dq25_feats, dq75_feats = [], []
     for neuron in data_res:
         data_names.append(neuron)
-        data_feats.append(np.r_[
-                                # data_res[neuron]["qa50"][2:12] - data_res[neuron]["qa50"][0:10],
-                                data_res[neuron]["qa50"][8:12] - data_res[neuron]["qa50"][0:4],
-                                data_res[neuron]["qa50"][14:18] - data_res[neuron]["qa50"][12:16],
-                                # data_res[neuron]["qb50"][2:12] - data_res[neuron]["qb50"][0:10],
-                                data_res[neuron]["qb50"][8:12] - data_res[neuron]["qb50"][0:4],
-                                data_res[neuron]["qb50"][12:16] - data_res[neuron]["qb50"][10:14]])
-        dq25_feats.append(np.r_[
-                                # data_res[neuron]["qa25"][2:12] - data_res[neuron]["qa25"][0:10],
-                                data_res[neuron]["qa25"][8:12] - data_res[neuron]["qa25"][0:4],
-                                data_res[neuron]["qa25"][14:18] - data_res[neuron]["qa25"][12:16],
-                                # data_res[neuron]["qb25"][2:12] - data_res[neuron]["qb25"][0:10],
-                                data_res[neuron]["qb25"][8:12] - data_res[neuron]["qb25"][0:4],
-                                data_res[neuron]["qb25"][12:16] - data_res[neuron]["qb25"][10:14]])
-        dq75_feats.append(np.r_[
-                                # data_res[neuron]["qa75"][2:12] - data_res[neuron]["qa75"][0:10],
-                                data_res[neuron]["qa75"][8:12] - data_res[neuron]["qa75"][0:4],
-                                data_res[neuron]["qa75"][14:18] - data_res[neuron]["qa75"][12:16],
-                                # data_res[neuron]["qb75"][2:12] - data_res[neuron]["qb75"][0:10],
-                                data_res[neuron]["qb75"][8:12] - data_res[neuron]["qb75"][0:4],
-                                data_res[neuron]["qb75"][12:16] - data_res[neuron]["qb75"][10:14]])
+        data_feats.append(np.hstack([
+                                # data_res[neuron]["ma"][:, 2:12] - data_res[neuron]["ma"][:, 0:10],
+                                data_res[neuron]["ma"][:, 8:12] - data_res[neuron]["ma"][:, 0:4],
+                                data_res[neuron]["ma"][:, 14:18] - data_res[neuron]["ma"][:, 12:16],
+                                # data_res[neuron]["mb"][:, 2:12] - data_res[neuron]["mb"][:, 0:10],
+                                data_res[neuron]["mb"][:, 8:12] - data_res[neuron]["mb"][:, 0:4],
+                                data_res[neuron]["mb"][:, 12:16] - data_res[neuron]["mb"][:, 10:14]]).T)
 
     for neuron in model_res:
         model_names.append(neuron)
@@ -76,26 +63,21 @@ def main(*args):
                                  model_res[neuron]["vb"][8:12] - model_res[neuron]["vb"][0:4],
                                  model_res[neuron]["vb"][13:17] - model_res[neuron]["vb"][11:15]])
 
-    data_feats = np.array(data_feats)[:, ::2] / 2
-    dq25_feats = np.array(dq25_feats)[:, ::2] / 2
-    dq75_feats = np.array(dq75_feats)[:, ::2] / 2
-    model_feats = np.array(model_feats)[:, ::2] / 2
-
-    c = np.zeros((model_feats.shape[0], data_feats.shape[0]), dtype=float)
-    d = np.zeros((model_feats.shape[0], data_feats.shape[0]), dtype=float)
+    c = np.zeros((len(model_feats), len(data_feats)), dtype=float)
+    p = np.zeros((len(model_feats), len(data_feats)), dtype=float)
     for i in range(c.shape[0]):
         for j in range(c.shape[1]):
-            c[i, j] = np.correlate(data_feats[j], model_feats[i])
-            d[i, j] = np.correlate(-data_feats[j], model_feats[i])
-            # d_high = np.maximum(dq75_feats[j] - model_feats[i], 0)
-            # d_low = np.minimum(model_feats[i] - dq25_feats[j], 0)
-            # c[i, j] = 1
-            # d[i, j] = np.sqrt(np.sum(np.square(d_high - d_low)))
-            # print(np.sum(d_high))
-
-    c = c - d
-    # c = np.maximum(c, 0) - np.maximum(d, 0)
-    # c = np.sqrt(np.maximum(c, 0)) - np.sqrt(np.maximum(d, 0))
+            if show_max:
+                c_k, p_k = [], []
+                for k in range(data_feats[j].shape[1]):
+                    r_, p_ = pearsonr(data_feats[j][:, k], model_feats[i])
+                    c_k.append(r_)
+                    p_k.append(p_)
+                k = np.argmax(c_k)
+                c[i, j] = c_k[k]
+                p[i, j] = p_k[k]
+            else:
+                c[i, j], p[i, j] = pearsonr(np.nanmedian(data_feats[j], axis=1), model_feats[i])
 
     plt.figure("cross-correlation", figsize=(8, 8))
 
@@ -108,11 +90,15 @@ def main(*args):
     mbon_rand = model.rng.permutation(nb_mbons)[:6]
 
     c_dan = c[:6, nb_mbons:]
+    p_dan = p[:6, nb_mbons:]
     c_mbon = c[6:, :nb_mbons]
-    c_model = np.r_[c_dan[np.arange(6), dan_ids - nb_mbons], c_mbon[np.arange(6), mbon_ids]].mean()
-    c_random = np.r_[c_dan[np.arange(6), dan_rand], c_mbon[np.arange(6), mbon_rand]].mean()
-    print(f"Cross-correlation of our model and the data: {c_model:.2f}")
-    print(f"Cross-correlation of a random model and the data: {c_random:.2f}")
+    p_mbon = p[6:, :nb_mbons]
+    c_model = np.nanmean(np.r_[c_dan[np.arange(6), dan_ids - nb_mbons], c_mbon[np.arange(6), mbon_ids]])
+    p_model = np.nanmean(np.r_[p_dan[np.arange(6), dan_ids - nb_mbons], p_mbon[np.arange(6), mbon_ids]])
+    c_random = np.nanmean(np.r_[c_dan[np.arange(6), dan_rand], c_mbon[np.arange(6), mbon_rand]])
+    p_random = np.nanmean(np.r_[p_dan[np.arange(6), dan_rand], p_mbon[np.arange(6), mbon_rand]])
+    print(f"Cross-correlation of our model and the data: R={c_model:.2f}, p={p_model:.4f}")
+    print(f"Cross-correlation of a random model and the data: R={c_random:.2f}, p={p_random:.4f}")
 
     ax = plt.subplot(211)  # DANs
     plt.imshow(c_dan, vmin=-1, vmax=1, cmap="coolwarm")
@@ -128,6 +114,12 @@ def main(*args):
     plt.scatter(mbon_ids, np.arange(6), c='k')
     plt.xticks(np.arange(nb_mbons), data_names[:nb_mbons], rotation=90)
     plt.yticks(np.arange(6), [r"$%s$" % n for n in model_names[6:]])
+
+    for i, i_r, j, dname, mname in zip(dan_ids - nb_mbons, dan_rand, np.arange(6), np.array(data_names)[dan_ids], model_names[:6]):
+        print(f"{dname} (${mname}$): R={c_dan[j, i]:.2f}, p={p_dan[j, i]:.4f}")
+
+    for i, i_r, j, dname, mname in zip(mbon_ids, mbon_rand, np.arange(6), np.array(data_names)[mbon_ids], model_names[6:]):
+        print(f"{dname} (${mname}$): R={c_mbon[j, i]:.2f}, p={p_mbon[j, i]:.4f}")
 
     plt.tight_layout()
     plt.show()
