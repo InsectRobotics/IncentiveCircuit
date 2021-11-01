@@ -34,7 +34,7 @@ class FruitFly(object):
     i_threshold = .2
 
     def __init__(self, nb_kcs=10, nb_kc_odour_a=None, nb_kc_odour_b=None, nb_steps=1000, nb_in_trial=1,
-                 learning_rule="dlr", nb_active_kcs=2, ltm_speed=.3, gain=.02, rng=np.random.RandomState(2021)):
+                 learning_rule="dpr", nb_active_kcs=2, ltm_speed=.3, gain=.02, rng=np.random.RandomState(2021)):
         """
         Simulation parameters and methods for the fly running in an arena with two odour distributions. The incentive
         circuit is used in order to find the most attractive or aversive direction and move towards or away from it.
@@ -52,7 +52,7 @@ class FruitFly(object):
         nb_in_trial: int, optional
             the number of in-trial time-steps for the incentive circuit processing. Default is 1.
         learning_rule: str, optional
-            the learning rule that the incentive circuit will use in order to update its weights. Default is "dlr".
+            the learning rule that the incentive circuit will use in order to update its weights. Default is "dpr".
         nb_active_kcs : int
             the number of active KCs at all times. Default is 2.
         gain: float, optional

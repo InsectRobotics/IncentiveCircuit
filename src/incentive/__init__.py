@@ -7,10 +7,13 @@ __license__ = "GPLv3+"
 __version__ = "v1.1-alpha"
 __maintainer__ = "Evripidis Gkanias"
 
-__all__ = ["arena", "circuit", "imaging", "results", "routines"]
+__all__ = ["arena", "bennett", "circuit", "imaging", "plot", "results", "routines", "tools"]
 
 import incentive.arena
+import incentive.bennett
 import incentive.circuit
 import incentive.imaging
+import incentive.plot
 import incentive.results
 import incentive.routines
+import incentive.tools

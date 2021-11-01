@@ -59,19 +59,15 @@ install the package.
 
 You can reproduce the results by running:
 ```commandline
-python test_learning_rule.py
-python run_subcircuits.py --nb-kc 10 --sm --rm --ltm --rrm --rfm --mam
-python run_incentive_circuit.py --nb-kc 10 --only-nids --structure
-python run_incentive_circuit.py --nb-kc 10 --only-nids --values --weights
-python run_incentive_wheel.py --nb-kc 10 --only-nids --structure
-python run_incentive_wheel.py --nb-kc 10 --only-nids --values --weights
-python run_data_analysis.py --stats --only-nids --verbose
-python create_paths.py --nb-flies 100 --nb-time-steps 100 
-python run_arena_paths.py
-python run_arena_stats.py
-python run_arena_pi.py
-python run_olfactory_conditioning.py
 python run_bennet_2021.py
+python run_data_analysis.py --stats --only-nids --verbose
+python run_incentive_circuit.py --only-nids --values --weights
+python create_paths.py --nb-flies 100 --nb-time-steps 100 
+python plot_arena_paths.py
+python plot_arena_pi_lines.py
+python plot_arena_weights_lines.py
+python run_unpaired_a.py
+python test_learning_rule.py
 ```
 where `--nb-kc` specifies the number of KCs (default is 10), `--odour1` specifies the
 number of KCs associated to odour A and `--odour2` specifies the number of KCs

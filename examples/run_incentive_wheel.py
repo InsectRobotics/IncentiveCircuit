@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
     # create the Wheel-of-Motivations Model
     model = IncentiveWheel(
-        learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=24,
+        learning_rule="dpr", nb_apl=0, nb_timesteps=3, nb_trials=24,
         nb_kc=nb_kcs, nb_kc_odour=kc2, has_real_names=False,
         has_sm=True, has_rm=True, has_rrm=True, has_ltm=True, has_mam=True)
 

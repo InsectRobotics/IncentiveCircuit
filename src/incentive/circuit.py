@@ -1,7 +1,7 @@
 """
 Examples:
 ---------
->>> ic = IncentiveCircuit(learning_rule="dlr", nb_kc=10)
+>>> ic = IncentiveCircuit(learning_rule="dpr", nb_kc=10)
 >>> ic(reversal=True)
 """
 

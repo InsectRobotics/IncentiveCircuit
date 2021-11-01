@@ -34,7 +34,7 @@ The allowed reinforcements.
 class Bennett(object):
 
     def __init__(self, train=None, test=None, nb_train=10, nb_test=2, nb_in_trial=100, target_intervention=None,
-                 nb_pn=2, nb_kcs=20, nb_kc_odour=10, learning_rule="dlr", rng=np.random.RandomState(2021)):
+                 nb_pn=2, nb_kcs=20, nb_kc_odour=10, learning_rule="dpr", rng=np.random.RandomState(2021)):
         """
         Simulates the behaviour of flies replicating Figure 5 from Bennett et al (2021) [1]_.
         Creates the experimental set-up in order to test predefined conditions using the incentive circuit.
@@ -66,7 +66,7 @@ class Bennett(object):
         nb_kc_odour : int, optional
             the number of KCs associated to each odour. Default is 10
         learning_rule : str, optional
-            the learning rule of the mushroom body (MB). Default is 'dlr' (for dopaminergic learning rule)
+            the learning rule of the mushroom body (MB). Default is 'dpr' (for dopaminergic learning rule)
         rng : np.random.RandomState, optional
             the random number generator
         """

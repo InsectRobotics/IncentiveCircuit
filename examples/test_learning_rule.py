@@ -42,7 +42,7 @@ def main(*args):
                 D2 = us
             d1.append(np.clip(D1, 0, 2))
             d2.append(np.clip(D2, 0, 2))
-            W += dopaminergic_learning_rule(k[-1], d1[-1], d2[-1], W, w_rest=1.)
+            W += dopaminergic_plasticity_rule(k[-1], d1[-1], d2[-1], W, w_rest=1.)
             w.append(np.maximum(W, 0))
 
         plt.figure('learning-rule', figsize=(7, 5))
@@ -203,7 +203,7 @@ def handler_routine(us_on=0., us_duration=.6, cs_on=0., cs_duration=.5, nb_sampl
 # dw/dt = D_1 k + D_2 (k + w - w_rest)
 # D_1 = D^-  (short trace)
 # D_2 = D^+  (longer trace)
-def dopaminergic_learning_rule(k, D_1, D_2, w, w_rest):
+def dopaminergic_plasticity_rule(k, D_1, D_2, w, w_rest):
     return (D_2 - D_1) * (k + w - w_rest)
 
 

@@ -735,7 +735,7 @@ def plot_learning_rule(wrt_k=True, wrt_w=True, wrt_d=True, colour_bar=False, fil
     nb_cols = 7 + int(colour_bar)
     if figsize is None:
         figsize = (nb_cols - 1, nb_rows + 1 - .5 * float(colour_bar))
-    plt.figure("dlr", figsize=figsize)
+    plt.figure("dpr", figsize=figsize)
     if wrt_k:
         w, d = np.meshgrid(w_, d_)
         for i, k in enumerate(np.linspace(0, 1, 7)):

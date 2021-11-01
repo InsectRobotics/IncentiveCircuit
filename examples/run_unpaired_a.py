@@ -28,7 +28,7 @@ if __name__ == '__main__':
     for i in range(10):
         # create the Incentive Complex
         model = IncentiveCircuit(
-            learning_rule="dlr", nb_timesteps=3, nb_trials=26, rng=np.random.RandomState(2021 + i),
+            learning_rule="dpr", nb_timesteps=3, nb_trials=26, rng=np.random.RandomState(2021 + i),
             nb_kc=nb_kcs, nb_active_kcs=5, nb_kc_odour_1=kc1, nb_kc_odour_2=kc2, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True)
 

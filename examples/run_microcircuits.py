@@ -23,7 +23,7 @@ if __name__ == '__main__':
     # Susceptible Memory Sub-circuit
     if read_arg(["--sm", "--susceptible-memory"]):
         model = IncentiveCircuit(
-            learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=24,
+            learning_rule="dpr", nb_apl=0, nb_timesteps=3, nb_trials=24,
             nb_kc=nb_kcs, nb_kc_odour=kc2, has_real_names=False,
             has_sm=True, has_rm=False, has_ltm=False, has_rrm=False, has_rfm=False, has_mam=False,
             as_microcircuits=True)
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     # Restrained Memory Sub-circuit
     if read_arg(["--rm", "--restrained-memory"]):
         model = IncentiveCircuit(
-            learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=24,
+            learning_rule="dpr", nb_apl=0, nb_timesteps=3, nb_trials=24,
             nb_kc=nb_kcs, nb_kc_odour=kc2, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=False, has_rrm=False, has_rfm=False, has_mam=False,
             as_microcircuits=True)
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     # Long-Term Memory Sub-circuit
     if read_arg(["--ltm", "--long-term-memory"]):
         model = IncentiveCircuit(
-            learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=24,
+            learning_rule="dpr", nb_apl=0, nb_timesteps=3, nb_trials=24,
             nb_kc=nb_kcs, nb_kc_odour=kc2, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=False, has_rfm=False, has_mam=False,
             as_microcircuits=True)
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     # Reciprocal Restrained Memory Sub-circuit
     if read_arg(["--rrm", "--reciprocal-restrained-memory"]):
         model = IncentiveCircuit(
-            learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=24,
+            learning_rule="dpr", nb_apl=0, nb_timesteps=3, nb_trials=24,
             nb_kc=nb_kcs, nb_kc_odour=kc2, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=False, has_mam=False,
             as_microcircuits=True)
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     # Reciprocal Forgetting Memory Sub-circuit
     if read_arg(["--rfm", "--reciprocal-forgetting-memory"]):
         model = IncentiveCircuit(
-            learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=24,
+            learning_rule="dpr", nb_apl=0, nb_timesteps=3, nb_trials=24,
             nb_kc=nb_kcs, nb_kc_odour=kc2, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True,
             as_microcircuits=True)
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     # Memory Assimilation Mechanism
     if read_arg(["--mam", "--memory-assimilation-mechanism"]):
         model = IncentiveCircuit(
-            learning_rule="dlr", nb_apl=0, nb_timesteps=3, nb_trials=24,
+            learning_rule="dpr", nb_apl=0, nb_timesteps=3, nb_trials=24,
             nb_kc=nb_kcs, nb_kc_odour=kc2, has_real_names=False,
             has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True,
             as_microcircuits=True)

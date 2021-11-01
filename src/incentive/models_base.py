@@ -39,8 +39,8 @@ class MBModel(object):
             number of extrinsic output neurons (MBONs). Default is 6
         nb_dan: int, optional
             number of extrinsic reinforcement neurons (DANs). Default is 6
-        learning_rule: {"dlr", "rw", "default"}
-            the learning rule to use; one of "dlr" or "rw". Default is "dlr"
+        learning_rule: {"dpr", "rw", "default"}
+            the learning rule to use; one of "dpr" or "rw". Default is "dpr"
         nb_trials: int, optional
             number of trials that the experiments will run. Default is 24
         nb_timesteps: int, optional
@@ -289,7 +289,7 @@ class MBModel(object):
         # the dopaminergic factor
         D = np.maximum(v, 0).dot(self.w_d2k)
 
-        if self._learning_rule in ["dopaminergic", "dlr", "default"]:
+        if self._learning_rule in ["dopaminergic", "dpr", "default"]:
             w_new = dopaminergic(k, D, w_k2m, eta=eta_w, w_rest=self.w_rest)
         elif self._learning_rule in ["reward-prediction-error", "rpe", "prediction-error"]:
             w_new = reward_prediction_error(k, v, D, w_k2m, eta=eta_w, w_rest=self.w_rest)
@@ -423,12 +423,12 @@ def reward_prediction_error(r_pre, r_post, D, w, eta=1., w_rest=1.):
 
 def dopaminergic(r_pre, D, w, eta=1., w_rest=1.):
     """
-    The dopaminergic learning rule introduced in Gkanias et al (2021). Reinforcement here is assumed to be the
+    The dopaminergic plasticity rule introduced in Gkanias et al (2021). Reinforcement here is assumed to be the
     dopaminergic factor.
 
         tau * dw / dt = rein * [r_pre + w(t) - w_rest]
 
-        tau = 1 / learning_rate
+        tau = 1 / eta
 
     When DAN > 0 and KC > W - W_rest increase the weight (if DAN < 0 it is reversed).
     When DAN > 0 and KC < W - W_rest decrease the weight (if DAN < 0 it is reversed).
