@@ -6,12 +6,12 @@ Reads and visualises all the arena-paths of the freely-moving flies created befo
 
 Examples:
 In order to visualise the data for 100 flies in each condition, run
-    $ python3 run_arena_paths.py --dir ../data/arena
+    $ python3 plot_arena_paths.py --dir ../data/arena
 or
-    $ python3 run_arena_paths.py -d ../data/arena
+    $ python3 plot_arena_paths.py -d ../data/arena
 
 In order to visualise the respective data using the prediction-error learning rule, run
-    $ python3 run_arena_paths.py -d ../data/arena -rw
+    $ python3 plot_arena_paths.py -d ../data/arena -rw
 """
 
 __author__ = "Evripidis Gkanias"

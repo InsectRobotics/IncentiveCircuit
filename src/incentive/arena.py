@@ -232,7 +232,7 @@ def arena_routine(agent, noise=0.1, r_start=.2, r_end=.5, reward=False, punishme
             agent.xy[t] *= 0.
 
 
-def load_arena_stats(file_names, nb_active_kcs=5, prediction_error=False, nb_kcs=10):
+def load_arena_stats(file_names, nb_active_kcs=5, prediction_error=False, nb_kcs=10, verbose=False):
     """
     Creates a DataFrame that contains the stats of experiments in the arena.
 
@@ -285,7 +285,8 @@ def load_arena_stats(file_names, nb_active_kcs=5, prediction_error=False, nb_kcs
 
         if int(details[0][1]) != nb_active_kcs:
             continue
-        print(details[0])
+        if verbose:
+            print(details[0])
 
         repeat = 0 if details[0][7] == '' else int(details[0][7])
 

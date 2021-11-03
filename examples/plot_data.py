@@ -6,12 +6,12 @@ Visualises the responses of all the recorded neurons.
 
 Examples:
 In order to visualise the data for 100 flies in each condition, run
-    $ python3 run_arena_paths.py --dir ../data/arena
+    $ python3 plot_arena_paths.py --dir ../data/arena
 or
-    $ python3 run_arena_paths.py -d ../data/arena
+    $ python3 plot_arena_paths.py -d ../data/arena
 
 In order to visualise the respective data using the prediction-error learning rule, run
-    $ python3 run_arena_paths.py -d ../data/arena -rw
+    $ python3 plot_arena_paths.py -d ../data/arena -rw
 """
 
 __author__ = "Evripidis Gkanias"
@@ -23,7 +23,7 @@ __email__ = "ev.gkanias@ed.ac.uk"
 __status__ = "Production"
 
 from incentive.imaging import load_data, get_summarised_responses
-from incentive.plot import plot_phase_overlap_mean_responses_from_data
+from incentive.plot import plot_responses_from_data
 from incentive.tools import read_arg
 
 
@@ -68,4 +68,4 @@ if __name__ == '__main__':
         neurons = [33, 39, 21, 41, 42, 30, 13, 16, 14, 17, 12, 2]
         sum_res = get_summarised_responses(df, experiment=experiment, nids=neurons, only_nids=read_arg(["--only-nids"]))
 
-    plot_phase_overlap_mean_responses_from_data(sum_res, only_nids=read_arg(["--only-nids"]))
+    plot_responses_from_data(sum_res, only_nids=read_arg(["--only-nids"]))

@@ -49,7 +49,7 @@ def a_values(model, models, only_nids=True):
     only_nids: bool, optional
         specify if we want to plot only the targeted neuron indices. Default is True
     """
-    return plot_phase_overlap_mean_responses_from_model(models, only_nids=only_nids)
+    return plot_responses_from_model(models, only_nids=only_nids)
 
 
 def a_weights(model, models, only_nids=True):

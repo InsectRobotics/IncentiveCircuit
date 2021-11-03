@@ -13,10 +13,10 @@ script:
   - cd examples/
   - mkdir data
   - python run_bennett_2021.py
-  - python run_data_analysis.py --stats --only-nids --verbose
-  - python run_incentive_circuit.py --only-nids --values --weights
+  - python plot_data.py --stats --only-nids --verbose
+  - python plot_model.py --only-nids --values --weights
   - python create_arena_paths.py --nb-flies 100 --nb-time-steps 100 -R 10 --dir data
-  - python plot_arena_pi_lines.py -R 10 --dir data
-  - python plot_arena_weights_lines.py -R 10 --dir data
+  - python plot_arena_fishbone.py -R 10 --dir data
+  - python plot_arena_fishbone_weights.py -R 10 --dir data
   - python run_unpaired_a.py
-  - python test_learning_rule.py
+  - python run_handler_2019.py
