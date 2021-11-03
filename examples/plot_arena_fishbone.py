@@ -9,16 +9,12 @@ __maintainer__ = "Evripidis Gkanias"
 __email__ = "ev.gkanias@ed.ac.uk"
 __status__ = "Production"
 
+from incentive import arena
 from incentive.tools import read_arg
 from incentive.plot import plot_arena_fishbone
 from incentive.arena import load_arena_stats
 
 import os
-
-# the directory of the file
-__dir__ = os.path.dirname(os.path.abspath(__file__))
-# the directory of the data
-__data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "src", "incentive", "data", "arena"))
 
 
 if __name__ == '__main__':
@@ -26,7 +22,7 @@ if __name__ == '__main__':
     nb_active_kcs = 5
 
     rpe = read_arg(["-rpe", "--reward-prediction-error"])
-    directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
+    arena.__data_dir__ = directory = os.path.abspath(read_arg(["-d", "--dir"], vtype=str, default=arena.__data_dir__))
     repeats = read_arg(["-R", "--repeats"], vtype=int, default=10)
 
     file_names = os.listdir(directory)

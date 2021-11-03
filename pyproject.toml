@@ -6,6 +6,7 @@ requires = [
     "scipy",
     "pandas",
     "matplotlib",
-    "pyyaml"
+    "pyyaml",
+    "openpyxl"
 ]
 build-backed = "setuptools.build_meta"

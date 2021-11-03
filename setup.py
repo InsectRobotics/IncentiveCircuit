@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="incentive",
-    version="v1.0.0-alpha",
+    version="v1.1-alpha",
     author="Evripidis Gkanias",
     maintainer="Evripidis Gkanias",
     author_email="ev.gkanias@ed.ac.uk",
@@ -28,6 +28,7 @@ setuptools.setup(
     packages=["incentive"],
     package_dir={"": "src"},
     package_data={'incentive': [os.path.join('data', 'fruitfly', '*'),
-                                os.path.join('data', 'arena', '*')]},
+                                os.path.join('data', 'arena', '*'),
+                                os.path.join('data', 'model-parameters.yml')]},
     python_requires=">=3.7",
 )
