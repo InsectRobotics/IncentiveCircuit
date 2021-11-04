@@ -535,6 +535,8 @@ def plot_arena_fishbone(df, odours_visited="A and B", code="srm", rpe=False, nb_
 
         if verbose:
             print(f"{np.sum(i)} / {i.shape[0]}")
+        if np.sum(i) < 1:
+            continue
 
         ca = np.zeros((a_pr[:, i].shape[0] * 3, a_pr[:, i].shape[1]), dtype=a_pr.dtype)
         ca[0::3, :] = a_pr[:, i]
@@ -725,6 +727,8 @@ def plot_arena_fishbone_weights(df, odours_visited="A and B", code="srm", rpe=Fa
 
         if verbose:
             print(f"{np.sum(i)} / {i.shape[0]}")
+        if np.sum(i) < 1:
+            continue
 
         ca = np.zeros((a_pr[:, i].shape[0] * 3, a_pr[:, i].shape[1]), dtype=a_pr.dtype)
         ca[0::3, :] = a_pr[:, i]
