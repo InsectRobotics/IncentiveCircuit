@@ -57,25 +57,25 @@ install the package.
 
 You can reproduce the results by running:
 ```commandline
-python run_bennet_2021.py
-python run_data_analysis.py --stats --only-nids --verbose
-python run_incentive_circuit.py --only-nids --values --weights
-python create_paths.py --nb-flies 100 --nb-time-steps 100 
-python plot_arena_paths.py
-python plot_arena_pi_lines.py
-python plot_arena_weights_lines.py
+python run_bennett_2021.py
+python plot_data.py --stats --only-nids --verbose
+python plot_model.py --only-nids --values --weights --verbose
+python create_arena_paths.py --nb-flies 100 --nb-time-steps 100 -R 10 --dir "data" --verbose
+python plot_arena_fishbone.py -R 10 -V "A and B" --dir "data" --verbose
+python plot_arena_fishbone_weights.py -R 10 -V "A and B" --dir "data" --verbose
+python plot_arena_paths.py -R 10 --dir "data" --verbose
 python run_unpaired_a.py
-python test_learning_rule.py
+python run_handler_2019.py
 ```
-where `--nb-kc` specifies the number of KCs (default is 10), `--odour1` specifies the
-number of KCs associated to odour A and `--odour2` specifies the number of KCs
-associated to odour B; `--sm`, `--rm`, `--ltm`, `--rrm`, `--rfm` and `--mam` flags
-the generating of the sub-circuit results for the SM, RM, LTM, RRM, RFM and MAM
-sub-circuits respectively; `--only-nids` plots only the neurons associated to the
-twin-spoke model; `--structure`, `--values` and `--weights` enable plotting of the
-structure, responses and KC-MBON synaptic weights of the model over time respectively;
-`--stats` prints the logistics of flies in the data-set; and `--verbose` allows
-printing in the console during the processing of the files.
+where `--only-nids` plots only the neurons associated to the incentive circuit;
+`--values` and `--weights` enable plotting of the responses and KC-MBON synaptic weights of the model over time respectively;
+`--stats` prints the logistics of flies in the data-set;
+`--nb-flies` specifies how many flies to simulate;
+`--nb-time-steps` the number of time-steps per repeat;
+`-R` the number of repeats for each experiment;
+`--dir` the directory where to store or load the data from;
+`-V` specifies which subset of flies to plot, depending on the odours they have visited; and
+`--verbose` allows printing in the console during the processing of the files.
 
 ## Report an issue
 
