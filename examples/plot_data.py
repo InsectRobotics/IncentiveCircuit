@@ -27,18 +27,18 @@ from incentive.plot import plot_responses_from_data
 from incentive.tools import read_arg
 
 
-if __name__ == '__main__':
+def main(*args):
 
     # read the parameters
-    experiment = read_arg(["-e", "--experiment"], vtype=str, default="B+")
-    verbose = read_arg(["-v", "--verbose"])
-    directory = read_arg(["-d", "--dir"], vtype=str, default=None)
+    experiment = read_arg(["-e", "--experiment"], vtype=str, default="B+", args=args)
+    verbose = read_arg(["-v", "--verbose"], args=args)
+    directory = read_arg(["-d", "--dir"], vtype=str, default=None, args=args)
 
     # load the data
     df = load_data(experiment, directory=directory)
 
     # generate statistics
-    if read_arg(["-s", "--stats", "--statistics"]):
+    if read_arg(["-s", "--stats", "--statistics"], args=args):
 
         # initialise statistics
         nb_neurons, nb_flies, nb_flies_min, nb_flies_max = 0, 0, 14, 0
@@ -59,13 +59,20 @@ if __name__ == '__main__':
         print("max #flies/neuron:", nb_flies_max)
         print("mean #flies/neuron:", nb_flies / nb_neurons)
 
-    if read_arg(["-a", "--all"]):
+    if read_arg(["-a", "--all"], args=args):
         sum_res = get_summarised_responses(df, experiment=experiment)
         # plot the data from all the available neurons
         neurons = None
     else:
         # plot the data from the selected neurons for the TSM model
         neurons = [33, 39, 21, 41, 42, 30, 13, 16, 14, 17, 12, 2]
-        sum_res = get_summarised_responses(df, experiment=experiment, nids=neurons, only_nids=read_arg(["--only-nids"]))
+        sum_res = get_summarised_responses(df, experiment=experiment, nids=neurons,
+                                           only_nids=read_arg(["--only-nids"], args=args))
 
-    plot_responses_from_data(sum_res, only_nids=read_arg(["--only-nids"]))
+    plot_responses_from_data(sum_res, only_nids=read_arg(["--only-nids"], args=args))
+
+
+if __name__ == '__main__':
+    import sys
+
+    main(*sys.argv)

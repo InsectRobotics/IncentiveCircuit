@@ -30,16 +30,15 @@ __maintainer__ = "Evripidis Gkanias"
 __email__ = "ev.gkanias@ed.ac.uk"
 __status__ = "Production"
 
+from incentive.arena import FruitFly
+from incentive import arena
 
 with open(os.path.join(os.path.join(ROOT_DIR, "data"), 'model-parameters.yml'), 'rb') as f:
     model_params = yaml.load(f, Loader=yaml.BaseLoader)
     """load the default parameters of the model"""
 
 
-if __name__ == '__main__':
-    from incentive.arena import FruitFly
-    from incentive import arena
-
+def main(*args):
     nb_kcs = int(model_params["number-kc"])
     nb_kc1 = int(model_params["number-kc-odour-a"])
     nb_kc2 = int(model_params["number-kc-odour-b"])
@@ -47,48 +46,48 @@ if __name__ == '__main__':
     sv = float(model_params["susceptible-weight"])
     rv = float(model_params["stm-weight"])
     mv = float(model_params["ltm-weight"])
-    nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=100)
-    nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=100)  # seconds
+    nb_flies = read_arg(["-f", "--nb-flies"], vtype=int, default=100, args=args)
+    nb_timesteps = read_arg(["-t", "--nb-time-steps"], vtype=int, default=100, args=args)  # seconds
     arena.__data_dir__ = directory = os.path.abspath(read_arg(["-d", "--dir"], vtype=str, default=arena.__data_dir__))
-    repeats = read_arg(["-R", "--repeat"], vtype=int, default=10)
+    repeats = read_arg(["-R", "--repeat"], vtype=int, default=10, args=args)
 
-    if read_arg(["-p", "--punishment"]):
+    if read_arg(["-p", "--punishment"], args=args):
         punishment = [True]
-    elif read_arg(["-np", "--not-punishment", "--reward"]):
+    elif read_arg(["-np", "--not-punishment", "--reward"], args=args):
         punishment = [False]
     else:
         punishment = [True, False]
-    if read_arg(["-s", "--susceptible"]):
+    if read_arg(["-s", "--susceptible"], args=args):
         susceptible = [sv]
-    elif read_arg(["-ns", "--not-susceptible"]):
+    elif read_arg(["-ns", "--not-susceptible"], args=args):
         susceptible = [0.]
     else:
         susceptible = [sv, 0.]
-    if read_arg(["-r", "--restrained"]):
+    if read_arg(["-r", "--restrained"], args=args):
         reciprocal = [rv]
-    elif read_arg(["-nr", "--not-restrained"]):
+    elif read_arg(["-nr", "--not-restrained"], args=args):
         reciprocal = [0.]
     else:
         reciprocal = [rv, 0.]
-    if read_arg(["-m", "--ltm", "--long-term-memory"]):
+    if read_arg(["-m", "--ltm", "--long-term-memory"], args=args):
         ltm = [mv]
-    elif read_arg(["-nm", "--not-ltm", "--not-long-term-memory"]):
+    elif read_arg(["-nm", "--not-ltm", "--not-long-term-memory"], args=args):
         ltm = [0.]
     else:
         ltm = [mv, 0.]
-    if read_arg(["-a", "--only-a"]):
+    if read_arg(["-a", "--only-a"], args=args):
         only_a = [True]
-    elif read_arg(["-na", "--not-a", "--not-only-a"]):
+    elif read_arg(["-na", "--not-a", "--not-only-a"], args=args):
         only_a = [False]
     else:
         only_a = [True, False]
-    if read_arg(["-b", "--only-b"]):
+    if read_arg(["-b", "--only-b"], args=args):
         only_b = [True]
-    elif read_arg(["-nb", "--not-b", "--not-only-b"]):
+    elif read_arg(["-nb", "--not-b", "--not-only-b"], args=args):
         only_b = [False]
     else:
         only_b = [True, False]
-    rng = np.random.RandomState(read_arg(["--rng", "--random-state"], vtype=int, default=2021))
+    rng = np.random.RandomState(read_arg(["--rng", "--random-state"], vtype=int, default=2021, args=args))
     ss, rs, ms, a_s, bs, ps = np.meshgrid(
         susceptible, reciprocal, ltm, only_a, only_b, punishment
     )
@@ -152,3 +151,9 @@ if __name__ == '__main__':
                 name_r = name
             np.savez(os.path.join(directory, "%s.npz" % name_r),
                      data=data, response=responses, weights=weights, names=names)
+
+
+if __name__ == '__main__':
+    import sys
+
+    main(*sys.argv)

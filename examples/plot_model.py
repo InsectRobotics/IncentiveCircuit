@@ -20,13 +20,16 @@ with open(os.path.join(os.path.join(ROOT_DIR, "data"), 'model-parameters.yml'), 
     model_params = yaml.load(f, Loader=yaml.BaseLoader)
     """load the default parameters of the model"""
 
-if __name__ == '__main__':
+
+def main(*args):
 
     # read the parameters
-    only_nids = read_arg(["--only-nids"])
-    nb_kcs = read_arg(["-k", "--nb-kc", "--nb-kcs"], vtype=int, default=int(model_params["number-kc"]))
-    kc1 = read_arg(["-k1", "--nb-kc1", "--odour1"], vtype=int, default=int(model_params["number-kc-odour-a"]))
-    kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=int(model_params["number-kc-odour-b"]))
+    only_nids = read_arg(["--only-nids"], args=args)
+    nb_kcs = read_arg(["-k", "--nb-kc", "--nb-kcs"], vtype=int, default=int(model_params["number-kc"]), args=args)
+    kc1 = read_arg(["-k1", "--nb-kc1", "--odour1"], vtype=int, default=int(model_params["number-kc-odour-a"]),
+                   args=args)
+    kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=int(model_params["number-kc-odour-b"]),
+                   args=args)
     # kc1 = read_arg(["-k1", "--nb-kc1", "--odour1"], vtype=int, default=nb_kcs // 2 + 1)
     # kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=nb_kcs // 2 + 2)
     nb_active_kc = int(model_params["number-kc-active"])
@@ -46,4 +49,10 @@ if __name__ == '__main__':
         models.append(run_main_experiments(model, reversal=True, unpaired=True, extinction=True))
 
     # plot the results based on the input flags
-    run_arg(model, models, only_nids)
+    run_arg(model, models, only_nids, args=args)
+
+
+if __name__ == '__main__':
+    import sys
+
+    main(*sys.argv)

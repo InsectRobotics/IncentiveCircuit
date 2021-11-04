@@ -21,7 +21,7 @@ with open(os.path.join(__data_dir__, "intervention-examples.yaml"), 'r') as f:
 
 def main(*args):
 
-    learning_rule = "rpe"
+    learning_rule = "dpr"
     nb_train, nb_test = 10, 2
     nb_trials = 10
     nb_samples = 20
@@ -67,7 +67,7 @@ def main(*args):
 
             data["Plausible model"] = np.array(targets)[model_id]
 
-            print(data[["Condition code", "Plausible model", "Cell types"]])
+            # print(data[["Condition code", "Plausible model", "Cell types"]])
         elif target_intervention == "Plausible model":
             model_id = []
             for e_id, condition in enumerate(data["Condition code"]):
@@ -86,13 +86,6 @@ def main(*args):
                 excite = exp["excite"]
                 inhibit = exp["inhibit"]
                 intervention = exp["intervention-schedule"]
-                # intervention_schedule = {
-                #     "train_CS+": bool(int("{0:03b}".format(intervention)[0])),
-                #     "train_CS-": bool(int("{0:03b}".format(intervention)[1])),
-                #     "test": bool(int("{0:03b}".format(intervention)[2]))
-                # }
-                # print(e_id, condition, train, test, excite, inhibit, intervention_schedule,
-                #       np.array(data["Cell types"])[e_id])
 
                 ben = Bennett(train=train, test=test, nb_train=nb_train, nb_test=nb_test, nb_in_trial=nb_trials,
                               rng=rng, learning_rule=learning_rule)

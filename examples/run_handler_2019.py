@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-if __name__ == '__main__':
+def main(*args):
 
     plasticity = []
     uss_on = [-6., -1.2, -.6, 0., .5, 6.]
@@ -152,3 +152,9 @@ if __name__ == '__main__':
     plt.ylim(-1, 1)
 
     plt.show()
+
+
+if __name__ == '__main__':
+    import sys
+
+    main(*sys.argv)

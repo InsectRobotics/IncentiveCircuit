@@ -22,31 +22,33 @@ __maintainer__ = "Evripidis Gkanias"
 __email__ = "ev.gkanias@ed.ac.uk"
 __status__ = "Production"
 
+from incentive import arena
+from incentive.arena import load_arena_paths
+from incentive.plot import plot_arena_paths
 from incentive.tools import read_arg
 
 import os
 
-# the directory of the file
-__dir__ = os.path.dirname(os.path.abspath(__file__))
-# the directory of the data
-__data_dir__ = os.path.realpath(os.path.join(__dir__, "..", "src", "incentive", "data", "arena"))
+
+def main(*args):
+
+    nb_active_kcs = 5
+    rpe = read_arg(["-rpe", "--reward-prediction-error"], args=args)
+    arena.__data_dir__ = directory = os.path.abspath(read_arg(["-d", "--dir"], vtype=str, default=arena.__data_dir__,
+                                                     args=args))
+    repeat = read_arg(['-r', '--repeat'], vtype=int, default=10, args=args)
+    verbose = read_arg(["--verbose", "-v"], vtype=bool, args=args)
+
+    file_names = os.listdir(directory)
+
+    d_raw, cases, d_names, d_repeats = load_arena_paths(file_names, nb_active_kcs=nb_active_kcs, max_repeat=repeat,
+                                                        prediction_error=rpe, verbose=verbose)
+    plot_arena_paths(d_raw, cases, d_names, d_repeats, "srm", figsize=(5, repeat),
+                     name="%sarena-paths-k%d%s" % ("rpe-" if rpe else "", nb_active_kcs,
+                                                   "-%02d" % repeat if repeat is not None else ""))
 
 
 if __name__ == '__main__':
-    from incentive.arena import load_arena_paths
-    from incentive.plot import plot_arena_paths
+    import sys
 
-    nb_active_kcs = 5
-    # rpe = read_arg(["-rpe", "--reward-prediction-error"])
-    rpe = True
-    directory = read_arg(["-d", "--dir"], vtype=str, default=__data_dir__)
-    repeat = read_arg(['-r', '--repeat'], vtype=int, default=10)
-
-    file_names = os.listdir(__data_dir__)
-    d_raw, cases, d_names, d_repeats = load_arena_paths(file_names, nb_active_kcs=nb_active_kcs,
-                                                        max_repeat=repeat, prediction_error=rpe)
-    plot_arena_paths(d_raw, cases, d_names, d_repeats, "srm", figsize=(5, repeat),
-                     name="%sarena-paths-k%d%s" % ("rpe-" if rpe else "",
-                                                    nb_active_kcs,
-                                                    "-%02d" % repeat if repeat is not None else ""))
-
+    main(*sys.argv)

@@ -3,20 +3,18 @@
 
 Python replication for the results from the eLife manuscript:
 
-Gkanias, E., McCurdy, L. Y., Nitabach, M. N., & Webb, B. (2021). Incentive circuit: how flies acquire,
-forget and assimilate memories. Submitted to eLife.
+Gkanias, E., McCurdy, L. Y., Nitabach, M. N., & Webb, B. (2021). The incentive circuit:
+memory dynamics in the mushroom body of *Drosophila melanogaster*. Submitted to eLife.
 
 ![The incentive circuit of the insect mushroom body.](docs/incentive-circuit.png)
 
-The "**incentive circuit**" (IC) is a model of the mushroom body in the fruit fly brain
+The "*incentive circuit*" (IC) is a model of the mushroom body in the fruit fly brain
 that receives sensory input and reinforcements and modulates the motivation state of
 the animal. In this model, the motivation states are limited into: *attraction* and
-*avoidance*. An extension of this is the "**incentive wheel**" (IW),  which creates a
-ranking of available tasks with respect to their importance given the current context.
-Although IC can explain complicated dynamics of behaviours regarding olfactory
-conditioning and involving the attraction and avoidance behaviours, IW is able to
-trigger more complicated dynamics by driving a bigger variety of behaviours, like
-feeding, sleeping, escaping or attacking.
+*avoidance*.
+This repository allows reconstructing the results presented in the original article.
+Below, you can find information of how to set up the environment and run the examples
+that generate the appropriate figures.
 
 ## Environment
 

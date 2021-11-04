@@ -357,7 +357,7 @@ def load_arena_stats(file_names, nb_active_kcs=5, prediction_error=False, nb_kcs
     return df
 
 
-def load_arena_paths(file_names, nb_active_kcs=2, max_repeat=None, prediction_error=False):
+def load_arena_paths(file_names, nb_active_kcs=5, max_repeat=None, prediction_error=False, verbose=False):
     """
     Loads the raw paths from the given files and returns their trace, case and name in 3
     separate lists.
@@ -429,7 +429,8 @@ def load_arena_paths(file_names, nb_active_kcs=2, max_repeat=None, prediction_er
         if max_repeat < (0 if details[0][7] == '' else int(details[0][7])):
             continue
 
-        print(fname, details[0])
+        if verbose:
+            print(fname, details[0])
         punishment = "p" if 'quinine' in details[0] else "r"
         neurons = (
             ("s" if 's' in details[0] else "") +

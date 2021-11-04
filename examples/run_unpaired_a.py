@@ -16,13 +16,13 @@ from incentive.tools import read_arg, run_arg
 import matplotlib.pyplot as plt
 
 
-if __name__ == '__main__':
+def main(*args):
 
     # read the parameters
-    only_nids = read_arg(["--only-nids"])
-    nb_kcs = read_arg(["-k", "--nb-kc", "--nb-kcs"], vtype=int, default=10)
-    kc1 = read_arg(["-k1", "--nb-kc1", "--odour1"], vtype=int, default=7)
-    kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=6)
+    only_nids = read_arg(["--only-nids"], args=args)
+    nb_kcs = read_arg(["-k", "--nb-kc", "--nb-kcs"], vtype=int, default=10, args=args)
+    kc1 = read_arg(["-k1", "--nb-kc1", "--odour1"], vtype=int, default=7, args=args)
+    kc2 = read_arg(["-k2", "--nb-kc2", "--odour2"], vtype=int, default=6, args=args)
 
     pi = []
     for i in range(10):
@@ -70,3 +70,9 @@ if __name__ == '__main__':
 
     # plot the results based on the input flags
     # run_arg(model, models, only_nids)
+
+
+if __name__ == '__main__':
+    import sys
+
+    main(*sys.argv)
