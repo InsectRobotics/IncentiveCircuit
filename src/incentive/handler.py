@@ -34,9 +34,13 @@ def run_case(us_on, gamma_k=.97, gamma_d1=.98, gamma_d2=.99):
         W += dopaminergic_plasticity_rule(k[-1], d1[-1], d2[-1], W, w_rest=1.)
         w.append(np.maximum(W, 0))
 
-    dR1 = (np.maximum(np.array(d1) - np.array(d2), 0) * (np.array(k) - 1) +
-           (np.array(d1) - np.array(d2)) * np.array(w))
-    dR2 = np.minimum(np.array(d1) - np.array(d2), 0) * (np.array(k) - 1)
+    # the potentiating effects
+    d_up = np.maximum(np.array(d1) - np.array(d2), 0)
+    # the depressing effects
+    d_down = np.minimum(np.array(d1) - np.array(d2), 0)
+
+    dR1 = -d_up * (np.array(k) - 1) - (d_up - d_down) * np.array(w)
+    dR2 = d_down * (np.array(k) - 1)
 
     return time, css, uss, k, d1, d2, m, w, dR1, dR2
 

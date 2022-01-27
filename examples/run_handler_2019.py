@@ -142,11 +142,14 @@ def main(*args):
         plasticity.append(np.mean(-dR1 - dR2))
 
     plasticity = np.array(plasticity)
-    plasticity[plasticity > 0] = plasticity[plasticity > 0] / plasticity.max() * .8
+    plasticity[plasticity > 0] = plasticity[plasticity > 0] / plasticity.max() * .6
     plasticity[plasticity < 0] = -plasticity[plasticity < 0] / plasticity.min() * .8
 
     plt.figure('plasticity', figsize=(2, 3))
-    plt.plot([-3, -1.2, -.6, 0, .5, 3], plasticity, 'k+-')
+    plt.plot([-3, -1.2, -.6, 0, .5, 3], plasticity, 'ks-', markerfacecolor="white")
+    # measured with a ruler from Handler et al. (2019)
+    plt.errorbar([-3, -1.2, -.6, 0, .5, 3], [0.0692, 0.5692, 0.2154, -0.8153, -0.6923, -0.1230],
+                 yerr=[0.0385, 0.0462, 0.0769, 0.0308, 0.0846, 0.0923], fmt='grey', capsize=3)
     plt.xticks([-3, -2, -1, 0, 1, 2, 3], [-6, -2, -1, 0, 1, 2, 6])
     plt.yticks([-1, 0, 1])
     plt.ylim(-1, 1)
