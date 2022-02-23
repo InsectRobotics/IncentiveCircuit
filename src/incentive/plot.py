@@ -33,7 +33,8 @@ POSTRAINING_COLOUR = np.array(colors.to_rgb("black"))
 MAX_NUMBER_OF_EXPERIMENTS = 3
 
 
-def plot_responses_from_model(ms, nids=None, only_nids=True, figsize=None, show_legend=True):
+def plot_responses_from_model(ms, nids=None, only_nids=True, title=None, figsize=None,
+                              cma=None, cmb=None, show_legend=True, last_high=False):
     """
     Plots the average responses of the neurons per phase/trial with overlapping lines.
 
@@ -48,7 +49,8 @@ def plot_responses_from_model(ms, nids=None, only_nids=True, figsize=None, show_
     figsize: list
         the size of the figure
     """
-    title = "individuals-" + '-'.join(str(ms[0][0]).split("'")[1:-1:2])
+    if title is None:
+        title = "individuals-" + '-'.join(str(ms[0][0]).split("'")[1:-1:2])
 
     nb_odours = 2
     nb_repeats = len(ms)
@@ -109,9 +111,10 @@ def plot_responses_from_model(ms, nids=None, only_nids=True, figsize=None, show_
     for i in range(nb_models):
         exp_names.append(ms[0][i].routine_name)
     _plot_mean_responses([va_q25, va_q50, va_q75], [vb_q25, vb_q50, vb_q75],
-                         exp_names=exp_names, neuron_names=names,
+                         exp_names=exp_names, neuron_names=names, cma=cma, cmb=cmb,
                          nb_timesteps=ms[0][0].nb_timesteps, nb_trials=ms[0][0].nb_trials,
-                         title=title, figsize=figsize, show_legend=show_legend and only_nids)
+                         title=title, figsize=figsize, show_legend=show_legend and only_nids,
+                         last_high=last_high)
 
 
 def plot_responses_from_data(sum_res, only_nids=True, figsize=None, show_legend=True):
@@ -172,8 +175,10 @@ def plot_responses_from_data(sum_res, only_nids=True, figsize=None, show_legend=
                          title=title, show_legend=show_legend and only_nids, figsize=figsize)
 
 
-def _plot_mean_responses(va, vb, neuron_names, exp_names=None, nb_timesteps=1, nb_trials=1,
-                         title=None, figsize=None, show_legend=True, is_data=False, vc=None):
+def _plot_mean_responses(va, vb, neuron_names, exp_names=None, nb_timesteps=1, nb_trials=1, cma=None, cmb=None,
+                         title=None, figsize=None, show_legend=True, is_data=False, vc=None, last_high=False):
+
+    global MAX_NUMBER_OF_EXPERIMENTS
 
     if exp_names is None:
         exp_names = ["reversal"]
@@ -184,6 +189,15 @@ def _plot_mean_responses(va, vb, neuron_names, exp_names=None, nb_timesteps=1, n
         title = "phase-overlap-responses"
 
     plot_shock = ["d_{av}", "c_{av}", "f_{av}", "320a", "296a", "301a"]
+
+    if cma is None:
+        cma = ODOUR_A_CMAP
+    elif isinstance(cma, str):
+        cma = plt.get_cmap(cma)
+    if cmb is None:
+        cmb = ODOUR_B_CMAP
+    elif isinstance(cmb, str):
+        cmb = plt.get_cmap(cmb)
 
     ymin, ymax = 0, 2
     ylim = [ymin - .1, ymax + .1]
@@ -204,6 +218,9 @@ def _plot_mean_responses(va, vb, neuron_names, exp_names=None, nb_timesteps=1, n
 
     nb_groups = 2 + int(vc is not None)
 
+    if last_high:
+        MAX_NUMBER_OF_EXPERIMENTS = len(exp_names) - 1
+
     plt.figure(title, figsize=figsize)
     subs = []
     for i in range(len(exp_names)-1, -1, -1):
@@ -216,12 +233,21 @@ def _plot_mean_responses(va, vb, neuron_names, exp_names=None, nb_timesteps=1, n
 
         for j in range(nb_neurons):
             label = None
-            a_col = ODOUR_A_CMAP(1 - (i + 1) / (MAX_NUMBER_OF_EXPERIMENTS + 1))
+            if last_high and i == len(exp_names)-1:
+                a_col = 'black'
+                m_col = 'black'
+                style = '--'
+                z = 2
+            else:
+                a_col = cma(1 - (i + 1) / (MAX_NUMBER_OF_EXPERIMENTS + 1))
+                m_col = (.8, .8, .8)
+                style = '-'
+                z = 1
             if j == nb_neurons - 1:
                 label = exp_names[i]
 
             vaj_q25, vaj_q50, vaj_q75 = [v[i, j] for v in va]
-            if len(subs) <= j:
+            if len(subs) <= j or cma != ODOUR_A_CMAP:
                 axa = plt.subplot(nb_rows, nb_cols, nb_groups * (j // nb_cols) * nb_cols + j % nb_cols + 1)
                 axa.set_xticks(_x_ticks)
                 axa.set_xticklabels(["" for _ in x_ticks_])
@@ -239,38 +265,50 @@ def _plot_mean_responses(va, vb, neuron_names, exp_names=None, nb_timesteps=1, n
                 axa.spines['top'].set_visible(False)
                 axa.spines['right'].set_visible(False)
 
-                a_acol = ODOUR_A_CMAP(.2)
+                if cma == ODOUR_A_CMAP:
+                    a_acol = cma(.2)
+                else:
+                    a_acol = a_col
 
                 if nb_models == 1:
                     axa.fill_between(x_[3:13], vaj_q25[3:13], vaj_q75[3:13], facecolor=a_acol, alpha=.2)
-                axa.plot(x_[:4], vaj_q50[:4], color=(.8, .8, .8), lw=2)
-                axa.plot(x_[3:13], vaj_q50[3:13], color=a_acol, lw=2, label="acquisition")
+                axa.plot(x_[:4], vaj_q50[:4], color=m_col, ls=style, lw=2, zorder=z)
+                axa.plot(x_[3:13], vaj_q50[3:13], color=a_acol, ls=style, lw=2, zorder=z, label="acquisition")
                 subs.append(axa)
 
             if nb_models == 1:
                 subs[j].fill_between(x_[14+int(is_data):24+int(is_data)], vaj_q25[14+int(is_data):24+int(is_data)],
                                      vaj_q75[14+int(is_data):24+int(is_data)], facecolor=a_col, alpha=.2)
-            subs[j].plot(x_[12:15+int(is_data)], vaj_q50[12:15+int(is_data)], color=(.8, .8, .8), lw=2)
-            subs[j].plot(x_[23+int(is_data):], vaj_q50[23+int(is_data):], color=(.8, .8, .8), lw=2)
+            subs[j].plot(x_[12:15+int(is_data)], vaj_q50[12:15+int(is_data)], color=m_col, ls=style, lw=2, zorder=z)
+            subs[j].plot(x_[23+int(is_data):], vaj_q50[23+int(is_data):], color=m_col, ls=style, lw=2, zorder=z)
             subs[j].plot(x_[14+int(is_data):24+int(is_data)], vaj_q50[14+int(is_data):24+int(is_data)],
-                         color=a_col, lw=2, label=label)
+                         color=a_col, ls=style, lw=2, zorder=z, label=label)
             if ("extinction" in exp_names[i] or "unpaired" in exp_names[i] or
-                    np.all([ps not in neuron_names[j] for ps in plot_shock])):
+                    np.all([ps not in neuron_names[j] for ps in plot_shock])) or last_high:
                 continue
             shock_i = [15+int(is_data), 17+int(is_data), 19+int(is_data), 21+int(is_data), 23+int(is_data)]
-            subs[j].plot(x_[shock_i], vaj_q50[shock_i], color=PUNISHMENT_COLOUR, marker='.', linestyle=' ')
+            subs[j].plot(x_[shock_i], vaj_q50[shock_i], color=PUNISHMENT_COLOUR, marker='.', linestyle=' ', zorder=2)
 
         x_b = x_ + 1 - 1 / (nb_timesteps - 1)
         for j in range(nb_neurons):
             jn = j + nb_neurons
 
             label = None
-            b_col = ODOUR_B_CMAP(1 - (i + 1) / (MAX_NUMBER_OF_EXPERIMENTS + 1))
+            if last_high and i == len(exp_names)-1:
+                b_col = 'black'
+                m_col = 'black'
+                style = '--'
+                z = 2
+            else:
+                b_col = cmb(1 - (i + 1) / (MAX_NUMBER_OF_EXPERIMENTS + 1))
+                m_col = (.8, .8, .8)
+                style = '-'
+                z = 1
             if j == nb_neurons - 1:
                 label = exp_names[i]
 
             vbj_q25, vbj_q50, vbj_q75 = [v[i, j] for v in vb]
-            if len(subs) <= jn:
+            if len(subs) <= jn or cmb != ODOUR_B_CMAP:
                 axb = plt.subplot(nb_rows, nb_cols, (nb_groups * (j // nb_cols) + 1) * nb_cols + j % nb_cols + 1)
                 axb.set_xticks(_x_ticks)
                 if vc is None:
@@ -291,24 +329,27 @@ def _plot_mean_responses(va, vb, neuron_names, exp_names=None, nb_timesteps=1, n
                 axb.spines['top'].set_visible(False)
                 axb.spines['right'].set_visible(False)
 
-                b_acol = ODOUR_B_CMAP(0.2)
+                if cmb == ODOUR_B_CMAP:
+                    b_acol = cmb(0.2)
+                else:
+                    b_acol = b_col
 
                 if nb_models == 1:
                     axb.fill_between(x_b[2:12], vbj_q25[2:12], vbj_q75[2:12], facecolor=b_acol, alpha=.2)
-                axb.plot(x_b[:3], vbj_q50[:3], color=(.8, .8, .8))
-                axb.plot(x_b[2:12], vbj_q50[2:12], color=b_acol, lw=2, label="acquisition")
+                axb.plot(x_b[:3], vbj_q50[:3], color=m_col, ls=style, lw=2, zorder=z)
+                axb.plot(x_b[2:12], vbj_q50[2:12], color=b_acol, ls=style, lw=2, zorder=z, label="acquisition")
                 subs.append(axb)
 
             if nb_models == 1:
                 subs[jn].fill_between(x_b[13:23], vbj_q25[13:23], vbj_q75[13:23], facecolor=b_col, alpha=.2)
-            subs[jn].plot(x_b[11:14], vbj_q50[11:14], color=(.8, .8, .8), lw=2)
-            subs[jn].plot(x_b[22:], vbj_q50[22:], color=(.8, .8, .8), lw=2)
-            subs[jn].plot(x_b[13:23], vbj_q50[13:23], color=b_col, lw=2, label=label)
+            subs[jn].plot(x_b[11:14], vbj_q50[11:14], color=m_col, ls=style, lw=2, zorder=z)
+            subs[jn].plot(x_b[22:], vbj_q50[22:], color=m_col, ls=style, lw=2, zorder=z)
+            subs[jn].plot(x_b[13:23], vbj_q50[13:23], color=b_col, ls=style, lw=2, zorder=z, label=label)
 
-            if i > 0 or np.all([ps not in neuron_names[j] for ps in plot_shock]):
+            if i > 0 or np.all([ps not in neuron_names[j] for ps in plot_shock]) or last_high:
                 continue
             shock_i = [3, 5, 7, 9, 11]
-            subs[jn].plot(x_b[shock_i], vbj_q50[shock_i], color=PUNISHMENT_COLOUR, marker='.', linestyle=' ')
+            subs[jn].plot(x_b[shock_i], vbj_q50[shock_i], color=PUNISHMENT_COLOUR, marker='.', linestyle=' ', zorder=2)
 
         if vc is not None:
             x_c = x_ + 1 - 1 / (nb_timesteps - 1)

@@ -21,7 +21,10 @@ import numpy as np
 
 class IncentiveCircuit(MBModel):
     def __init__(self, has_sm=True, has_rm=True, has_ltm=True, has_rrm=True, has_rfm=True, has_mam=True,
-                 has_real_names=False, as_microcircuits=False, ltm_speed=.3, *args, **kwargs):
+                 has_real_names=False, as_microcircuits=False, ltm_speed=None,
+                 b_d=-0.5, b_c=-0.15, b_f=-0.15, b_s=-2, b_r=-0.5, b_m=-0.5,
+                 w_s2d=.3, w_d2s=1., w_s2r=1., w_r2c=.5, w_c2r=1., w_m2c=.3, w_c2m=.3, w_m2f=.5, w_f2m=1., w_f2r=.3,
+                 *args, **kwargs):
         """
         The Incentive Circuit (IC) is a simplified version of the mushroom body from the Drosophila melanogaster
         brain, which is a hypothetical sub-circuit in it. It contains the connections from the Kenyon cells (KCs) to the
@@ -56,6 +59,8 @@ class IncentiveCircuit(MBModel):
         shock_magnitude = 2.
         odour_magnitude = 2.
         # ltm_speed = .5 if as_microcircuits else .05
+        if ltm_speed is not None:
+            w_c2m = w_m2c = w_f2r = ltm_speed
 
         pds, pde = 0, 2
         pcs, pce = 2, 4
@@ -67,12 +72,12 @@ class IncentiveCircuit(MBModel):
         self.us_dims = 2
         self.w_p2k *= odour_magnitude
 
-        self._v[:, pds:pde] = self.bias[pds:pde] = -0.5  # D-DANs
-        self._v[:, pcs:pce] = self.bias[pcs:pce] = -0.15  # C-DANs
-        self._v[:, pfs:pfe] = self.bias[pfs:pfe] = -0.15  # F-DANs
-        self._v[:, pss:pse] = self.bias[pss:pse] = -2.  # S-MBONs
-        self._v[:, prs:pre] = self.bias[prs:pre] = -.5  # R-MBONs
-        self._v[:, pms:pme] = self.bias[pms:pme] = -.5  # M-MBONs
+        self._v[:, pds:pde] = self.bias[pds:pde] = b_d  # D-DANs
+        self._v[:, pcs:pce] = self.bias[pcs:pce] = b_c  # C-DANs
+        self._v[:, pfs:pfe] = self.bias[pfs:pfe] = b_f  # F-DANs
+        self._v[:, pss:pse] = self.bias[pss:pse] = b_s  # S-MBONs
+        self._v[:, prs:pre] = self.bias[prs:pre] = b_r  # R-MBONs
+        self._v[:, pms:pme] = self.bias[pms:pme] = b_m  # M-MBONs
         if as_microcircuits:
             self._v[:, prs:pre] = self.bias[prs:pre] = -2.  # R-MBONs
             self._v[:, pms:pme] = self.bias[pms:pme] = -4.  # M-MBONs
@@ -86,7 +91,7 @@ class IncentiveCircuit(MBModel):
             self._w_m2v[pss:pse, pds:pde] = np.array([  # S-MBONs to D-DANs
                 [+0., -1.],  # MBON-γ1ped (s_at)
                 [-1., +0.]  # MBON-γ4>γ1γ2 (s_av)
-            ]) * .3
+            ]) * w_s2d
             # # Susceptible memories excite their respective DANs
             # self._w_m2v[pss:pse, pds:pde] = np.array([  # S-MBONs to D-DANs
             #     [+1., -0.],  # MBON-γ1ped (s_at)
@@ -98,7 +103,7 @@ class IncentiveCircuit(MBModel):
                 [float(m == (d + ((pde-pds) // 2)) % (pde-pds))
                  for m in range(pse-pss)]
                 for d in range(pde-pds)
-            ]) * 1.
+            ]) * w_d2s
 
         # restrained memory (RM) sub-circuit
         if has_rm:
@@ -106,7 +111,7 @@ class IncentiveCircuit(MBModel):
             self._w_m2v[pss:pse, prs:pre] = np.array([  # S-MBONs to R-MBONs
                 [-.0, -1.],  # MBON-γ1ped (s_at)
                 [-1., -.0]  # MBON-γ4>γ1γ2 (s_av)
-            ]) * 1.
+            ]) * w_s2r
 
         # reciprocal restrained memories (RRM) sub-circuit
         if has_rrm:
@@ -114,7 +119,7 @@ class IncentiveCircuit(MBModel):
             self._w_m2v[prs:pre, pcs:pce] = np.array([  # R-MBONs to C-DANs
                 [+1., +0.],  # MBON-γ2α'1 (r_at)
                 [+0., +1.]  # MBON-γ5β'2a (r_av)
-            ]) * .5
+            ]) * w_r2c
 
             # # Restrained memories inhibit their opposite DANs
             # self._w_m2v[prs:pre, pcs:pce] = np.array([  # R-MBONs to C-DANs
@@ -127,14 +132,14 @@ class IncentiveCircuit(MBModel):
                 [float(m == (d + ((pce-pcs) // 2)) % (pce-pcs))
                  for m in range(pre-prs)]
                 for d in range(pce-pcs)
-            ]) * 1.
+            ]) * w_c2r
 
         if has_ltm:
             # Long-term memory (LTM) sub-circuit
             self._w_m2v[pms:pme, pcs:pce] += np.array([  # M-MBONs to C-DANs
                 [+1.0, +.0],  # MBON-β2β'2a (m_at)
                 [+.0, +1.0],  # MBON-α'1 (m_av)
-            ]) * ltm_speed
+            ]) * w_m2c
 
             # # Long-term memory (LTM) sub-circuit
             # self._w_m2v[pms:pme, pcs:pce] += np.array([  # M-MBONs to C-DANs
@@ -147,7 +152,7 @@ class IncentiveCircuit(MBModel):
                 [float(m == (d + ((pce-pcs) // 2) + 1) % (pce-pcs))
                  for m in range(pme-pms)]
                 for d in range(pce-pcs)
-            ]) * ltm_speed
+            ]) * w_c2m
 
         # reciprocal forgetting memories (RFM) sub-circuit
         if has_rfm:
@@ -155,14 +160,14 @@ class IncentiveCircuit(MBModel):
             self._w_m2v[pms:pme, pfs:pfe] = np.array([  # M-MBONs to F-DANs
                 [+1., +.0],  # MBON-β2β'2a (m_at)
                 [+.0, +1.]  # MBON-α'1 (m_av)
-            ]) * .5
+            ]) * w_m2f
 
             # Forgetting DANs depress their opposite long-term memory MBONs
             self._w_d2k[pfs:pfe, pms:pme] += -np.array([
                 [float(m == (d + ((pfe-pfs) // 2)) % (pfe-pfs))
                  for m in range(pme-pms)]
                 for d in range(pfe-pfs)
-            ]) * 1.
+            ]) * w_f2m
 
         # Memory assimilation mechanism (MAM)
         if has_mam:
@@ -170,7 +175,7 @@ class IncentiveCircuit(MBModel):
                 [float(m == (d + ((pce-pcs) // 2) - 1) % (pce-pcs))
                  for m in range(pme-pms)]
                 for d in range(pce-pcs)
-            ]) * ltm_speed
+            ]) * w_f2r
 
         u = np.zeros((2, self.nb_dan + self.nb_mbon), dtype=float)
         u[:, pds:pde] = np.eye(pde-pds) * shock_magnitude
