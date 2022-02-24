@@ -1,6 +1,6 @@
 from incentive.bennett import Bennett, read_data, translate_condition_code, pi_binomial_adjustment
 
-from scipy.stats.stats import pearsonr
+from scipy.stats import pearsonr
 
 import matplotlib.pyplot as plt
 import numpy as np
