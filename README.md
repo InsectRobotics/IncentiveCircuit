@@ -1,4 +1,4 @@
-# The Incentive Circuit ![GitHub top language](https://img.shields.io/github/languages/top/InsectRobotics/IncentiveCircuit) [![GitHub license](https://img.shields.io/github/license/InsectRobotics/IncentiveCircuit)](https://github.com/InsectRobotics/IncentiveCircuit/blob/main/LICENSE) ![GitHub last-commit](https://img.shields.io/github/last-commit/InsectRobotics/IncentiveCircuit) [![Build Status](https://app.travis-ci.com/InsectRobotics/IncentiveCircuit.svg?branch=main)](https://app.travis-ci.com/InsectRobotics/IncentiveCircuit)
+# The Incentive Circuit ![GitHub top language](https://img.shields.io/github/languages/top/InsectRobotics/IncentiveCircuit) [![GitHub license](https://img.shields.io/github/license/InsectRobotics/IncentiveCircuit)](https://github.com/InsectRobotics/IncentiveCircuit/blob/main/LICENSE) ![GitHub last-commit](https://img.shields.io/github/last-commit/InsectRobotics/IncentiveCircuit) <a href="https://app.travis-ci.com/InsectRobotics/IncentiveCircuit" target="_blank">![Build Status](https://app.travis-ci.com/InsectRobotics/IncentiveCircuit.svg?branch=main)</a>
 
 
 Python replication for the results from the eLife manuscript:
