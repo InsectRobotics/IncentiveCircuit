@@ -88,5 +88,5 @@ The code is written by [Evripidis Gkanias](https://evgkanias.github.io/).
 
 ## Copyright
 
-Copyright &copy; 2021, Insect robotics Group, Institute of Perception,
+Copyright &copy; 2022, Insect robotics Group, Institute of Perception,
 Action and Behaviour, School of Informatics, the University of Edinburgh.
