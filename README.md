@@ -3,8 +3,11 @@
 
 Python replication for the results from the eLife manuscript:
 
-Gkanias, E., McCurdy, L. Y., Nitabach, M. N., & Webb, B. (2021). The incentive circuit:
-memory dynamics in the mushroom body of *Drosophila melanogaster*. Submitted to eLife.
+
+Gkanias, E., McCurdy, L. Y., Nitabach, M. N. & Webb, B. An incentive circuit for memory
+dynamics in the mushroom body of *Drosophila melanogaster*. Elife 11, e75611 (2022).
+
+DOI: [10.7554/eLife.75611](https://doi.org/10.7554/eLife.75611)
 
 ![The incentive circuit of the insect mushroom body.](docs/incentive-circuit.png)
 
